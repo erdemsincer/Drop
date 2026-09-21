@@ -1,0 +1,11 @@
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/Drop.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/bin/Debug/net10.0/Drop.Domain.deps.json
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/bin/Debug/net10.0/Drop.Domain.dll
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/bin/Debug/net10.0/Drop.Domain.pdb
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/Drop.Domain.AssemblyInfoInputs.cache
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/Drop.Domain.AssemblyInfo.cs
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/Drop.Domain.csproj.CoreCompileInputs.cache
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/Drop.Domain.dll
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/refint/Drop.Domain.dll
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/Drop.Domain.pdb
+/Users/erdemsincer/Project/Drop/src/Drop.Domain/obj/Debug/net10.0/ref/Drop.Domain.dll

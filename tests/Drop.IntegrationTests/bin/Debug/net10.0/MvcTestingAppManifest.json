@@ -1,0 +1,6 @@
+{
+  "Drop.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/erdemsincer\/Project\/Drop\/src\/Drop.Api",
+  "Drop.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/erdemsincer\/Project\/Drop\/src\/Drop.Application",
+  "Drop.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/erdemsincer\/Project\/Drop\/src\/Drop.Domain",
+  "Drop.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/erdemsincer\/Project\/Drop\/src\/Drop.Infrastructure"
+}

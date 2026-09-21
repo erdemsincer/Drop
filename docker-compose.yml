@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: drop-postgres
+    environment:
+      POSTGRES_DB: dropdb
+      POSTGRES_USER: drop
+      POSTGRES_PASSWORD: drop_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - drop_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  drop_postgres_data:

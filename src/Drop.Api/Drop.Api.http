@@ -1,0 +1,6 @@
+@Drop.Api_HostAddress = http://localhost:5072
+
+GET {{Drop.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
