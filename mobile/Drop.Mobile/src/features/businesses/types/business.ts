@@ -53,6 +53,7 @@ export type BusinessDrop = {
   activeClaimCount: number;
   redeemedCount: number;
   remainingCapacity: number;
+  durationMinutes: number;
   claimDurationMinutes: number;
   status: DropStatus;
   startsAt?: string | null;

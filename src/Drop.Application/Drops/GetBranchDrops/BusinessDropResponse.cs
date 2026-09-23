@@ -15,6 +15,7 @@ public sealed record BusinessDropResponse(
     int ActiveClaimCount,
     int RedeemedCount,
     int RemainingCapacity,
+    int DurationMinutes,
     int ClaimDurationMinutes,
     DropStatus Status,
     DateTimeOffset? StartsAt,

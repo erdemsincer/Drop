@@ -158,6 +158,7 @@ public sealed class BusinessQueryTests : IClassFixture<DropApiFactory>, IAsyncLi
         drop.GetProperty("redeemedCount").GetInt32().Should().Be(1);
         drop.GetProperty("remainingCapacity").GetInt32().Should().Be(7);
         drop.GetProperty("claimDurationMinutes").GetInt32().Should().Be(15);
+        drop.GetProperty("durationMinutes").GetInt32().Should().Be(60);
         drop.GetProperty("status").GetString().Should().Be("Active");
     }
 

@@ -193,6 +193,12 @@ export default function BranchDashboardScreen() {
                 params: { branchId, dropId: item.id },
               })
             }
+            onRepublish={() =>
+              router.push({
+                pathname: '/(app)/business/branch/[branchId]/create-drop',
+                params: { branchId, fromDropId: item.id },
+              })
+            }
             onEnd={() => confirmEnd(item)}
             onCancel={() => confirmCancel(item)}
           />

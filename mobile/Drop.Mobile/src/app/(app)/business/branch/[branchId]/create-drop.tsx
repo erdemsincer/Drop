@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getApiError } from '@/api/getApiError';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
@@ -15,6 +15,9 @@ import {
   type DropFormValues,
   apiFieldMap,
   dropToFormValues,
+  dropToTemplateValues,
+  recentTemplates,
+  withOption,
   toCreateDropRequest,
   toUpdateDropRequest,
   validateDropForm,
@@ -43,15 +46,35 @@ const initialValues: DropFormValues = {
   claimDurationMinutes: 15,
 };
 
-/** Creates a drop, or edits a live one when a dropId param is given. */
+/**
+ * Creates a drop, edits a live one (dropId), or republishes a previous one
+ * (fromDropId: every field, durations included, prefilled).
+ */
 export default function DropFormScreen() {
-  const { branchId, dropId } = useLocalSearchParams<{ branchId: string; dropId?: string }>();
+  const { branchId, dropId, fromDropId } = useLocalSearchParams<{
+    branchId: string;
+    dropId?: string;
+    fromDropId?: string;
+  }>();
   const dropsQuery = useBranchDrops(branchId);
-  const editing = dropId ? dropsQuery.data?.find(drop => drop.id === dropId) : undefined;
+  const drops = dropsQuery.data ?? [];
+  const editing = dropId ? drops.find(drop => drop.id === dropId) : undefined;
+  const template = fromDropId ? drops.find(drop => drop.id === fromDropId) : undefined;
   const isEdit = Boolean(dropId);
   const taken = editing ? editing.activeClaimCount + editing.redeemedCount : 0;
+  const templates = isEdit ? [] : recentTemplates(drops);
 
-  const [values, setValues] = useState(() => (editing ? dropToFormValues(editing) : initialValues));
+  const [values, setValues] = useState(() =>
+    editing ? dropToFormValues(editing) : template ? dropToTemplateValues(template) : initialValues,
+  );
+  const [appliedTemplateId, setAppliedTemplateId] = useState(template?.id);
+
+  const applyTemplate = (drop: (typeof drops)[number]) => {
+    haptics.tap();
+    setValues(dropToTemplateValues(drop));
+    setErrors({});
+    setAppliedTemplateId(drop.id);
+  };
   const [errors, setErrors] = useState<DropFormErrors>({});
   const createMutation = useCreateDrop(branchId);
   const updateMutation = useUpdateDrop(branchId);
@@ -111,6 +134,49 @@ export default function DropFormScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {templates.length > 0 && (
+            <View style={styles.templates}>
+              <Text style={styles.templatesTitle}>Öncekilerden doldur</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.templatesRow}
+              >
+                {templates.map(drop => {
+                  const selected = drop.id === appliedTemplateId;
+
+                  return (
+                    <Pressable
+                      key={drop.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${drop.title} ile doldur`}
+                      onPress={() => applyTemplate(drop)}
+                      style={({ pressed }) => [
+                        styles.template,
+                        selected && styles.templateSelected,
+                        pressed && styles.templatePressed,
+                      ]}
+                    >
+                      <Ionicons
+                        name={selected ? 'checkmark-circle' : 'copy-outline'}
+                        size={16}
+                        color={selected ? colors.textOnDark : colors.primary}
+                      />
+                      <View style={styles.templateText}>
+                        <Text style={[styles.templateName, selected && styles.templateNameSelected]} numberOfLines={1}>
+                          {drop.title}
+                        </Text>
+                        <Text style={[styles.templateMeta, selected && styles.templateMetaSelected]} numberOfLines={1}>
+                          {drop.capacity} kişi · {drop.claimDurationMinutes} dk
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
+
           <Section title="Fırsat" icon="sparkles">
             <TextField
               label="Başlık"
@@ -171,7 +237,7 @@ export default function DropFormScreen() {
             <>
             <Section title="Drop ne kadar yayında kalsın?" icon="hourglass">
               <ChoiceChips
-                options={DROP_DURATIONS}
+                options={withOption(DROP_DURATIONS, values.durationMinutes)}
                 value={values.durationMinutes}
                 onChange={value => set('durationMinutes', value)}
               />
@@ -179,7 +245,7 @@ export default function DropFormScreen() {
 
             <Section title="Yakalandıktan sonra kullanım süresi" icon="timer">
               <ChoiceChips
-                options={CLAIM_DURATIONS}
+                options={withOption(CLAIM_DURATIONS, values.claimDurationMinutes)}
                 value={values.claimDurationMinutes}
                 onChange={value => set('claimDurationMinutes', value)}
               />
@@ -273,6 +339,60 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
+  },
+  templates: {
+    gap: spacing.sm,
+  },
+  templatesTitle: {
+    marginLeft: spacing.xs,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  templatesRow: {
+    gap: spacing.sm,
+    paddingRight: spacing.xl,
+  },
+  template: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    maxWidth: 220,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+  },
+  templateSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  templatePressed: {
+    opacity: 0.8,
+  },
+  templateText: {
+    flexShrink: 1,
+  },
+  templateName: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  templateNameSelected: {
+    color: colors.textOnDark,
+  },
+  templateMeta: {
+    marginTop: 1,
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  templateMetaSelected: {
+    color: colors.textOnDarkMuted,
   },
   editNote: {
     flexDirection: 'row',

@@ -13,11 +13,20 @@ type Props = {
   canManage?: boolean;
   busy?: boolean;
   onEdit?: () => void;
+  onRepublish?: () => void;
   onEnd?: () => void;
   onCancel?: () => void;
 };
 
-export function BusinessDropCard({ drop, canManage = false, busy = false, onEdit, onEnd, onCancel }: Props) {
+export function BusinessDropCard({
+  drop,
+  canManage = false,
+  busy = false,
+  onEdit,
+  onRepublish,
+  onEnd,
+  onCancel,
+}: Props) {
   const remaining = useCountdown(drop.endsAt ?? new Date(0).toISOString());
   const live = drop.status === 'Active' && !remaining.isExpired;
 
@@ -80,6 +89,18 @@ export function BusinessDropCard({ drop, canManage = false, busy = false, onEdit
         <Metric color={colors.border} label="Kalan" value={drop.remainingCapacity} />
       </View>
 
+      {!live && canManage && onRepublish && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${drop.title} tekrar yayınla`}
+          onPress={onRepublish}
+          style={({ pressed }) => [styles.republish, pressed && styles.actionPressed]}
+        >
+          <Ionicons name="repeat" size={16} color={colors.primary} />
+          <Text style={styles.republishText}>Tekrar yayınla</Text>
+        </Pressable>
+      )}
+
       {live && canManage && (
         <View style={styles.actions}>
           {busy ? (
@@ -141,7 +162,7 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   cardPast: {
-    opacity: 0.72,
+    opacity: 0.85,
   },
   header: {
     flexDirection: 'row',
@@ -241,6 +262,21 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
+  },
+  republish: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 40,
+    marginTop: spacing.lg,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.md,
+  },
+  republishText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '800',
   },
   actionDanger: {
     backgroundColor: colors.dangerSoft,

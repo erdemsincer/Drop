@@ -74,6 +74,37 @@ export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
   claimDurationMinutes: drop.claimDurationMinutes,
 });
 
+/** Everything of a previous drop, durations included, to publish it again. */
+export const dropToTemplateValues = (drop: BusinessDrop): DropFormValues => ({
+  ...dropToFormValues(drop),
+  durationMinutes: drop.durationMinutes,
+  claimDurationMinutes: drop.claimDurationMinutes,
+});
+
+/** Most recent drops with distinct titles, newest first: the "fill from previous" shortcuts. */
+export const recentTemplates = (drops: BusinessDrop[], limit = 6) => {
+  const seen = new Set<string>();
+
+  return [...drops]
+    .sort((a, b) => new Date(b.startsAt ?? 0).getTime() - new Date(a.startsAt ?? 0).getTime())
+    .filter(drop => {
+      const key = drop.title.trim().toLocaleLowerCase('tr-TR');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, limit);
+};
+
+const minutesLabel = (minutes: number) =>
+  minutes % 60 === 0 ? `${minutes / 60} saat` : minutes > 60 ? `${Math.floor(minutes / 60)} sa ${minutes % 60} dk` : `${minutes} dk`;
+
+/** Keeps a non-standard duration (e.g. 45 dk from an older drop) selectable. */
+export const withOption = (options: Choice<number>[], value: number): Choice<number>[] =>
+  options.some(option => option.value === value)
+    ? options
+    : [...options, { label: minutesLabel(value), value }].sort((a, b) => a.value - b.value);
+
 export const toUpdateDropRequest = (values: DropFormValues): UpdateDropRequest => {
   const { title, description, minimumSpend, capacity } = toCreateDropRequest(values);
   return { title, description, minimumSpend, capacity };

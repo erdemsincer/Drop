@@ -40,6 +40,7 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 drop.Description,
                 drop.MinimumSpend,
                 drop.Capacity,
+                drop.Duration,
                 drop.ClaimDuration,
                 drop.Status,
                 drop.StartsAt,
@@ -64,6 +65,7 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 row.ActiveClaimCount,
                 row.RedeemedCount,
                 Math.Max(0, row.Capacity - row.ActiveClaimCount - row.RedeemedCount),
+                (int)row.Duration.TotalMinutes,
                 (int)row.ClaimDuration.TotalMinutes,
                 // No background job flips the status yet, so derive expiry from EndsAt.
                 row.Status == DropStatus.Active && row.EndsAt <= now
