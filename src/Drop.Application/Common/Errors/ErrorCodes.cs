@@ -18,6 +18,7 @@ public static class ErrorCodes
     {
         public const string NotFound = "business.not_found";
         public const string AccessDenied = "business.access_denied";
+        public const string NameExists = "business.name_exists";
     }
 
     public static class Branch
@@ -39,6 +40,7 @@ public static class ErrorCodes
         public const string ActiveClaimExists = "claim.active_exists";
         public const string NotActive = "claim.not_active";
         public const string Expired = "claim.expired";
+        public const string AccessDenied = "claim.access_denied";
     }
 
     public static class Qr

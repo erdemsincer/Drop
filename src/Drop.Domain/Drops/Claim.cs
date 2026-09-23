@@ -51,17 +51,15 @@ public sealed class Claim : Entity
 
     public void Redeem(DateTimeOffset now)
     {
-        if (Status == ClaimStatus.Redeemed)
+        if (Status != ClaimStatus.Active)
         {
             throw new ClaimDomainException(
-                "claim.already_redeemed",
-                "Claim has already been redeemed.");
+                "claim.not_active",
+                "Only active claims can be redeemed.");
         }
 
-        if (Status == ClaimStatus.Expired || now >= ExpiresAt)
+        if (now >= ExpiresAt)
         {
-            Status = ClaimStatus.Expired;
-
             throw new ClaimDomainException(
                 "claim.expired",
                 "Claim has expired.");

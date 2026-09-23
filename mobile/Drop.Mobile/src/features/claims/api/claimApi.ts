@@ -1,6 +1,11 @@
 import { apiClient } from '@/api/apiClient';
 
-import type { ActiveClaim, CreateClaimResponse } from '../types/claim';
+import type {
+  ActiveClaim,
+  CreateClaimResponse,
+  RedeemClaimRequest,
+  RedeemClaimResponse,
+} from '../types/claim';
 
 export const createClaim = async (
   dropId: string,
@@ -22,6 +27,19 @@ export const getActiveClaim = async () => {
   if (response.status === 204) {
     return null;
   }
+
+  return response.data;
+};
+
+export const redeemClaim = async (
+  claimId: string,
+  qrToken: string,
+) => {
+  const response =
+    await apiClient.post<RedeemClaimResponse>(
+      `/api/claims/${claimId}/redeem`,
+      { qrToken } satisfies RedeemClaimRequest,
+    );
 
   return response.data;
 };

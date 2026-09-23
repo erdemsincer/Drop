@@ -4,14 +4,18 @@ using Drop.Application.Authentication.Login;
 using Drop.Application.Authentication.Register;
 using Drop.Application.Businesses;
 using Drop.Application.Businesses.CreateBusiness;
+using Drop.Application.Businesses.GetMyBusinesses;
 using Drop.Application.Branches;
 using Drop.Application.Branches.CreateBranch;
+using Drop.Application.Branches.GetBranch;
+using Drop.Application.Branches.GetBranches;
 using Drop.Application.BranchQrTokens.Create;
 using Drop.Application.Claims;
 using Drop.Application.Claims.CreateClaim;
 using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Drops;
 using Drop.Application.Drops.CreateDrop;
+using Drop.Application.Drops.GetBranchDrops;
 using Drop.Application.Drops.GetNearbyDrops;
 using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Features.Drops.GetDropDetail;
@@ -72,14 +76,26 @@ public static class DependencyInjection
         services.AddScoped<INearbyDropQuery, NearbyDropQuery>();
         services.AddScoped<GetNearbyDropsService>();
 
-    services.AddScoped<IDropDetailQuery, DropDetailQuery>();
-    services.AddScoped<GetDropDetailService>();
+        services.AddScoped<IDropDetailQuery, DropDetailQuery>();
+        services.AddScoped<GetDropDetailService>();
 
         services.AddScoped<IActiveClaimQuery, ActiveClaimQuery>();
         services.AddScoped<GetActiveClaimService>();
 
         services.AddScoped<IClaimStore, ClaimStore>();
         services.AddScoped<CreateClaimService>();
+
+        services.AddScoped<IMyBusinessesQuery, MyBusinessesQuery>();
+        services.AddScoped<GetMyBusinessesService>();
+
+        services.AddScoped<IBranchListQuery, BranchListQuery>();
+        services.AddScoped<GetBranchesService>();
+
+        services.AddScoped<IBranchDetailQuery, BranchDetailQuery>();
+        services.AddScoped<GetBranchService>();
+
+        services.AddScoped<IBranchDropsQuery, BranchDropsQuery>();
+        services.AddScoped<GetBranchDropsService>();
 
         services.AddScoped<IRedemptionStore, RedemptionStore>();
         services.AddScoped<RedeemClaimService>();

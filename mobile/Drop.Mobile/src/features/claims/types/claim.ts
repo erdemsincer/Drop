@@ -13,3 +13,13 @@ export type ActiveClaim = {
   dropTitle: string;
   expiresAt: string;
 };
+
+export type RedeemClaimRequest = {
+  qrToken: string;
+};
+
+export type RedeemClaimResponse = {
+  claimId: string;
+  dropId: string;
+  redeemedAt: string;
+};

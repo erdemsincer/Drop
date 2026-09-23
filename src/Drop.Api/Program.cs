@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Text;
 using Drop.Api.ExceptionHandling;
 using Drop.Api.Middleware;
@@ -34,10 +35,16 @@ try
             .Enrich.WithProperty("Application", "Drop.Api");
     });
 
-    builder.Services.AddControllers(options =>
-    {
-        options.Filters.Add<ValidationActionFilter>();
-    });
+    builder.Services
+        .AddControllers(options =>
+        {
+            options.Filters.Add<ValidationActionFilter>();
+        })
+        .AddJsonOptions(options =>
+        {
+            // Enums go over the wire as names ("Owner", "Active"), not numbers.
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
 
     builder.Services.AddApplication();
 

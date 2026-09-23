@@ -1,3 +1,4 @@
+using Drop.Application.Security;
 using Drop.Domain.Branches;
 using Drop.Domain.Businesses;
 using Drop.Domain.Drops;
@@ -68,7 +69,87 @@ public static class IntegrationTestData
 
         await dbContext.SaveChangesAsync();
 
-        return new ClaimScenario(drop.Id, branch.Id);
+        return new ClaimScenario(drop.Id, branch.Id, business.Id, user.Id);
+    }
+
+    /// <summary>
+    /// Creates an active QR token for the branch and returns the raw token.
+    /// Only the SHA-256 hash is persisted, mirroring production.
+    /// </summary>
+    public static async Task<string> CreateActiveQrTokenAsync(
+        DropApiFactory factory,
+        Guid branchId)
+    {
+        using var scope = factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<DropDbContext>();
+
+        var tokenGenerator =
+            scope.ServiceProvider
+                .GetRequiredService<IQrTokenGenerator>();
+
+        var rawToken = tokenGenerator.Generate();
+
+        dbContext.BranchQrTokens.Add(
+            new BranchQrToken(
+                branchId,
+                tokenGenerator.Hash(rawToken),
+                DateTimeOffset.UtcNow));
+
+        await dbContext.SaveChangesAsync();
+
+        return rawToken;
+    }
+
+    /// <summary>
+    /// Creates a claim directly in the database, bypassing capacity checks.
+    /// </summary>
+    public static async Task<Guid> CreateClaimAsync(
+        DropApiFactory factory,
+        Guid dropId,
+        Guid userId,
+        DateTimeOffset createdAt,
+        TimeSpan claimDuration)
+    {
+        using var scope = factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<DropDbContext>();
+
+        var claim = new Claim(
+            dropId,
+            userId,
+            createdAt,
+            claimDuration);
+
+        dbContext.Claims.Add(claim);
+
+        await dbContext.SaveChangesAsync();
+
+        return claim.Id;
+    }
+
+    /// <summary>
+    /// Adds an existing user to a business with the given role.
+    /// </summary>
+    public static async Task AddMemberAsync(
+        DropApiFactory factory,
+        Guid businessId,
+        Guid userId,
+        BusinessMemberRole role)
+    {
+        using var scope = factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<DropDbContext>();
+
+        dbContext.BusinessMembers.Add(new BusinessMember(businessId, userId, role));
+
+        await dbContext.SaveChangesAsync();
     }
 
     /// <summary>
@@ -109,8 +190,10 @@ public static class IntegrationTestData
 }
 
 /// <summary>
-/// Represents a scenario for testing claims (drop, branch IDs).
+/// Represents a scenario for testing claims (drop, branch, business and owner IDs).
 /// </summary>
 public sealed record ClaimScenario(
     Guid DropId,
-    Guid BranchId);
+    Guid BranchId,
+    Guid BusinessId,
+    Guid OwnerId);

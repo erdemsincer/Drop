@@ -1,5 +1,8 @@
 using Drop.Application.Abstractions;
+using Drop.Application.Authentication;
 using Drop.Application.Businesses;
+using Drop.Application.Common.Errors;
+using Drop.Application.Common.Exceptions;
 using Drop.Domain.Branches;
 
 namespace Drop.Application.Branches.CreateBranch;
@@ -9,15 +12,21 @@ public sealed class CreateBranchService
     private readonly IBusinessRepository _businessRepository;
     private readonly IBranchRepository _branchRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBusinessAccessService _accessService;
+    private readonly ICurrentUser _currentUser;
 
     public CreateBranchService(
         IBusinessRepository businessRepository,
         IBranchRepository branchRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IBusinessAccessService accessService,
+        ICurrentUser currentUser)
     {
         _businessRepository = businessRepository;
         _branchRepository = branchRepository;
         _unitOfWork = unitOfWork;
+        _accessService = accessService;
+        _currentUser = currentUser;
     }
 
     public async Task<CreateBranchResponse> ExecuteAsync(
@@ -32,8 +41,21 @@ public sealed class CreateBranchService
 
         if (!businessExists)
         {
-            throw new InvalidOperationException(
+            throw new NotFoundException(
+                ErrorCodes.Business.NotFound,
                 "Business was not found.");
+        }
+
+        var canManage = await _accessService.CanManageBusinessAsync(
+            _currentUser.Id,
+            businessId,
+            cancellationToken);
+
+        if (!canManage)
+        {
+            throw new ForbiddenException(
+                ErrorCodes.Business.AccessDenied,
+                "You cannot manage this business.");
         }
 
         var branch = new Branch(

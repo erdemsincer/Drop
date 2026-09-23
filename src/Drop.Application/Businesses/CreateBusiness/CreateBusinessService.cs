@@ -1,5 +1,7 @@
 using Drop.Application.Abstractions;
 using Drop.Application.Authentication;
+using Drop.Application.Common.Errors;
+using Drop.Application.Common.Exceptions;
 using Drop.Domain.Businesses;
 
 namespace Drop.Application.Businesses.CreateBusiness;
@@ -31,7 +33,9 @@ public sealed class CreateBusinessService
 
         if (await _businessRepository.ExistsByNameAsync(name, cancellationToken))
         {
-            throw new InvalidOperationException("A business with the same name already exists.");
+            throw new ConflictException(
+                ErrorCodes.Business.NameExists,
+                "A business with the same name already exists.");
         }
 
         var business = new Business(name);

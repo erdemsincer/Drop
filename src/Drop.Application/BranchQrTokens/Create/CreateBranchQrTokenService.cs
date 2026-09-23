@@ -1,5 +1,9 @@
 using Drop.Application.Abstractions;
+using Drop.Application.Authentication;
 using Drop.Application.Branches;
+using Drop.Application.Businesses;
+using Drop.Application.Common.Errors;
+using Drop.Application.Common.Exceptions;
 using Drop.Application.Security;
 using Drop.Domain.Branches;
 
@@ -12,19 +16,25 @@ public sealed class CreateBranchQrTokenService
     private readonly IQrTokenGenerator _tokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _timeProvider;
+    private readonly IBusinessAccessService _accessService;
+    private readonly ICurrentUser _currentUser;
 
     public CreateBranchQrTokenService(
         IBranchRepository branchRepository,
         IBranchQrTokenRepository tokenRepository,
         IQrTokenGenerator tokenGenerator,
         IUnitOfWork unitOfWork,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IBusinessAccessService accessService,
+        ICurrentUser currentUser)
     {
         _branchRepository = branchRepository;
         _tokenRepository = tokenRepository;
         _tokenGenerator = tokenGenerator;
         _unitOfWork = unitOfWork;
         _timeProvider = timeProvider;
+        _accessService = accessService;
+        _currentUser = currentUser;
     }
 
     public async Task<CreateBranchQrTokenResponse> ExecuteAsync(
@@ -37,8 +47,21 @@ public sealed class CreateBranchQrTokenService
 
         if (branch is null)
         {
-            throw new InvalidOperationException(
+            throw new NotFoundException(
+                ErrorCodes.Branch.NotFound,
                 "Branch was not found.");
+        }
+
+        var canManage = await _accessService.CanManageBranchAsync(
+            _currentUser.Id,
+            branchId,
+            cancellationToken);
+
+        if (!canManage)
+        {
+            throw new ForbiddenException(
+                ErrorCodes.Business.AccessDenied,
+                "You cannot manage this business.");
         }
 
         var now = _timeProvider.GetUtcNow();

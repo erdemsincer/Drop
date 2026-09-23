@@ -9,8 +9,8 @@ public sealed class RedeemClaimRequestValidator
     {
         RuleFor(x => x.QrToken)
             .NotEmpty()
-            .WithErrorCode("qr_token.required")
+            .WithErrorCode("qr.required")
             .MaximumLength(500)
-            .WithErrorCode("qr_token.too_long");
+            .WithErrorCode("qr.invalid");
     }
 }

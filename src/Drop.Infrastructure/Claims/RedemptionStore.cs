@@ -1,4 +1,5 @@
 using Drop.Application.Claims;
+using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Common.Errors;
 using Drop.Application.Common.Exceptions;
 using Drop.Domain.Drops;
@@ -16,8 +17,9 @@ internal sealed class RedemptionStore : IRedemptionStore
         _dbContext = dbContext;
     }
 
-    public async Task<RedeemResult> RedeemAsync(
+    public async Task<RedeemClaimResponse> RedeemAsync(
         Guid claimId,
+        Guid userId,
         string qrTokenHash,
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
@@ -42,8 +44,22 @@ internal sealed class RedemptionStore : IRedemptionStore
                 "Claim was not found.");
         }
 
+        if (claim.UserId != userId)
+        {
+            throw new ForbiddenException(
+                ErrorCodes.Claim.AccessDenied,
+                "You cannot redeem this claim.");
+        }
+
         var drop = await _dbContext.Drops
-            .SingleAsync(x => x.Id == claim.DropId, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == claim.DropId, cancellationToken);
+
+        if (drop is null)
+        {
+            throw new NotFoundException(
+                ErrorCodes.Drop.NotFound,
+                "Drop was not found.");
+        }
 
         var validQr = await _dbContext.BranchQrTokens
             .AnyAsync(
@@ -73,7 +89,7 @@ internal sealed class RedemptionStore : IRedemptionStore
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new RedeemResult(
+        return new RedeemClaimResponse(
             claim.Id,
             claim.DropId,
             claim.RedeemedAt!.Value);

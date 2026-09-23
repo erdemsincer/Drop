@@ -1,26 +1,20 @@
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { getApiErrorMessage } from '@/api/apiError';
 import { getApiError } from '@/api/getApiError';
-import { register } from '@/features/auth/api/authApi';
-import {
-  type AuthFormErrors,
-  validateRegister,
-} from '@/features/auth/utils/authValidation';
+import { login, register } from '@/features/auth/api/authApi';
+import { AuthShell } from '@/features/auth/components/AuthShell';
+import { AuthSwitchLink } from '@/features/auth/components/AuthSwitchLink';
+import { BusinessSignupLink } from '@/features/auth/components/BusinessSignupLink';
+import { type AuthFormErrors, validateRegister } from '@/features/auth/utils/authValidation';
+import { useAuth } from '@/providers/AuthProvider';
+import { authStorage } from '@/storage/authStorage';
+import { Button, Notice, TextField, colors, haptics } from '@/ui';
+
+const apiFields = ['Email', 'Password', 'FirstName', 'LastName'];
 
 export default function RegisterScreen() {
   const [firstName, setFirstName] = useState('');
@@ -29,39 +23,36 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [formErrors, setFormErrors] = useState<AuthFormErrors>({});
 
+  const { refresh } = useAuth();
+
+  // Register, then sign straight in so the user lands in the app.
   const mutation = useMutation({
-    mutationFn: register,
-    onSuccess: () => router.replace('/(auth)/login'),
+    mutationFn: async (request: Parameters<typeof register>[0]) => {
+      await register(request);
+      const session = await login({ email: request.email, password: request.password });
+      await authStorage.setAccessToken(session.accessToken);
+    },
+    onSuccess: async () => {
+      haptics.success();
+      await refresh();
+      router.replace('/(app)');
+    },
+    onError: () => haptics.error(),
   });
 
-  const apiError = mutation.error
-    ? getApiError(mutation.error)
-    : null;
+  const apiError = mutation.error ? getApiError(mutation.error) : null;
 
-  const updateField = (
-    field: string,
-    value: string,
-    setter: (next: string) => void
-  ) => {
+  const update = (field: string, setter: (value: string) => void) => (value: string) => {
     setter(value);
-
-    setFormErrors((errors) => ({
-      ...errors,
-      [field]: '',
-    }));
+    setFormErrors(errors => ({ ...errors, [field]: '' }));
   };
 
   const submit = () => {
-    const errors = validateRegister(
-      firstName,
-      lastName,
-      email,
-      password
-    );
-
+    const errors = validateRegister(firstName, lastName, email, password);
     setFormErrors(errors);
 
     if (Object.keys(errors).length) {
+      haptics.error();
       return;
     }
 
@@ -73,404 +64,158 @@ export default function RegisterScreen() {
     });
   };
 
-  const fieldError = (
-    name: string,
-    apiName: string
-  ) =>
-    formErrors[name] ??
-    (apiError
-      ? getApiErrorMessage(apiError, apiName)
-      : undefined);
+  const fieldError = (name: string, apiName: string) =>
+    formErrors[name] || (apiError ? getApiErrorMessage(apiError, apiName) : undefined);
 
-  const hasGeneralApiError =
-    apiError &&
-    !['Email', 'Password', 'FirstName', 'LastName'].some(
-      (name) => apiError.errors?.[name]?.length
-    );
+  const hasFieldApiError = apiFields.some(name => apiError?.errors?.[name]?.length);
+
+  const generalError = apiError
+    ? hasFieldApiError
+      ? null
+      : apiError.code === 'auth.email_exists'
+        ? 'Bu e-posta ile zaten bir hesap var.'
+        : getApiErrorMessage(apiError)
+    : mutation.isError
+      ? 'Sunucuya ulaşılamadı. Bağlantını kontrol et.'
+      : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View
-        pointerEvents="none"
-        style={styles.orbTop}
+    <AuthShell
+      eyebrow="BİRKAÇ SANİYE SÜRER"
+      title="Hesabını oluştur."
+      subtitle="Yakınındaki anlık fırsatları ilk sen yakala."
+      footer={
+        <>
+          <AuthSwitchLink
+            prompt="Zaten hesabın var mı?"
+            action="Giriş yap"
+            onPress={() => router.replace('/(auth)/login')}
+          />
+          <BusinessSignupLink />
+        </>
+      }
+    >
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <TextField
+            label="Ad"
+            icon="person-outline"
+            value={firstName}
+            onChangeText={update('firstName', setFirstName)}
+            placeholder="Ad"
+            autoComplete="given-name"
+            error={hasFieldApiError ? fieldError('firstName', 'FirstName') : formErrors.firstName}
+          />
+        </View>
+        <View style={styles.half}>
+          <TextField
+            label="Soyad"
+            icon="person-outline"
+            value={lastName}
+            onChangeText={update('lastName', setLastName)}
+            placeholder="Soyad"
+            autoComplete="family-name"
+            error={hasFieldApiError ? fieldError('lastName', 'LastName') : formErrors.lastName}
+          />
+        </View>
+      </View>
+
+      <TextField
+        label="E-posta"
+        icon="mail-outline"
+        value={email}
+        onChangeText={update('email', setEmail)}
+        placeholder="ornek@drop.app"
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        error={hasFieldApiError ? fieldError('email', 'Email') : formErrors.email}
       />
 
-      <View
-        pointerEvents="none"
-        style={styles.orbBottom}
+      <TextField
+        label="Şifre"
+        icon="lock-closed-outline"
+        value={password}
+        onChangeText={update('password', setPassword)}
+        placeholder="En az 8 karakter"
+        secureTextEntry
+        autoComplete="new-password"
+        returnKeyType="go"
+        onSubmitEditing={submit}
+        error={hasFieldApiError ? fieldError('password', 'Password') : formErrors.password}
       />
 
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={
-          Platform.OS === 'ios'
-            ? 'padding'
-            : undefined
-        }
-      >
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.header}>
-            <Text style={styles.logo}>
-              DROP
-            </Text>
+      <PasswordStrength password={password} />
 
-            <View style={styles.logoLine} />
+      {generalError && <Notice message={generalError} />}
 
-            <Text style={styles.eyebrow}>
-              BİRKAÇ SANİYE SÜRER
-            </Text>
-
-            <Text style={styles.title}>
-              Hesabını oluştur.
-            </Text>
-
-            <Text style={styles.subtitle}>
-              Yakınındaki fırsatları kaçırma.
-            </Text>
-          </View>
-
-          <View style={styles.form}>
-            <Field
-              label="Ad"
-              value={firstName}
-              onChangeText={(value) =>
-                updateField(
-                  'firstName',
-                  value,
-                  setFirstName
-                )
-              }
-              error={fieldError(
-                'firstName',
-                'FirstName'
-              )}
-              autoComplete="given-name"
-            />
-
-            <Field
-              label="Soyad"
-              value={lastName}
-              onChangeText={(value) =>
-                updateField(
-                  'lastName',
-                  value,
-                  setLastName
-                )
-              }
-              error={fieldError(
-                'lastName',
-                'LastName'
-              )}
-              autoComplete="family-name"
-            />
-
-            <Field
-              label="E-posta"
-              value={email}
-              onChangeText={(value) =>
-                updateField(
-                  'email',
-                  value,
-                  setEmail
-                )
-              }
-              error={fieldError(
-                'email',
-                'Email'
-              )}
-              autoComplete="email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <Field
-              label="Şifre"
-              value={password}
-              onChangeText={(value) =>
-                updateField(
-                  'password',
-                  value,
-                  setPassword
-                )
-              }
-              error={fieldError(
-                'password',
-                'Password'
-              )}
-              autoComplete="new-password"
-              secureTextEntry
-              returnKeyType="go"
-              onSubmitEditing={submit}
-            />
-
-            <Text style={styles.hint}>
-              Şifre en az 8 karakter olmalıdır.
-            </Text>
-
-            {hasGeneralApiError ? (
-              <Text style={styles.error}>
-                {getApiErrorMessage(apiError)}
-              </Text>
-            ) : null}
-
-            <Pressable
-              accessibilityRole="button"
-              style={[
-                styles.button,
-                mutation.isPending
-                  ? styles.disabled
-                  : undefined,
-              ]}
-              disabled={mutation.isPending}
-              onPress={submit}
-            >
-              {mutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>
-                  Kayıt Ol
-                </Text>
-              )}
-            </Pressable>
-          </View>
-
-          <Pressable
-  accessibilityRole="button"
-  onPress={() => router.replace('/(auth)/login')}
->
-            <Text style={styles.link}>
-              Zaten hesabın var mı?{' '}
-              <Text style={styles.linkStrong}>
-                Giriş yap
-              </Text>
-            </Text>
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <Button
+        title="Hesap Oluştur"
+        trailingIcon="arrow-forward"
+        loading={mutation.isPending}
+        onPress={submit}
+      />
+    </AuthShell>
   );
 }
 
-type FieldProps =
-  React.ComponentProps<typeof TextInput> & {
-    label: string;
-    error?: string;
-  };
+function PasswordStrength({ password }: { password: string }) {
+  const score =
+    (password.length >= 8 ? 1 : 0) +
+    (/[A-Z]/.test(password) && /[a-z]/.test(password) ? 1 : 0) +
+    (/\d/.test(password) ? 1 : 0) +
+    (/[^A-Za-z0-9]/.test(password) ? 1 : 0);
 
-function Field({
-  label,
-  error,
-  style,
-  ...props
-}: FieldProps) {
+  const palette = [colors.border, colors.danger, colors.warning, colors.success, colors.success];
+  const labels = ['En az 8 karakter', 'Zayıf', 'Orta', 'Güçlü', 'Çok güçlü'];
+
   return (
-    <View style={styles.field}>
-      <Text style={styles.label}>
-        {label}
-      </Text>
-
-      <TextInput
-        {...props}
-        placeholder={label}
-        autoCorrect={false}
-        accessibilityLabel={label}
-        style={[
-          styles.input,
-          error
-            ? styles.inputError
-            : undefined,
-          style,
-        ]}
-      />
-
-      {error ? (
-        <Text style={styles.error}>
-          {error}
-        </Text>
-      ) : null}
+    <View style={styles.strength}>
+      <View style={styles.strengthBars}>
+        {[0, 1, 2, 3].map(index => (
+          <View
+            key={index}
+            style={[
+              styles.strengthBar,
+              { backgroundColor: index < score ? palette[score] : colors.border },
+            ]}
+          />
+        ))}
+      </View>
+      <Text style={styles.strengthLabel}>{labels[password ? score : 0]}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f5f8',
-  },
-
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-    paddingVertical: 32,
-  },
-
-  orbTop: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: '#dbeafe',
-    top: -130,
-    right: -80,
-  },
-
-  orbBottom: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: '#dcfce7',
-    bottom: -130,
-    left: -100,
-  },
-
-  header: {
-    backgroundColor: '#111827',
-    borderRadius: 24,
-    padding: 26,
-    marginBottom: 16,
-    overflow: 'hidden',
-    shadowColor: '#111827',
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    elevation: 5,
-  },
-
-  logo: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: 2.5,
-  },
-
-  logoLine: {
-    width: 30,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: '#a3e635',
-    marginTop: 18,
-    marginBottom: 14,
-  },
-
-  eyebrow: {
-    color: '#a3e635',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-  },
-
-  title: {
-    marginTop: 8,
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#fff',
-  },
-
-  subtitle: {
-    marginTop: 8,
-    color: '#cbd5e1',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-
-  form: {
+  row: {
+    flexDirection: 'row',
     gap: 12,
-    borderRadius: 24,
-    padding: 20,
-    backgroundColor: '#fff',
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    elevation: 3,
   },
-
-  field: {
-    gap: 8,
+  half: {
+    flex: 1,
   },
-
-  label: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#334155',
-    letterSpacing: 0.2,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
-    paddingHorizontal: 15,
-    height: 54,
-    fontSize: 16,
-    backgroundColor: '#f8fafc',
-    color: '#0f172a',
-  },
-
-  inputError: {
-    borderColor: '#ef4444',
-    backgroundColor: '#fef2f2',
-  },
-
-  error: {
-    color: '#dc2626',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-
-  hint: {
-    color: '#64748b',
-    fontSize: 13,
-  },
-
-  button: {
-    marginTop: 10,
-    minHeight: 54,
-    borderRadius: 14,
-    backgroundColor: '#84cc16',
+  strength: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#65a30d',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    elevation: 3,
+    gap: 10,
+    marginTop: -4,
   },
-
-  disabled: {
-    opacity: 0.6,
+  strengthBars: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 5,
   },
-
-  buttonText: {
-    color: '#172108',
-    fontWeight: '800',
-    fontSize: 16,
+  strengthBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
   },
-
-  link: {
-    textAlign: 'center',
-    color: '#64748b',
-    marginTop: 24,
-    fontSize: 14,
-  },
-
-  linkStrong: {
-    color: '#0f172a',
-    fontWeight: '800',
+  strengthLabel: {
+    minWidth: 96,
+    textAlign: 'right',
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

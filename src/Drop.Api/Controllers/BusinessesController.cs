@@ -1,4 +1,5 @@
 using Drop.Application.Businesses.CreateBusiness;
+using Drop.Application.Businesses.GetMyBusinesses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +11,15 @@ namespace Drop.Api.Controllers;
 [Tags("Businesses")]
 public sealed class BusinessesController : ControllerBase
 {
+    /// <summary>Businesses the current user is a member of. Empty when the user has none.</summary>
+    [HttpGet("me")]
+    public async Task<ActionResult<IReadOnlyList<MyBusinessResponse>>> GetMine(
+        [FromServices] GetMyBusinessesService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(cancellationToken));
+    }
+
     [HttpPost]
     public async Task<ActionResult<CreateBusinessResponse>> Create(
         [FromBody] CreateBusinessRequest request,

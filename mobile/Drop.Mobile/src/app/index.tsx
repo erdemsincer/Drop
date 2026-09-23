@@ -1,10 +1,18 @@
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
 
 import { useAuth } from '@/providers/AuthProvider';
+import { Screen, StateView } from '@/ui';
 
 export default function IndexScreen() {
   const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View>;
+
+  if (isLoading) {
+    return (
+      <Screen>
+        <StateView loading title="Drop" />
+      </Screen>
+    );
+  }
+
   return <Redirect href={isAuthenticated ? '/(app)' : '/(auth)/login'} />;
 }

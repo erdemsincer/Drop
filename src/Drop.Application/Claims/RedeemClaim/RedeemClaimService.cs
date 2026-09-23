@@ -18,36 +18,20 @@ public sealed class RedeemClaimService
         _timeProvider = timeProvider;
     }
 
-    public async Task<RedeemClaimResponse> ExecuteAsync(
+    public Task<RedeemClaimResponse> ExecuteAsync(
         Guid claimId,
+        Guid userId,
         RedeemClaimRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (claimId == Guid.Empty)
-        {
-            throw new ArgumentException(
-                "Claim id cannot be empty.",
-                nameof(claimId));
-        }
+        // Raw token never leaves this method; only its SHA-256 hash reaches the store.
+        var tokenHash = _tokenGenerator.Hash(request.QrToken);
 
-        if (string.IsNullOrWhiteSpace(request.QrToken))
-        {
-            throw new ArgumentException(
-                "QR token cannot be empty.",
-                nameof(request));
-        }
-
-        var hash = _tokenGenerator.Hash(request.QrToken);
-
-        var result = await _redemptionStore.RedeemAsync(
+        return _redemptionStore.RedeemAsync(
             claimId,
-            hash,
+            userId,
+            tokenHash,
             _timeProvider.GetUtcNow(),
             cancellationToken);
-
-        return new RedeemClaimResponse(
-            result.ClaimId,
-            result.DropId,
-            result.RedeemedAt);
     }
 }

@@ -1,5 +1,6 @@
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
+import { setUnauthorizedHandler } from '@/api/apiClient';
 import { authStorage } from '@/storage/authStorage';
 
 type AuthContextValue = {
@@ -30,6 +31,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
 
     return () => { isActive = false; };
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => setIsAuthenticated(false));
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   return <AuthContext.Provider value={{ isAuthenticated, isLoading, signOut, refresh }}>{children}</AuthContext.Provider>;

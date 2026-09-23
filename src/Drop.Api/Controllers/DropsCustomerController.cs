@@ -11,16 +11,16 @@ public sealed class DropsCustomerController : ControllerBase
 {
     [HttpGet("nearby")]
     public async Task<ActionResult<IReadOnlyList<NearbyDropResponse>>> GetNearby(
-        [FromQuery] double latitude,
-        [FromQuery] double longitude,
-        [FromQuery] double radiusKm,
+        [FromQuery] GetNearbyDropsRequest request,
         [FromServices] GetNearbyDropsService service,
         CancellationToken cancellationToken)
     {
+        // Binding the request object lets ValidationActionFilter run
+        // GetNearbyDropsRequestValidator, so bad input is a 400, not a 500.
         var response = await service.ExecuteAsync(
-            latitude,
-            longitude,
-            radiusKm,
+            request.Latitude,
+            request.Longitude,
+            request.RadiusKm,
             cancellationToken);
 
         return Ok(response);

@@ -1,16 +1,17 @@
 {
   "expo": {
-    "name": "Drop.Mobile",
+    "name": "Drop",
     "slug": "drop-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dropmobile",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Yakınındaki aktif Drop fırsatlarını gösterebilmek için konumunu kullanıyoruz."
+        "NSLocationWhenInUseUsageDescription": "Yakınındaki aktif Drop fırsatlarını gösterebilmek için konumunu kullanıyoruz.",
+        "NSCameraUsageDescription": "İşletmedeki Drop QR kodunu okutabilmek için kamera erişimine ihtiyacımız var."
       }
     },
     "android": {
@@ -43,6 +44,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Yakınındaki aktif Drop fırsatlarını gösterebilmek için konumunu kullanıyoruz."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "İşletmedeki Drop QR kodunu okutabilmek için kamera erişimine ihtiyacımız var."
         }
       ],
       "expo-font",

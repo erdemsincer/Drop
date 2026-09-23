@@ -1,3 +1,4 @@
+using Drop.Application.Authentication;
 using Drop.Application.Claims.CreateClaim;
 using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Claims.RedeemClaim;
@@ -24,6 +25,23 @@ public sealed class ClaimsController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("{claimId:guid}/redeem")]
+    public async Task<ActionResult<RedeemClaimResponse>> Redeem(
+        Guid claimId,
+        [FromBody] RedeemClaimRequest request,
+        [FromServices] RedeemClaimService service,
+        [FromServices] ICurrentUser currentUser,
+        CancellationToken cancellationToken)
+    {
+        var response = await service.ExecuteAsync(
+            claimId,
+            currentUser.Id,
+            request,
+            cancellationToken);
+
+        return Ok(response);
+    }
 }
 
 [Authorize]
@@ -43,22 +61,3 @@ public sealed class DropClaimsController : ControllerBase
         return Created($"/api/claims/{response.ClaimId}", response);
     }
 }
-
-[Authorize]
-[ApiController]
-[Route("api/claims/{claimId:guid}")]
-public sealed class ClaimRedemptionController : ControllerBase
-{
-    [HttpPost("redeem")]
-    public async Task<ActionResult<RedeemClaimResponse>> Redeem(
-        Guid claimId,
-        [FromBody] RedeemClaimRequest request,
-        [FromServices] RedeemClaimService service,
-        CancellationToken cancellationToken)
-    {
-        var response = await service.ExecuteAsync(claimId, request, cancellationToken);
-
-        return Ok(response);
-    }
-}
-

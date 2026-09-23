@@ -34,6 +34,7 @@ internal sealed class ActiveClaimQuery : IActiveClaimQuery
             WHERE c."UserId" = {0}
               AND c."Status" = 'Active'
               AND c."ExpiresAt" > {1}
+            ORDER BY c."ExpiresAt" DESC
             LIMIT 1
             """;
 

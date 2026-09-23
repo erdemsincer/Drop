@@ -1,11 +1,9 @@
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Avatar, Badge, ProgressBar, colors, radius, shadows, spacing } from '@/ui';
 import { formatCurrency } from '@/utils/formatCurrency';
+
 import { useCountdown } from '../hooks/useCountdown';
 import type { NearbyDrop } from '../types/drop';
 import { formatDistance } from '../utils/formatDistance';
@@ -15,150 +13,85 @@ type Props = {
   onPress: () => void;
 };
 
-export function DropCard({
-  drop,
-  onPress,
-}: Props) {
+const URGENT_SECONDS = 10 * 60;
+
+export function DropCard({ drop, onPress }: Props) {
   const remaining = useCountdown(drop.endsAt);
 
   if (remaining.isExpired) {
     return null;
   }
 
+  const soldOut = drop.remainingCapacity <= 0;
+  const lowStock = !soldOut && drop.remainingCapacity <= 3;
+  const urgent = remaining.totalSeconds <= URGENT_SECONDS;
+  const claimedRatio = drop.capacity > 0 ? drop.claimedCount / drop.capacity : 1;
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${drop.businessName} fırsatı: ${drop.title}`}
-      style={({ pressed }) => [
-        styles.card,
-        pressed && styles.cardPressed,
-      ]}
+      accessibilityLabel={`${drop.businessName}: ${drop.title}`}
+      style={({ pressed }) => [styles.card, soldOut && styles.cardSoldOut, pressed && styles.pressed]}
     >
-      <View style={styles.accentLine} />
+      <View style={styles.header}>
+        <Avatar name={drop.businessName} size={46} />
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.businessSection}>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>
-                {drop.businessName
-                  .trim()
-                  .charAt(0)
-                  .toLocaleUpperCase('tr-TR')}
-              </Text>
-            </View>
-
-            <View style={styles.business}>
-              <Text
-                style={styles.businessName}
-                numberOfLines={1}
-              >
-                {drop.businessName}
-              </Text>
-
-              <Text
-                style={styles.branchName}
-                numberOfLines={1}
-              >
-                {drop.branchName}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.distanceBadge}>
-            <Text style={styles.distanceIcon}>
-              ◉
-            </Text>
-
-            <Text style={styles.distance}>
-              {formatDistance(
-                drop.distanceMeters,
-              )}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.dropBadge}>
-          <View style={styles.liveDot} />
-
-          <Text style={styles.dropBadgeText}>
-            AKTİF DROP
+        <View style={styles.business}>
+          <Text style={styles.businessName} numberOfLines={1}>
+            {drop.businessName}
+          </Text>
+          <Text style={styles.branchName} numberOfLines={1}>
+            {drop.branchName}
           </Text>
         </View>
 
-        <Text
-          style={styles.title}
-          numberOfLines={2}
-        >
-          {drop.title}
+        <View style={styles.distance}>
+          <Ionicons name="navigate" size={12} color={colors.primary} />
+          <Text style={styles.distanceText}>{formatDistance(drop.distanceMeters)}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.title} numberOfLines={2}>
+        {drop.title}
+      </Text>
+
+      {!!drop.description && (
+        <Text style={styles.description} numberOfLines={2}>
+          {drop.description}
         </Text>
+      )}
 
-        {!!drop.description && (
-          <Text
-            style={styles.description}
-            numberOfLines={2}
-          >
-            {drop.description}
-          </Text>
+      <View style={styles.tags}>
+        {soldOut ? (
+          <Badge label="TÜKENDİ" tone="neutral" />
+        ) : lowStock ? (
+          <Badge label={`SON ${drop.remainingCapacity}`} tone="danger" icon="flame" />
+        ) : (
+          <Badge label="AKTİF" tone="success" live />
         )}
 
         {drop.minimumSpend != null && (
-          <View style={styles.spendBox}>
-            <View style={styles.spendIcon}>
-              <Text style={styles.spendIconText}>
-                ₺
-              </Text>
-            </View>
-
-            <View>
-              <Text style={styles.spendLabel}>
-                Minimum harcama
-              </Text>
-
-              <Text style={styles.spendValue}>
-                {formatCurrency(
-                  drop.minimumSpend,
-                )}
-              </Text>
-            </View>
-          </View>
+          <Badge label={`Min. ${formatCurrency(drop.minimumSpend)}`} tone="neutral" icon="wallet-outline" />
         )}
+      </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.footer}>
-          <View style={styles.capacitySection}>
-            <Text style={styles.capacityNumber}>
-              {drop.remainingCapacity}
-            </Text>
-
-            <Text style={styles.capacityLabel}>
-              fırsat kaldı
-            </Text>
+      <View style={styles.footer}>
+        <View style={styles.capacity}>
+          <View style={styles.capacityRow}>
+            <Text style={styles.capacityValue}>{drop.remainingCapacity}</Text>
+            <Text style={styles.capacityLabel}> / {drop.capacity} kaldı</Text>
           </View>
-
-          <View style={styles.timeBadge}>
-            <Text style={styles.timeLabel}>
-              Kalan süre
-            </Text>
-
-            <Text style={styles.time}>
-              {remaining.label}
-            </Text>
-          </View>
+          <ProgressBar
+            value={claimedRatio}
+            color={lowStock || soldOut ? colors.danger : colors.primary}
+            style={styles.progress}
+          />
         </View>
 
-        <View style={styles.actionRow}>
-          <Text style={styles.actionText}>
-            Fırsatı incele
-          </Text>
-
-          <View style={styles.arrowCircle}>
-            <Text style={styles.arrow}>
-              →
-            </Text>
-          </View>
+        <View style={[styles.timer, urgent && styles.timerUrgent]}>
+          <Ionicons name="time" size={15} color={urgent ? colors.warning : colors.textOnDark} />
+          <Text style={[styles.timerText, urgent && styles.timerTextUrgent]}>{remaining.label}</Text>
         </View>
       </View>
     </Pressable>
@@ -167,274 +100,120 @@ export function DropCard({
 
 const styles = StyleSheet.create({
   card: {
-    position: 'relative',
-    overflow: 'hidden',
-    marginBottom: 18,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E9ECF2',
-    borderRadius: 24,
-
-    shadowColor: '#141A2A',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 18,
-
-    elevation: 5,
+    marginBottom: spacing.lg,
+    padding: spacing.lg + 2,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    ...shadows.card,
   },
-
-  cardPressed: {
-    opacity: 0.94,
+  cardSoldOut: {
+    opacity: 0.6,
+  },
+  pressed: {
     transform: [{ scale: 0.985 }],
+    opacity: 0.95,
   },
-
-  accentLine: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: 5,
-    backgroundColor: '#6C5CE7',
-  },
-
-  content: {
-    paddingTop: 20,
-    paddingRight: 20,
-    paddingBottom: 18,
-    paddingLeft: 23,
-  },
-
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.md,
   },
-
-  businessSection: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-
-  logo: {
-    width: 46,
-    height: 46,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F0EDFF',
-    borderRadius: 15,
-  },
-
-  logoText: {
-    color: '#6C5CE7',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-
   business: {
     flex: 1,
   },
-
   businessName: {
-    color: '#171A24',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-
-  branchName: {
-    marginTop: 4,
-    color: '#868B98',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-
-  distanceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    backgroundColor: '#F5F6F9',
-    borderRadius: 20,
-  },
-
-  distanceIcon: {
-    marginRight: 5,
-    color: '#6C5CE7',
-    fontSize: 10,
-  },
-
-  distance: {
-    color: '#424755',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  dropBadge: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 22,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    backgroundColor: '#EAFBF3',
-    borderRadius: 9,
-  },
-
-  liveDot: {
-    width: 7,
-    height: 7,
-    marginRight: 6,
-    backgroundColor: '#16B96B',
-    borderRadius: 4,
-  },
-
-  dropBadgeText: {
-    color: '#119455',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.7,
-  },
-
-  title: {
-    marginTop: 11,
-    color: '#151821',
-    fontSize: 23,
-    fontWeight: '900',
-    lineHeight: 29,
-    letterSpacing: -0.6,
-  },
-
-  description: {
-    marginTop: 8,
-    color: '#646A78',
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 21,
-  },
-
-  spendBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 18,
-    padding: 13,
-    backgroundColor: '#FAFAFC',
-    borderWidth: 1,
-    borderColor: '#EFF0F4',
-    borderRadius: 16,
-  },
-
-  spendIcon: {
-    width: 36,
-    height: 36,
-    marginRight: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF1D8',
-    borderRadius: 12,
-  },
-
-  spendIconText: {
-    color: '#E18B00',
-    fontSize: 18,
-    fontWeight: '900',
-  },
-
-  spendLabel: {
-    color: '#9297A3',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-
-  spendValue: {
-    marginTop: 2,
-    color: '#262A35',
+    color: colors.text,
     fontSize: 15,
     fontWeight: '800',
   },
-
-  divider: {
-    height: 1,
-    marginVertical: 18,
-    backgroundColor: '#EEEFF3',
+  branchName: {
+    marginTop: 2,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
-
+  distance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.pill,
+  },
+  distanceText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  title: {
+    marginTop: spacing.lg,
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    lineHeight: 25,
+  },
+  description: {
+    marginTop: 6,
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.lg,
+    marginTop: spacing.lg,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceMuted,
   },
-
-  capacitySection: {
+  capacity: {
+    flex: 1,
+  },
+  capacityRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-
-  capacityNumber: {
-    color: '#6C5CE7',
-    fontSize: 22,
+  capacityValue: {
+    color: colors.text,
+    fontSize: 18,
     fontWeight: '900',
   },
-
   capacityLabel: {
-    marginLeft: 5,
-    color: '#6D7280',
-    fontSize: 13,
+    color: colors.textMuted,
+    fontSize: 12,
     fontWeight: '600',
   },
-
-  timeBadge: {
-    alignItems: 'flex-end',
+  progress: {
+    marginTop: 7,
   },
-
-  timeLabel: {
-    marginBottom: 3,
-    color: '#A0A4AF',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  time: {
-    color: '#F05252',
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: -0.2,
-  },
-
-  actionRow: {
+  timer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 17,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: colors.ink,
+    borderRadius: radius.md,
   },
-
-  actionText: {
-    marginRight: 9,
-    color: '#6C5CE7',
-    fontSize: 13,
+  timerUrgent: {
+    backgroundColor: colors.warningSoft,
+  },
+  timerText: {
+    color: colors.textOnDark,
+    fontSize: 14,
     fontWeight: '800',
+    fontVariant: ['tabular-nums'],
   },
-
-  arrowCircle: {
-    width: 29,
-    height: 29,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6C5CE7',
-    borderRadius: 15,
-  },
-
-  arrow: {
-    marginTop: -2,
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
+  timerTextUrgent: {
+    color: colors.warning,
   },
 });
