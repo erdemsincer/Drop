@@ -2,6 +2,7 @@ using Drop.Application.Authentication;
 using Drop.Application.Businesses;
 using Drop.Application.Common.Errors;
 using Drop.Application.Common.Exceptions;
+using Drop.Domain.Businesses;
 
 namespace Drop.Application.Branches.GetBranch;
 
@@ -47,6 +48,8 @@ public sealed class GetBranchService
             branch.Longitude,
             role,
             BusinessRoles.CanManage(role),
-            BusinessRoles.CanShowQr(role));
+            BusinessRoles.CanShowQr(role),
+            branch.BusinessStatus,
+            BusinessRoles.CanManage(role) && branch.BusinessStatus == BusinessStatus.Approved);
     }
 }

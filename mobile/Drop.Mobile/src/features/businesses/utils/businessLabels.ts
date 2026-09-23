@@ -1,9 +1,19 @@
-import type { BusinessRole, DropStatus } from '../types/business';
+import type { BusinessRole, BusinessStatus, DropStatus } from '../types/business';
 
 export const roleLabels: Record<BusinessRole, string> = {
   Owner: 'Sahip',
   Manager: 'Yönetici',
   Staff: 'Personel',
+};
+
+export const businessStatusInfo: Record<
+  BusinessStatus,
+  { label: string; tone: 'warning' | 'success' | 'danger' | 'neutral'; icon: 'time' | 'checkmark-circle' | 'close-circle' | 'pause-circle' }
+> = {
+  Pending: { label: 'İNCELENİYOR', tone: 'warning', icon: 'time' },
+  Approved: { label: 'ONAYLI', tone: 'success', icon: 'checkmark-circle' },
+  Rejected: { label: 'REDDEDİLDİ', tone: 'danger', icon: 'close-circle' },
+  Suspended: { label: 'ASKIDA', tone: 'neutral', icon: 'pause-circle' },
 };
 
 export const canManageRole = (role?: BusinessRole) => role === 'Owner' || role === 'Manager';
@@ -24,6 +34,8 @@ export const getBusinessErrorMessage = (code?: string, fallback?: string) => {
       return 'İşletme bulunamadı.';
     case 'branch.not_found':
       return 'Şube bulunamadı.';
+    case 'business.not_approved':
+      return 'İşletmen onaylanmadan Drop yayınlayamazsın. İnceleme genellikle kısa sürer.';
     case 'member.user_not_found':
       return 'Bu e-postayla kayıtlı bir Drop hesabı yok. Kişinin önce uygulamaya kayıt olması gerekiyor.';
     case 'member.already_exists':

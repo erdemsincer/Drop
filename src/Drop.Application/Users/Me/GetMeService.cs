@@ -1,3 +1,4 @@
+using Drop.Application.Admin;
 using Drop.Application.Authentication;
 using Drop.Application.Common.Errors;
 using Drop.Application.Common.Exceptions;
@@ -8,13 +9,16 @@ public sealed class GetMeService
 {
     private readonly IUserRepository _userRepository;
     private readonly ICurrentUser _currentUser;
+    private readonly IAdminAccess _adminAccess;
 
     public GetMeService(
         IUserRepository userRepository,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IAdminAccess adminAccess)
     {
         _userRepository = userRepository;
         _currentUser = currentUser;
+        _adminAccess = adminAccess;
     }
 
     public async Task<MeResponse> ExecuteAsync(
@@ -25,6 +29,8 @@ public sealed class GetMeService
                 ErrorCodes.Auth.InvalidCredentials,
                 "User no longer exists.");
 
-        return new MeResponse(user.Id, user.Email, user.FirstName, user.LastName);
+        var isAdmin = await _adminAccess.IsAdminAsync(user.Id, cancellationToken);
+
+        return new MeResponse(user.Id, user.Email, user.FirstName, user.LastName, isAdmin);
     }
 }

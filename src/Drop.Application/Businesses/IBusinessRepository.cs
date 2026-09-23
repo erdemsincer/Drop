@@ -8,6 +8,14 @@ public interface IBusinessRepository
         Business business,
         CancellationToken cancellationToken = default);
 
+    Task<Business?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<Business?> GetByBranchIdAsync(
+        Guid branchId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> ExistsAsync(
         Guid id,
         CancellationToken cancellationToken = default);

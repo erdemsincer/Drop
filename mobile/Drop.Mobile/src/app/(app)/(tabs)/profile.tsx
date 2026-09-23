@@ -70,6 +70,17 @@ export default function ProfileScreen() {
           </Section>
         )}
 
+        {me?.isAdmin && (
+          <Section title="Yönetim">
+            <Row
+              icon="shield-checkmark"
+              title="İşletme onayları"
+              subtitle="Başvuruları incele, onayla veya reddet"
+              onPress={() => router.push('/(app)/admin')}
+            />
+          </Section>
+        )}
+
         <Section title="Hesap">
           <Row icon="ticket" title="Drop'larım" onPress={() => router.navigate('/(app)/(tabs)/claims')} />
           <Row icon="log-out" title="Çıkış yap" danger onPress={confirmLogout} />

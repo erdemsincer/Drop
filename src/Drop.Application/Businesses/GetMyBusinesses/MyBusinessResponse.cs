@@ -6,4 +6,6 @@ public sealed record MyBusinessResponse(
     Guid Id,
     string Name,
     BusinessMemberRole Role,
-    int BranchCount);
+    int BranchCount,
+    BusinessStatus Status,
+    string? StatusReason);

@@ -23,6 +23,8 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
             .WithPassword("drop_test_password")
             .Build();
 
+    public const string AdminEmail = "platform-admin@drop.test";
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -63,6 +65,8 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
 
         // Tests hammer auth endpoints from one "IP"; rate limits are covered separately.
         builder.UseSetting("RateLimiting:Enabled", "false");
+
+        builder.UseSetting("Admin:Emails", AdminEmail);
 
         builder.ConfigureServices(services =>
         {

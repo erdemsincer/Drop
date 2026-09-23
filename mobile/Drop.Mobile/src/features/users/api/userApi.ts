@@ -5,6 +5,7 @@ export type Me = {
   email: string;
   firstName: string;
   lastName: string;
+  isAdmin: boolean;
 };
 
 export const getMe = async () => {

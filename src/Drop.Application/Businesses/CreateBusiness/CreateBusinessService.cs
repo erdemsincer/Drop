@@ -10,17 +10,20 @@ public sealed class CreateBusinessService
     private readonly IBusinessMemberRepository _memberRepository;
     private readonly ICurrentUser _currentUser;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _timeProvider;
 
     public CreateBusinessService(
         IBusinessRepository businessRepository,
         IBusinessMemberRepository memberRepository,
         ICurrentUser currentUser,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        TimeProvider timeProvider)
     {
         _businessRepository = businessRepository;
         _memberRepository = memberRepository;
         _currentUser = currentUser;
         _unitOfWork = unitOfWork;
+        _timeProvider = timeProvider;
     }
 
     public async Task<CreateBusinessResponse> ExecuteAsync(
@@ -30,7 +33,8 @@ public sealed class CreateBusinessService
         var name = request.Name.Trim();
 
         // Names are not unique: two cafés in different cities may share one.
-        var business = new Business(name);
+        // Starts Pending: drops can be published only after manual approval.
+        var business = new Business(name, _timeProvider.GetUtcNow());
 
         var member = new BusinessMember(
             business.Id,
@@ -42,6 +46,6 @@ public sealed class CreateBusinessService
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CreateBusinessResponse(business.Id, business.Name);
+        return new CreateBusinessResponse(business.Id, business.Name, business.Status);
     }
 }

@@ -1,4 +1,5 @@
 using Drop.Application.Abstractions;
+using Drop.Application.Admin;
 using Drop.Application.Authentication;
 using Drop.Application.Authentication.Login;
 using Drop.Application.Authentication.Logout;
@@ -31,6 +32,7 @@ using Drop.Application.Security;
 using Drop.Application.Users;
 using Drop.Application.Users.DeleteAccount;
 using Drop.Application.Users.Me;
+using Drop.Infrastructure.Admin;
 using Drop.Infrastructure.Authentication;
 using Drop.Infrastructure.BackgroundJobs;
 using Drop.Infrastructure.Businesses;
@@ -119,6 +121,10 @@ public static class DependencyInjection
 
         services.AddScoped<IClaimStore, ClaimStore>();
         services.AddScoped<CreateClaimService>();
+
+        services.AddScoped<IAdminAccess, ConfiguredAdminAccess>();
+        services.AddScoped<IAdminBusinessStore, AdminBusinessStore>();
+        services.AddScoped<AdminBusinessesService>();
 
         services.AddScoped<IBusinessMembersQuery, BusinessMembersQuery>();
         services.AddScoped<BusinessMembersService>();

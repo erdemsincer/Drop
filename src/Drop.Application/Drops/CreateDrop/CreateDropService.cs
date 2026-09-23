@@ -10,6 +10,7 @@ namespace Drop.Application.Drops.CreateDrop;
 public sealed class CreateDropService
 {
     private readonly IBranchRepository _branchRepository;
+    private readonly IBusinessRepository _businessRepository;
     private readonly IDropRepository _dropRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _timeProvider;
@@ -18,6 +19,7 @@ public sealed class CreateDropService
 
     public CreateDropService(
         IBranchRepository branchRepository,
+        IBusinessRepository businessRepository,
         IDropRepository dropRepository,
         IUnitOfWork unitOfWork,
         TimeProvider timeProvider,
@@ -25,6 +27,7 @@ public sealed class CreateDropService
         ICurrentUser currentUser)
     {
         _branchRepository = branchRepository;
+        _businessRepository = businessRepository;
         _dropRepository = dropRepository;
         _unitOfWork = unitOfWork;
         _timeProvider = timeProvider;
@@ -58,6 +61,15 @@ public sealed class CreateDropService
             throw new ForbiddenException(
                 ErrorCodes.Business.AccessDenied,
                 "You cannot manage this business.");
+        }
+
+        var business = await _businessRepository.GetByBranchIdAsync(branchId, cancellationToken);
+
+        if (business is null || !business.CanPublishDrops)
+        {
+            throw new ConflictException(
+                ErrorCodes.Business.NotApproved,
+                "The business must be approved before publishing drops.");
         }
 
         var drop = new Domain.Drops.Drop(

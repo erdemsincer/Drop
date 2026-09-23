@@ -38,7 +38,8 @@ public static class IntegrationTestData
             "Owner",
             now);
 
-        var business = new Business("Drop Coffee");
+        var business = new Business("Drop Coffee", now);
+        business.Approve(now);
 
         var member = new BusinessMember(
             business.Id,
@@ -133,6 +134,34 @@ public static class IntegrationTestData
         dbContext.BusinessMembers.Add(new BusinessMember(businessId, userId, role));
 
         await dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// The platform admin (e-mail listed in Admin:Emails), created on first use.
+    /// </summary>
+    public static async Task<Guid> GetOrCreateAdminAsync(DropApiFactory factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DropDbContext>();
+
+        var existing = dbContext.Users.FirstOrDefault(x => x.Email == DropApiFactory.AdminEmail);
+        if (existing is not null) return existing.Id;
+
+        var admin = new User(DropApiFactory.AdminEmail, "test-password-hash", "Platform", "Admin", DateTimeOffset.UtcNow);
+        dbContext.Users.Add(admin);
+
+        try
+        {
+            await dbContext.SaveChangesAsync();
+            return admin.Id;
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            // Another test class created it concurrently.
+            using var retry = factory.Services.CreateScope();
+            return retry.ServiceProvider.GetRequiredService<DropDbContext>()
+                .Users.First(x => x.Email == DropApiFactory.AdminEmail).Id;
+        }
     }
 
     /// <summary>

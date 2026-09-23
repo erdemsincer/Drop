@@ -23,6 +23,25 @@ internal sealed class BusinessRepository : IBusinessRepository
             cancellationToken);
     }
 
+    public Task<Business?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return _dbContext.Businesses.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public Task<Business?> GetByBranchIdAsync(
+        Guid branchId,
+        CancellationToken cancellationToken = default)
+    {
+        return (
+            from branch in _dbContext.Branches
+            join business in _dbContext.Businesses on branch.BusinessId equals business.Id
+            where branch.Id == branchId
+            select business
+        ).FirstOrDefaultAsync(cancellationToken);
+    }
+
     public Task<bool> ExistsAsync(
         Guid id,
         CancellationToken cancellationToken = default)

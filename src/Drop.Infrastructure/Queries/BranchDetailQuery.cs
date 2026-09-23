@@ -28,7 +28,8 @@ internal sealed class BranchDetailQuery : IBranchDetailQuery
                 business.Id,
                 business.Name,
                 branch.Location.Latitude,
-                branch.Location.Longitude)
+                branch.Location.Longitude,
+                business.Status)
         ).AsNoTracking().FirstOrDefaultAsync(cancellationToken);
     }
 }

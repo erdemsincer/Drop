@@ -4,7 +4,7 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'rea
 
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import type { MyBusiness } from '@/features/businesses/types/business';
-import { roleLabels } from '@/features/businesses/utils/businessLabels';
+import { businessStatusInfo, roleLabels } from '@/features/businesses/utils/businessLabels';
 import {
   Avatar,
   Badge,
@@ -109,6 +109,13 @@ function BusinessCard({ business, onPress }: { business: MyBusiness; onPress: ()
         </Text>
         <View style={styles.cardMeta}>
           <Badge label={roleLabels[business.role].toUpperCase()} tone="primary" />
+          {business.status !== 'Approved' && (
+            <Badge
+              label={businessStatusInfo[business.status].label}
+              tone={businessStatusInfo[business.status].tone}
+              icon={businessStatusInfo[business.status].icon}
+            />
+          )}
           <Text style={styles.cardMetaText}>
             {business.branchCount} şube
           </Text>

@@ -1,10 +1,14 @@
 export type BusinessRole = 'Owner' | 'Manager' | 'Staff';
 
+export type BusinessStatus = 'Pending' | 'Approved' | 'Rejected' | 'Suspended';
+
 export type MyBusiness = {
   id: string;
   name: string;
   role: BusinessRole;
   branchCount: number;
+  status: BusinessStatus;
+  statusReason?: string | null;
 };
 
 export type Branch = {
@@ -25,6 +29,9 @@ export type BranchDetail = {
   role: BusinessRole;
   canManage: boolean;
   canShowQr: boolean;
+  businessStatus: BusinessStatus;
+  /** Manager/owner of an approved business. */
+  canPublishDrops: boolean;
 };
 
 export type BusinessMember = {
@@ -67,6 +74,7 @@ export type CreateBusinessRequest = {
 export type CreateBusinessResponse = {
   id: string;
   name: string;
+  status: BusinessStatus;
 };
 
 export type CreateBranchRequest = {

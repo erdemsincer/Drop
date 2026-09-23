@@ -16,5 +16,15 @@ internal sealed class BusinessConfiguration
         builder.Property(x => x.Name)
             .HasMaxLength(200)
             .IsRequired();
+
+        builder.Property(x => x.Status)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .IsRequired();
+
+        builder.Property(x => x.StatusReason)
+            .HasMaxLength(500);
+
+        builder.HasIndex(x => x.Status);
     }
 }

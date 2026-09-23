@@ -27,7 +27,9 @@ internal sealed class MyBusinessesQuery : IMyBusinessesQuery
                 business.Id,
                 business.Name,
                 member.Role,
-                _dbContext.Branches.Count(branch => branch.BusinessId == business.Id))
+                _dbContext.Branches.Count(branch => branch.BusinessId == business.Id),
+                business.Status,
+                business.StatusReason)
         ).AsNoTracking().ToListAsync(cancellationToken);
     }
 }

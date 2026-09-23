@@ -30,6 +30,7 @@ services:
       Jwt__Key: ${JWT_KEY:-}
       Qr__SigningKey: ${QR_SIGNING_KEY:-}
       Database__MigrateOnStartup: "true"
+      Admin__Emails: ${ADMIN_EMAILS:-}
       Email__SmtpHost: ${SMTP_HOST:-}
       Email__SmtpPort: ${SMTP_PORT:-587}
       Email__SmtpUser: ${SMTP_USER:-}

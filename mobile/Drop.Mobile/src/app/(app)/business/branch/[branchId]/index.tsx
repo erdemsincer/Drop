@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { BusinessDropCard } from '@/features/businesses/components/BusinessDropCard';
+import { BusinessStatusNotice } from '@/features/businesses/components/BusinessStatusNotice';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
 import { useDropLifecycle } from '@/features/businesses/hooks/useDropLifecycle';
@@ -163,11 +164,18 @@ export default function BranchDashboardScreen() {
         </View>
       </LinearGradient>
 
+      {branch && branch.businessStatus !== 'Approved' && (
+        <View style={styles.notice}>
+          <BusinessStatusNotice status={branch.businessStatus} />
+        </View>
+      )}
+
       {branch?.canManage ? (
         <View style={styles.actions}>
           <Button
             title="Drop Oluştur"
             icon="flash"
+            disabled={!branch.canPublishDrops}
             style={styles.action}
             onPress={() =>
               router.push({ pathname: '/(app)/business/branch/[branchId]/create-drop', params: { branchId } })
@@ -235,7 +243,7 @@ export default function BranchDashboardScreen() {
                 params: { branchId, dropId: item.id },
               })
             }
-            onRepublish={() =>
+            onRepublish={!branch?.canPublishDrops ? undefined : () =>
               router.push({
                 pathname: '/(app)/business/branch/[branchId]/create-drop',
                 params: { branchId, fromDropId: item.id },
@@ -354,6 +362,9 @@ const styles = StyleSheet.create({
     color: colors.textOnDarkMuted,
     fontSize: 11,
     fontWeight: '700',
+  },
+  notice: {
+    marginTop: spacing.lg,
   },
   actions: {
     flexDirection: 'row',

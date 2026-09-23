@@ -6,7 +6,8 @@ public sealed record BranchDetailData(
     Guid BusinessId,
     string BusinessName,
     double Latitude,
-    double Longitude);
+    double Longitude,
+    Drop.Domain.Businesses.BusinessStatus BusinessStatus);
 
 public interface IBranchDetailQuery
 {

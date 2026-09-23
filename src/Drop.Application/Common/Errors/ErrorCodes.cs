@@ -20,6 +20,12 @@ public static class ErrorCodes
     {
         public const string NotFound = "business.not_found";
         public const string AccessDenied = "business.access_denied";
+        public const string NotApproved = "business.not_approved";
+    }
+
+    public static class Admin
+    {
+        public const string AccessDenied = "admin.access_denied";
     }
 
     public static class Member

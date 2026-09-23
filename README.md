@@ -54,6 +54,10 @@ development secrets.
 | `Cors__AllowedOrigins__0` | no | only for browser clients; the mobile app needs none |
 | `ReverseProxy__Enabled` | behind a load balancer | trusts `X-Forwarded-*` for client IP/HTTPS |
 | `RateLimiting__AuthPerMinute` / `RedeemPerMinute` | no | defaults 10 / 20 |
+| `Admin__Emails` | for business review | comma-separated e-mails of platform admins |
+
+New businesses start as **Pending** and can publish drops only after an admin
+approves them (Profile → Yönetim in the app, or `POST /api/admin/businesses/{id}/approve`).
 
 Rotating the JWT key signs everyone out; rotating the QR key invalidates codes
 on screen for at most ~1 minute.

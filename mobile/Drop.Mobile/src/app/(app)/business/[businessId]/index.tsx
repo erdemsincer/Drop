@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
+import { BusinessStatusNotice } from '@/features/businesses/components/BusinessStatusNotice';
 import { useBranches } from '@/features/businesses/hooks/useBranches';
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import type { Branch } from '@/features/businesses/types/business';
@@ -80,6 +81,12 @@ export default function BusinessDetailScreen() {
                 {business && <Badge label={roleLabels[business.role].toUpperCase()} tone="primary" />}
               </View>
             </View>
+
+            {business && (
+              <View style={styles.notice}>
+                <BusinessStatusNotice status={business.status} reason={business.statusReason} />
+              </View>
+            )}
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Şubeler</Text>
@@ -174,6 +181,9 @@ const styles = StyleSheet.create({
   name: {
     ...typography.title,
     color: colors.text,
+  },
+  notice: {
+    marginTop: spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',

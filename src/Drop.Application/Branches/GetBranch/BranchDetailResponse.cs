@@ -11,4 +11,6 @@ public sealed record BranchDetailResponse(
     double Longitude,
     BusinessMemberRole Role,
     bool CanManage,
-    bool CanShowQr);
+    bool CanShowQr,
+    BusinessStatus BusinessStatus,
+    bool CanPublishDrops);
