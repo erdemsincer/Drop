@@ -55,7 +55,9 @@ internal sealed class DropDetailQuery : IDropDetailQuery
 
                 d."StartsAt" AS "StartsAt",
                 d."EndsAt" AS "EndsAt",
-                d."ClaimDurationMinutes" AS "ClaimDurationMinutes"
+                d."ClaimDurationMinutes" AS "ClaimDurationMinutes",
+                b."Latitude" AS "Latitude",
+                b."Longitude" AS "Longitude"
             FROM drops d
             INNER JOIN branches b ON b."Id" = d."BranchId"
             INNER JOIN businesses bus ON bus."Id" = b."BusinessId"

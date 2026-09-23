@@ -13,6 +13,7 @@ export const statusLabels: Record<DropStatus, string> = {
   Active: 'YAYINDA',
   Expired: 'SONA ERDİ',
   Cancelled: 'İPTAL',
+  Scheduled: 'PLANLANDI',
 };
 
 export const getBusinessErrorMessage = (code?: string, fallback?: string) => {

@@ -39,4 +39,7 @@ export type DropDetail = {
   endsAt: string;
 
   claimDurationMinutes: number;
+
+  latitude: number;
+  longitude: number;
 };

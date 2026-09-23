@@ -6,6 +6,7 @@ import { BusinessDropCard } from '@/features/businesses/components/BusinessDropC
 import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
 import { useDropLifecycle } from '@/features/businesses/hooks/useDropLifecycle';
+import { useUpdateDrop } from '@/features/businesses/hooks/useUpdateDrop';
 import type { BusinessDrop } from '@/features/businesses/types/business';
 import {
   Badge,
@@ -23,14 +24,45 @@ import {
   typography,
 } from '@/ui';
 
+const isScheduled = (drop: BusinessDrop) =>
+  drop.status === 'Scheduled' && !!drop.startsAt && new Date(drop.startsAt).getTime() > Date.now();
+
+// A scheduled drop whose start passed counts as live until the sweep flips it.
 const isLive = (drop: BusinessDrop) =>
-  drop.status === 'Active' && !!drop.endsAt && new Date(drop.endsAt).getTime() > Date.now();
+  (drop.status === 'Active' || drop.status === 'Scheduled') &&
+  !isScheduled(drop) &&
+  !!drop.endsAt &&
+  new Date(drop.endsAt).getTime() > Date.now();
 
 export default function BranchDashboardScreen() {
   const { branchId } = useLocalSearchParams<{ branchId: string }>();
   const branchQuery = useBranch(branchId);
   const dropsQuery = useBranchDrops(branchId);
   const lifecycle = useDropLifecycle(branchId);
+  const updateDrop = useUpdateDrop(branchId);
+
+  const addCapacity = (drop: BusinessDrop, step: number) => {
+    haptics.press();
+    updateDrop.mutate(
+      {
+        dropId: drop.id,
+        request: {
+          title: drop.title,
+          description: drop.description,
+          minimumSpend: drop.minimumSpend,
+          capacity: drop.capacity + step,
+        },
+      },
+      {
+        onSuccess: () => haptics.success(),
+        onError: () => {
+          haptics.error();
+          Alert.alert('Kapasite artırılamadı', 'Drop sona ermiş olabilir. Liste yenilendi.');
+          void dropsQuery.refetch();
+        },
+      },
+    );
+  };
 
   const runLifecycle = (dropId: string, action: 'end' | 'cancel') => {
     haptics.press();
@@ -59,10 +91,12 @@ export default function BranchDashboardScreen() {
 
   const confirmCancel = (drop: BusinessDrop) =>
     Alert.alert(
-      'Drop iptal edilsin mi?',
-      drop.activeClaimCount > 0
-        ? `${drop.activeClaimCount} müşterinin rezervasyonu da iptal olacak ve kullanamayacaklar.`
-        : 'Drop yayından kaldırılacak.',
+      isScheduled(drop) ? 'Planlanan Drop iptal edilsin mi?' : 'Drop iptal edilsin mi?',
+      isScheduled(drop)
+        ? 'Drop hiç yayına girmeyecek.'
+        : drop.activeClaimCount > 0
+          ? `${drop.activeClaimCount} müşterinin rezervasyonu da iptal olacak ve kullanamayacaklar.`
+          : 'Drop yayından kaldırılacak.',
       [
         { text: 'Vazgeç', style: 'cancel' },
         { text: 'İptal et', style: 'destructive', onPress: () => runLifecycle(drop.id, 'cancel') },
@@ -87,8 +121,11 @@ export default function BranchDashboardScreen() {
 
   const branch = branchQuery.data;
   const drops = dropsQuery.data ?? [];
+  const scheduled = drops
+    .filter(isScheduled)
+    .sort((a, b) => new Date(a.startsAt!).getTime() - new Date(b.startsAt!).getTime());
   const live = drops.filter(isLive);
-  const past = drops.filter(drop => !isLive(drop));
+  const past = drops.filter(drop => !isLive(drop) && !isScheduled(drop));
 
   const totals = live.reduce(
     (sum, drop) => ({
@@ -100,6 +137,7 @@ export default function BranchDashboardScreen() {
 
   const sections = [
     ...(live.length ? [{ title: 'Yayında', data: live }] : []),
+    ...(scheduled.length ? [{ title: 'Planlanan', data: scheduled }] : []),
     ...(past.length ? [{ title: 'Geçmiş', data: past }] : []),
   ];
 
@@ -186,7 +224,11 @@ export default function BranchDashboardScreen() {
           <BusinessDropCard
             drop={item}
             canManage={branch?.canManage}
-            busy={lifecycle.isPending && lifecycle.variables?.dropId === item.id}
+            busy={
+              (lifecycle.isPending && lifecycle.variables?.dropId === item.id) ||
+              (updateDrop.isPending && updateDrop.variables?.dropId === item.id)
+            }
+            onAddCapacity={step => addCapacity(item, step)}
             onEdit={() =>
               router.push({
                 pathname: '/(app)/business/branch/[branchId]/create-drop',

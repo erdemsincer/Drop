@@ -6,4 +6,5 @@ public sealed record CreateDropResponse(
     string Title,
     int Capacity,
     DateTimeOffset StartsAt,
-    DateTimeOffset EndsAt);
+    DateTimeOffset EndsAt,
+    Domain.Drops.DropStatus Status);

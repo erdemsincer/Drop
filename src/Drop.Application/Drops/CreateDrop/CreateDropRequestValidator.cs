@@ -34,6 +34,14 @@ public sealed class CreateDropRequestValidator
             .InclusiveBetween(1, 60)
             .WithErrorCode("claim_duration.out_of_range");
 
+        // Relative to the wall clock only; the service re-checks against TimeProvider.
+        RuleFor(x => x.StartsAt!.Value)
+            .LessThanOrEqualTo(_ => DateTimeOffset.UtcNow.AddDays(30))
+            .WithName("StartsAt")
+            .WithErrorCode("starts_at.too_far")
+            .WithMessage("A drop can be scheduled at most 30 days ahead.")
+            .When(x => x.StartsAt.HasValue);
+
         RuleFor(x => x.ClaimDurationMinutes)
             .LessThanOrEqualTo(x => x.DurationMinutes)
             .WithErrorCode("claim_duration.exceeds_drop_duration")

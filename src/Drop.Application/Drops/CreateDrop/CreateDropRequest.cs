@@ -6,4 +6,5 @@ public sealed record CreateDropRequest(
     decimal? MinimumSpend,
     int Capacity,
     int DurationMinutes,
-    int ClaimDurationMinutes);
+    int ClaimDurationMinutes,
+    DateTimeOffset? StartsAt = null);

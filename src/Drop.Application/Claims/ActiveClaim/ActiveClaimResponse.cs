@@ -6,4 +6,6 @@ public sealed record ActiveClaimResponse(
     string BusinessName,
     string BranchName,
     string DropTitle,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    double Latitude,
+    double Longitude);

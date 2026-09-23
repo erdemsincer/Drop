@@ -4,7 +4,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useActiveClaim } from '@/features/claims/hooks/useActiveClaim';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
+import { openDirections } from '@/utils/openDirections';
 import {
   Badge,
   Button,
@@ -29,6 +31,9 @@ export default function ClaimScreen() {
   }>();
 
   const remaining = useCountdown(expiresAt);
+  // Location for "Yol tarifi" comes from the active claim (the route only carries the id).
+  const activeClaim = useActiveClaim().data;
+  const place = activeClaim?.claimId === id ? activeClaim : undefined;
   const expired = remaining.isExpired;
   const urgent = !expired && remaining.totalSeconds <= URGENT_SECONDS;
 
@@ -121,11 +126,25 @@ export default function ClaimScreen() {
         {expired ? (
           <Button title="Yeni Drop'lara göz at" icon="compass" onPress={goHome} />
         ) : (
+          <>
+          {place && (
+            <Button
+              title="Yol tarifi al"
+              icon="navigate"
+              variant="light"
+              size="md"
+              style={styles.directions}
+              onPress={() =>
+                openDirections(place.latitude, place.longitude, `${place.businessName} ${place.branchName}`)
+              }
+            />
+          )}
           <Button
             title="QR Kodu Okut"
             icon="scan"
             onPress={() => router.push({ pathname: '/(app)/claim/scanner/[id]', params: { id } })}
           />
+          </>
         )}
       </View>
     </Screen>
@@ -298,5 +317,8 @@ const styles = StyleSheet.create({
   actions: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.md,
+  },
+  directions: {
+    marginBottom: spacing.sm,
   },
 });

@@ -78,6 +78,27 @@ public sealed class Drop : Entity
         EndsAt = now.Add(Duration);
     }
 
+    /// <summary>Publishes later: stays invisible until activated at <paramref name="startsAt"/>.</summary>
+    public void Schedule(DateTimeOffset startsAt, DateTimeOffset now)
+    {
+        if (Status != DropStatus.Draft)
+            throw new DropDomainException(
+                "drop.not_draft",
+                "Only draft drops can be scheduled.");
+
+        if (startsAt <= now)
+            throw new DropDomainException(
+                "drop.start_in_past",
+                "A scheduled drop must start in the future.");
+
+        Status = DropStatus.Scheduled;
+        StartsAt = startsAt;
+        EndsAt = startsAt.Add(Duration);
+    }
+
+    public bool IsScheduled(DateTimeOffset now) =>
+        Status == DropStatus.Scheduled && StartsAt > now;
+
     public bool IsLive(DateTimeOffset now) =>
         Status == DropStatus.Active && EndsAt > now;
 
@@ -93,11 +114,11 @@ public sealed class Drop : Entity
     }
 
     /// <summary>
-    /// Withdraws the drop entirely. Callers must also cancel its active claims.
+    /// Withdraws a live or scheduled drop. Callers must also cancel its active claims.
     /// </summary>
     public void Cancel(DateTimeOffset now)
     {
-        EnsureLive(now);
+        EnsureLiveOrScheduled(now);
 
         Status = DropStatus.Cancelled;
         EndsAt = now;
@@ -115,7 +136,7 @@ public sealed class Drop : Entity
         int occupied,
         DateTimeOffset now)
     {
-        EnsureLive(now);
+        EnsureLiveOrScheduled(now);
 
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Title cannot be empty.");
@@ -135,6 +156,14 @@ public sealed class Drop : Entity
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         MinimumSpend = minimumSpend;
         Capacity = capacity;
+    }
+
+    private void EnsureLiveOrScheduled(DateTimeOffset now)
+    {
+        if (!IsLive(now) && !IsScheduled(now))
+            throw new DropDomainException(
+                "drop.not_active",
+                "Only live or scheduled drops can be changed.");
     }
 
     private void EnsureLive(DateTimeOffset now)

@@ -26,7 +26,9 @@ internal sealed class ActiveClaimQuery : IActiveClaimQuery
                 bus."Name" AS "BusinessName",
                 b."Name" AS "BranchName",
                 d."Title" AS "DropTitle",
-                c."ExpiresAt" AS "ExpiresAt"
+                c."ExpiresAt" AS "ExpiresAt",
+                b."Latitude" AS "Latitude",
+                b."Longitude" AS "Longitude"
             FROM claims c
             INNER JOIN drops d ON d."Id" = c."DropId"
             INNER JOIN branches b ON b."Id" = d."BranchId"

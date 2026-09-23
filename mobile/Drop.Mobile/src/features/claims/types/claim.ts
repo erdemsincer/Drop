@@ -12,6 +12,8 @@ export type ActiveClaim = {
   branchName: string;
   dropTitle: string;
   expiresAt: string;
+  latitude: number;
+  longitude: number;
 };
 
 export type RedeemClaimRequest = {

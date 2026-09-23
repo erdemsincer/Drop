@@ -31,6 +31,7 @@ import {
   typography,
 } from '@/ui';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { openDirections } from '@/utils/openDirections';
 
 export default function DropDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -132,6 +133,12 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
                 </Text>
               </View>
             </View>
+            <IconButton
+              icon="navigate"
+              tone="glass"
+              accessibilityLabel="Yol tarifi"
+              onPress={() => openDirections(drop.latitude, drop.longitude, `${drop.businessName} ${drop.branchName}`)}
+            />
           </View>
 
           <Text style={styles.title}>{drop.title}</Text>

@@ -13,4 +13,6 @@ public sealed record DropDetailResponse(
     int RemainingCapacity,
     DateTimeOffset StartsAt,
     DateTimeOffset EndsAt,
-    int ClaimDurationMinutes);
+    int ClaimDurationMinutes,
+    double Latitude,
+    double Longitude);

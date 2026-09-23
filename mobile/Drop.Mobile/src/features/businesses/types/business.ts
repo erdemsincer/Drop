@@ -42,7 +42,7 @@ export type AddMemberRequest = {
   role: Exclude<BusinessRole, 'Owner'>;
 };
 
-export type DropStatus = 'Draft' | 'Active' | 'Expired' | 'Cancelled';
+export type DropStatus = 'Draft' | 'Active' | 'Expired' | 'Cancelled' | 'Scheduled';
 
 export type BusinessDrop = {
   id: string;
@@ -90,6 +90,8 @@ export type CreateDropRequest = {
   capacity: number;
   durationMinutes: number;
   claimDurationMinutes: number;
+  /** ISO time; omit or null to publish immediately. */
+  startsAt?: string | null;
 };
 
 export type UpdateDropRequest = {

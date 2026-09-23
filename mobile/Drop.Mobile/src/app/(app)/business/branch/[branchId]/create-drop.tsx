@@ -4,6 +4,7 @@ import { type ReactNode, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getApiError } from '@/api/getApiError';
+import { StartTimePicker } from '@/features/businesses/components/StartTimePicker';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
 import { useCreateDrop } from '@/features/businesses/hooks/useCreateDrop';
 import { useUpdateDrop } from '@/features/businesses/hooks/useUpdateDrop';
@@ -44,6 +45,7 @@ const initialValues: DropFormValues = {
   capacity: '10',
   durationMinutes: 60,
   claimDurationMinutes: 15,
+  startsAt: null,
 };
 
 /**
@@ -235,6 +237,14 @@ export default function DropFormScreen() {
             </View>
           ) : (
             <>
+            <Section title="Ne zaman başlasın?" icon="calendar">
+              <StartTimePicker
+                value={values.startsAt}
+                onChange={value => set('startsAt', value)}
+                error={errorFor('startsAt')}
+              />
+            </Section>
+
             <Section title="Drop ne kadar yayında kalsın?" icon="hourglass">
               <ChoiceChips
                 options={withOption(DROP_DURATIONS, values.durationMinutes)}
@@ -267,8 +277,8 @@ export default function DropFormScreen() {
 
         <View style={styles.footer}>
           <Button
-            title={isEdit ? 'Değişiklikleri Kaydet' : "Drop'u Yayınla"}
-            icon={isEdit ? 'checkmark-circle' : 'rocket'}
+            title={isEdit ? 'Değişiklikleri Kaydet' : values.startsAt ? "Drop'u Planla" : "Drop'u Yayınla"}
+            icon={isEdit ? 'checkmark-circle' : values.startsAt ? 'calendar' : 'rocket'}
             loading={mutation.isPending}
             onPress={handlePublish}
           />

@@ -67,12 +67,25 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 Math.Max(0, row.Capacity - row.ActiveClaimCount - row.RedeemedCount),
                 (int)row.Duration.TotalMinutes,
                 (int)row.ClaimDuration.TotalMinutes,
-                // No background job flips the status yet, so derive expiry from EndsAt.
-                row.Status == DropStatus.Active && row.EndsAt <= now
-                    ? DropStatus.Expired
-                    : row.Status,
+                EffectiveStatus(row.Status, row.StartsAt, row.EndsAt, now),
                 row.StartsAt,
                 row.EndsAt))
             .ToList();
+    }
+
+    // The sweep runs once a minute; don't show a stale status in between.
+    private static DropStatus EffectiveStatus(
+        DropStatus status,
+        DateTimeOffset? startsAt,
+        DateTimeOffset? endsAt,
+        DateTimeOffset now)
+    {
+        if ((status is DropStatus.Active or DropStatus.Scheduled) && endsAt <= now)
+            return DropStatus.Expired;
+
+        if (status == DropStatus.Scheduled && startsAt <= now)
+            return DropStatus.Active;
+
+        return status;
     }
 }

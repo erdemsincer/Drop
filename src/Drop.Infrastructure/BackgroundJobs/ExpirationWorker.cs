@@ -45,10 +45,11 @@ internal sealed class ExpirationWorker : BackgroundService
 
                 var result = await sweeper.RunAsync(_timeProvider.GetUtcNow(), stoppingToken);
 
-                if (result.ExpiredDrops > 0 || result.ExpiredClaims > 0)
+                if (result.ExpiredDrops > 0 || result.ExpiredClaims > 0 || result.ActivatedDrops > 0)
                 {
                     _logger.LogInformation(
-                        "Expired {DropCount} drops and {ClaimCount} claims.",
+                        "Activated {ActivatedCount} scheduled drops; expired {DropCount} drops and {ClaimCount} claims.",
+                        result.ActivatedDrops,
                         result.ExpiredDrops,
                         result.ExpiredClaims);
                 }

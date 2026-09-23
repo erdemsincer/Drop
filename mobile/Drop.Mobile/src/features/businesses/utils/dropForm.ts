@@ -23,6 +23,8 @@ export type DropFormValues = {
   capacity: string;
   durationMinutes: number;
   claimDurationMinutes: number;
+  /** ISO start time, or null to publish now. */
+  startsAt: string | null;
 };
 
 export type DropFormErrors = Partial<Record<keyof DropFormValues, string>>;
@@ -48,6 +50,12 @@ export const validateDropForm = (values: DropFormValues): DropFormErrors => {
     errors.capacity = '1 ile 1000 arasında bir sayı gir.';
   }
 
+  if (values.startsAt) {
+    const start = new Date(values.startsAt).getTime();
+    if (start < Date.now() + 2 * 60_000) errors.startsAt = 'Başlangıç en az birkaç dakika sonrası olmalı.';
+    else if (start > Date.now() + 30 * 24 * 3_600_000) errors.startsAt = 'En fazla 30 gün sonrasına planlanabilir.';
+  }
+
   if (values.claimDurationMinutes > values.durationMinutes) {
     errors.claimDurationMinutes = 'Kullanım süresi Drop süresinden uzun olamaz.';
   }
@@ -62,6 +70,7 @@ export const toCreateDropRequest = (values: DropFormValues): CreateDropRequest =
   capacity: Number(values.capacity),
   durationMinutes: values.durationMinutes,
   claimDurationMinutes: values.claimDurationMinutes,
+  startsAt: values.startsAt,
 });
 
 export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
@@ -72,6 +81,7 @@ export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
   // Fixed once live; kept equal so duration validation is a no-op when editing.
   durationMinutes: drop.claimDurationMinutes,
   claimDurationMinutes: drop.claimDurationMinutes,
+  startsAt: null,
 });
 
 /** Everything of a previous drop, durations included, to publish it again. */
@@ -79,6 +89,7 @@ export const dropToTemplateValues = (drop: BusinessDrop): DropFormValues => ({
   ...dropToFormValues(drop),
   durationMinutes: drop.durationMinutes,
   claimDurationMinutes: drop.claimDurationMinutes,
+  startsAt: null,
 });
 
 /** Most recent drops with distinct titles, newest first: the "fill from previous" shortcuts. */
@@ -117,5 +128,6 @@ export const apiFieldMap: Record<string, keyof DropFormValues> = {
   MinimumSpend: 'minimumSpend',
   Capacity: 'capacity',
   DurationMinutes: 'durationMinutes',
+  StartsAt: 'startsAt',
   ClaimDurationMinutes: 'claimDurationMinutes',
 };

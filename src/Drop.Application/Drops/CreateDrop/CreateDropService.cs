@@ -71,7 +71,11 @@ public sealed class CreateDropService
 
         var now = _timeProvider.GetUtcNow();
 
-        drop.Activate(now);
+        // A start within the next minute is treated as "now": the sweep runs every minute anyway.
+        if (request.StartsAt is { } startsAt && startsAt > now.AddMinutes(1))
+            drop.Schedule(startsAt, now);
+        else
+            drop.Activate(now);
 
         await _dropRepository.AddAsync(
             drop,
@@ -86,6 +90,7 @@ public sealed class CreateDropService
             drop.Title,
             drop.Capacity,
             drop.StartsAt!.Value,
-            drop.EndsAt!.Value);
+            drop.EndsAt!.Value,
+            drop.Status);
     }
 }
