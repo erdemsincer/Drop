@@ -153,8 +153,8 @@ builder.Services.AddSwaggerGen(options =>
         app.UseSwaggerUI();
     }
 
-    app.UseExceptionHandler();
-
+    // Order matters: request logging must wrap the exception handler so it
+    // logs the final status (e.g. 409), not the raw exception as a 500.
     app.UseMiddleware<CorrelationIdMiddleware>();
 
     app.UseSerilogRequestLogging(options =>
@@ -166,6 +166,8 @@ builder.Services.AddSwaggerGen(options =>
             diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
         };
     });
+
+    app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

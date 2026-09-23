@@ -21,7 +21,14 @@ public sealed class CorrelationIdMiddleware
                 ? existing.ToString()
                 : Guid.NewGuid().ToString("N");
 
-        context.Response.Headers[HeaderName] = correlationId;
+        context.Items[HeaderName] = correlationId;
+
+        // Set on start: the exception handler clears headers before writing its response.
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers[HeaderName] = correlationId;
+            return Task.CompletedTask;
+        });
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {

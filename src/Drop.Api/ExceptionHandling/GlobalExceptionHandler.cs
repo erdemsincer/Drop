@@ -174,10 +174,8 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
     private static string? GetCorrelationId(HttpContext context)
     {
-        return context.Response.Headers.TryGetValue(
-            CorrelationIdMiddleware.HeaderName,
-            out var value)
-            ? value.ToString()
+        return context.Items.TryGetValue(CorrelationIdMiddleware.HeaderName, out var value)
+            ? value as string
             : null;
     }
 
