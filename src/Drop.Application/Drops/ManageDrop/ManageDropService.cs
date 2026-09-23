@@ -45,6 +45,16 @@ public sealed class ManageDropService
         return await _lifecycleStore.CancelAsync(dropId, _timeProvider.GetUtcNow(), cancellationToken);
     }
 
+    public async Task<DropLifecycleResponse> UpdateAsync(
+        Guid dropId,
+        UpdateDropRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureCanManageAsync(dropId, cancellationToken);
+
+        return await _lifecycleStore.UpdateAsync(dropId, request, _timeProvider.GetUtcNow(), cancellationToken);
+    }
+
     private async Task EnsureCanManageAsync(Guid dropId, CancellationToken cancellationToken)
     {
         var drop = await _dropRepository.GetByIdAsync(dropId, cancellationToken)

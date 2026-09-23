@@ -12,11 +12,12 @@ type Props = {
   drop: BusinessDrop;
   canManage?: boolean;
   busy?: boolean;
+  onEdit?: () => void;
   onEnd?: () => void;
   onCancel?: () => void;
 };
 
-export function BusinessDropCard({ drop, canManage = false, busy = false, onEnd, onCancel }: Props) {
+export function BusinessDropCard({ drop, canManage = false, busy = false, onEdit, onEnd, onCancel }: Props) {
   const remaining = useCountdown(drop.endsAt ?? new Date(0).toISOString());
   const live = drop.status === 'Active' && !remaining.isExpired;
 
@@ -87,11 +88,19 @@ export function BusinessDropCard({ drop, canManage = false, busy = false, onEnd,
             <>
               <Pressable
                 accessibilityRole="button"
+                onPress={onEdit}
+                style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
+              >
+                <Ionicons name="create-outline" size={16} color={colors.text} />
+                <Text style={styles.actionText}>Düzenle</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
                 onPress={onEnd}
                 style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
               >
                 <Ionicons name="stop-circle-outline" size={16} color={colors.text} />
-                <Text style={styles.actionText}>Erken bitir</Text>
+                <Text style={styles.actionText}>Bitir</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"

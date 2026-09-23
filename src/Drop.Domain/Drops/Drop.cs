@@ -103,6 +103,40 @@ public sealed class Drop : Entity
         EndsAt = now;
     }
 
+    /// <summary>
+    /// Edits a live drop. Capacity may grow freely but never drop below the
+    /// places already taken (live reservations + redemptions).
+    /// </summary>
+    public void UpdateDetails(
+        string title,
+        string? description,
+        decimal? minimumSpend,
+        int capacity,
+        int occupied,
+        DateTimeOffset now)
+    {
+        EnsureLive(now);
+
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title cannot be empty.");
+
+        if (minimumSpend < 0)
+            throw new ArgumentOutOfRangeException(nameof(minimumSpend));
+
+        if (capacity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+
+        if (capacity < occupied)
+            throw new DropDomainException(
+                "drop.capacity_below_claimed",
+                $"Capacity cannot be lower than the {occupied} places already taken.");
+
+        Title = title.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        MinimumSpend = minimumSpend;
+        Capacity = capacity;
+    }
+
     private void EnsureLive(DateTimeOffset now)
     {
         if (!IsLive(now))

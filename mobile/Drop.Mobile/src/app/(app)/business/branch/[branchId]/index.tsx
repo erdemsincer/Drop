@@ -11,6 +11,7 @@ import {
   Badge,
   Button,
   Header,
+  IconButton,
   Screen,
   Skeleton,
   StateView,
@@ -164,7 +165,19 @@ export default function BranchDashboardScreen() {
 
   return (
     <Screen edges={['top']}>
-      <Header title={branch?.name} onBack={() => router.back()} />
+      <Header
+        title={branch?.name}
+        onBack={() => router.back()}
+        right={
+          branch?.canManage ? (
+            <IconButton
+              icon="create-outline"
+              accessibilityLabel="Şubeyi düzenle"
+              onPress={() => router.push({ pathname: '/(app)/business/branch/[branchId]/edit', params: { branchId } })}
+            />
+          ) : undefined
+        }
+      />
 
       <SectionList
         sections={sections}
@@ -174,6 +187,12 @@ export default function BranchDashboardScreen() {
             drop={item}
             canManage={branch?.canManage}
             busy={lifecycle.isPending && lifecycle.variables?.dropId === item.id}
+            onEdit={() =>
+              router.push({
+                pathname: '/(app)/business/branch/[branchId]/create-drop',
+                params: { branchId, dropId: item.id },
+              })
+            }
             onEnd={() => confirmEnd(item)}
             onCancel={() => confirmCancel(item)}
           />

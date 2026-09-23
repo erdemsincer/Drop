@@ -105,6 +105,58 @@ public sealed class DropLifecycleTests : IClassFixture<DropApiFactory>, IAsyncLi
         (await second.Content.ReadAsStringAsync()).Should().Contain("drop.not_active");
     }
 
+    [Fact]
+    public async Task Update_ShouldChangeDetails_WhenLive()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
+
+        var response = await CreateClient(scenario.OwnerId).PutAsJsonAsync(
+            $"/api/drops/{scenario.DropId}",
+            new { title = "Yeni başlık", description = "Güncel", minimumSpend = 100m, capacity = 12 });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var scope = _factory.Services.CreateScope();
+        var drop = await scope.ServiceProvider.GetRequiredService<DropDbContext>()
+            .Drops.AsNoTracking().SingleAsync(x => x.Id == scenario.DropId);
+
+        drop.Title.Should().Be("Yeni başlık");
+        drop.Capacity.Should().Be(12);
+        drop.MinimumSpend.Should().Be(100m);
+    }
+
+    [Fact]
+    public async Task Update_ShouldRejectCapacityBelowTakenPlaces()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
+        var users = await IntegrationTestData.CreateUsersAsync(_factory, count: 3);
+
+        foreach (var user in users)
+        {
+            await IntegrationTestData.CreateClaimAsync(
+                _factory, scenario.DropId, user, DateTimeOffset.UtcNow, TimeSpan.FromMinutes(15));
+        }
+
+        var response = await CreateClient(scenario.OwnerId).PutAsJsonAsync(
+            $"/api/drops/{scenario.DropId}",
+            new { title = "Drop", capacity = 2 });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("drop.capacity_below_claimed");
+    }
+
+    [Fact]
+    public async Task Update_ShouldRejectEndedDrop()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
+        var owner = CreateClient(scenario.OwnerId);
+        await owner.PostAsync($"/api/drops/{scenario.DropId}/end", null);
+
+        var response = await owner.PutAsJsonAsync($"/api/drops/{scenario.DropId}", new { title = "Drop", capacity = 5 });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
     private HttpClient CreateClient(Guid userId)
     {
         var client = _factory.CreateClient();

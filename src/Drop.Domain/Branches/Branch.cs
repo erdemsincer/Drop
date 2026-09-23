@@ -38,4 +38,22 @@ public sealed class Branch : Entity
     public string Name { get; private set; } = null!;
 
     public Location Location { get; private set; } = null!;
+
+    public void Rename(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException(
+                "Branch name cannot be empty.",
+                nameof(name));
+        }
+
+        Name = name.Trim();
+    }
+
+    public void Relocate(Location location)
+    {
+        Location = location
+            ?? throw new ArgumentNullException(nameof(location));
+    }
 }

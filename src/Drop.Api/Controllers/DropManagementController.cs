@@ -10,6 +10,17 @@ namespace Drop.Api.Controllers;
 [Tags("Drops")]
 public sealed class DropManagementController : ControllerBase
 {
+    /// <summary>Edits a live drop's text, minimum spend and capacity.</summary>
+    [HttpPut]
+    public async Task<ActionResult<DropLifecycleResponse>> Update(
+        Guid dropId,
+        [FromBody] UpdateDropRequest request,
+        [FromServices] ManageDropService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.UpdateAsync(dropId, request, cancellationToken));
+    }
+
     /// <summary>Stops new claims now; customers who already claimed can still redeem.</summary>
     [HttpPost("end")]
     public async Task<ActionResult<DropLifecycleResponse>> End(

@@ -91,6 +91,19 @@ export type CreateDropRequest = {
   claimDurationMinutes: number;
 };
 
+export type UpdateDropRequest = {
+  title: string;
+  description?: string | null;
+  minimumSpend?: number | null;
+  capacity: number;
+};
+
+export type UpdateBranchRequest = {
+  name: string;
+  latitude?: number;
+  longitude?: number;
+};
+
 export type CreateDropResponse = {
   id: string;
   branchId: string;

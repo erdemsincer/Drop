@@ -15,6 +15,8 @@ import type {
   CreateDropResponse,
   DropLifecycleResponse,
   MyBusiness,
+  UpdateBranchRequest,
+  UpdateDropRequest,
 } from '../types/business';
 
 export const getMyBusinesses = async () => {
@@ -83,4 +85,14 @@ export const addMember = async (businessId: string, request: AddMemberRequest) =
 
 export const removeMember = async (businessId: string, userId: string) => {
   await apiClient.delete(`/api/businesses/${businessId}/members/${userId}`);
+};
+
+export const updateDrop = async (dropId: string, request: UpdateDropRequest) => {
+  const response = await apiClient.put<DropLifecycleResponse>(`/api/drops/${dropId}`, request);
+  return response.data;
+};
+
+export const updateBranch = async (branchId: string, request: UpdateBranchRequest) => {
+  const response = await apiClient.put<CreateBranchResponse>(`/api/branches/${branchId}`, request);
+  return response.data;
 };

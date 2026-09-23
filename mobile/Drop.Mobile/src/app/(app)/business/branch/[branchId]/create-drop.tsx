@@ -4,7 +4,9 @@ import { type ReactNode, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getApiError } from '@/api/getApiError';
+import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
 import { useCreateDrop } from '@/features/businesses/hooks/useCreateDrop';
+import { useUpdateDrop } from '@/features/businesses/hooks/useUpdateDrop';
 import { getBusinessErrorMessage } from '@/features/businesses/utils/businessLabels';
 import {
   CLAIM_DURATIONS,
@@ -12,7 +14,9 @@ import {
   type DropFormErrors,
   type DropFormValues,
   apiFieldMap,
+  dropToFormValues,
   toCreateDropRequest,
+  toUpdateDropRequest,
   validateDropForm,
 } from '@/features/businesses/utils/dropForm';
 import {
@@ -39,11 +43,19 @@ const initialValues: DropFormValues = {
   claimDurationMinutes: 15,
 };
 
-export default function CreateDropScreen() {
-  const { branchId } = useLocalSearchParams<{ branchId: string }>();
-  const [values, setValues] = useState(initialValues);
+/** Creates a drop, or edits a live one when a dropId param is given. */
+export default function DropFormScreen() {
+  const { branchId, dropId } = useLocalSearchParams<{ branchId: string; dropId?: string }>();
+  const dropsQuery = useBranchDrops(branchId);
+  const editing = dropId ? dropsQuery.data?.find(drop => drop.id === dropId) : undefined;
+  const isEdit = Boolean(dropId);
+  const taken = editing ? editing.activeClaimCount + editing.redeemedCount : 0;
+
+  const [values, setValues] = useState(() => (editing ? dropToFormValues(editing) : initialValues));
   const [errors, setErrors] = useState<DropFormErrors>({});
-  const mutation = useCreateDrop(branchId);
+  const createMutation = useCreateDrop(branchId);
+  const updateMutation = useUpdateDrop(branchId);
+  const mutation = isEdit ? updateMutation : createMutation;
 
   const apiError = mutation.error ? getApiError(mutation.error) : null;
 
@@ -62,6 +74,11 @@ export default function CreateDropScreen() {
 
   const handlePublish = () => {
     const validation = validateDropForm(values);
+
+    if (isEdit && !validation.capacity && Number(values.capacity) < taken) {
+      validation.capacity = `En az ${taken} olmalı; bu kadar yer zaten yakalandı.`;
+    }
+
     setErrors(validation);
 
     if (Object.keys(validation).length) {
@@ -69,18 +86,24 @@ export default function CreateDropScreen() {
       return;
     }
 
-    mutation.mutate(toCreateDropRequest(values), {
+    const done = {
       onSuccess: () => {
         haptics.success();
         router.back();
       },
       onError: () => haptics.error(),
-    });
+    };
+
+    if (isEdit && dropId) {
+      updateMutation.mutate({ dropId, request: toUpdateDropRequest(values) }, done);
+    } else {
+      createMutation.mutate(toCreateDropRequest(values), done);
+    }
   };
 
   return (
     <Screen>
-      <Header title="Yeni Drop" onBack={() => router.back()} />
+      <Header title={isEdit ? "Drop'u düzenle" : 'Yeni Drop'} onBack={() => router.back()} />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
@@ -137,27 +160,38 @@ export default function CreateDropScreen() {
             </View>
           </Section>
 
-          <Section title="Drop ne kadar yayında kalsın?" icon="hourglass">
-            <ChoiceChips
-              options={DROP_DURATIONS}
-              value={values.durationMinutes}
-              onChange={value => set('durationMinutes', value)}
-            />
-          </Section>
+          {isEdit ? (
+            <View style={styles.editNote}>
+              <Ionicons name="information-circle" size={18} color={colors.primary} />
+              <Text style={styles.editNoteText}>
+                Yayın ve kullanım süresi Drop yayındayken değiştirilemez. Gerekirse Drop&apos;u erken bitirip yenisini aç.
+              </Text>
+            </View>
+          ) : (
+            <>
+            <Section title="Drop ne kadar yayında kalsın?" icon="hourglass">
+              <ChoiceChips
+                options={DROP_DURATIONS}
+                value={values.durationMinutes}
+                onChange={value => set('durationMinutes', value)}
+              />
+            </Section>
 
-          <Section title="Yakalandıktan sonra kullanım süresi" icon="timer">
-            <ChoiceChips
-              options={CLAIM_DURATIONS}
-              value={values.claimDurationMinutes}
-              onChange={value => set('claimDurationMinutes', value)}
-            />
-            {errorFor('claimDurationMinutes') && (
-              <Text style={styles.inlineError}>{errorFor('claimDurationMinutes')}</Text>
-            )}
-            <Text style={styles.hint}>
-              Müşteri Drop&apos;u yakaladıktan sonra bu süre içinde gelip QR okutmalı. Süre dolarsa yer yeniden açılır.
-            </Text>
-          </Section>
+            <Section title="Yakalandıktan sonra kullanım süresi" icon="timer">
+              <ChoiceChips
+                options={CLAIM_DURATIONS}
+                value={values.claimDurationMinutes}
+                onChange={value => set('claimDurationMinutes', value)}
+              />
+              {errorFor('claimDurationMinutes') && (
+                <Text style={styles.inlineError}>{errorFor('claimDurationMinutes')}</Text>
+              )}
+              <Text style={styles.hint}>
+                Müşteri Drop&apos;u yakaladıktan sonra bu süre içinde gelip QR okutmalı. Süre dolarsa yer yeniden açılır.
+              </Text>
+            </Section>
+            </>
+          )}
 
           {apiError && !apiError.errors && (
             <Notice message={getBusinessErrorMessage(apiError.code, apiError.detail)} />
@@ -166,7 +200,12 @@ export default function CreateDropScreen() {
         </ScrollView>
 
         <View style={styles.footer}>
-          <Button title="Drop'u Yayınla" icon="rocket" loading={mutation.isPending} onPress={handlePublish} />
+          <Button
+            title={isEdit ? 'Değişiklikleri Kaydet' : "Drop'u Yayınla"}
+            icon={isEdit ? 'checkmark-circle' : 'rocket'}
+            loading={mutation.isPending}
+            onPress={handlePublish}
+          />
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -234,6 +273,20 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
+  },
+  editNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    padding: spacing.lg,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.lg,
+  },
+  editNoteText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 19,
   },
   footer: {
     paddingHorizontal: spacing.xl,

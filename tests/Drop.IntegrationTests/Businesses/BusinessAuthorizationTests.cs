@@ -104,6 +104,40 @@ public sealed class BusinessAuthorizationTests : IClassFixture<DropApiFactory>, 
     }
 
     [Fact]
+    public async Task UpdateBranch_ShouldRenameAndRelocate_WhenOwner()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 1);
+        var owner = CreateClient(scenario.OwnerId);
+
+        var update = await owner.PutAsJsonAsync(
+            $"/api/branches/{scenario.BranchId}",
+            new { name = "Sahil", latitude = 36.8, longitude = 34.6 });
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var branch = await owner.GetFromJsonAsync<System.Text.Json.JsonElement>($"/api/branches/{scenario.BranchId}");
+        branch.GetProperty("name").GetString().Should().Be("Sahil");
+        branch.GetProperty("latitude").GetDouble().Should().Be(36.8);
+
+        var renameOnly = await owner.PutAsJsonAsync($"/api/branches/{scenario.BranchId}", new { name = "Sahil 2" });
+        renameOnly.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await renameOnly.Content.ReadAsStringAsync()).Should().Contain("\"latitude\":36.8");
+    }
+
+    [Fact]
+    public async Task UpdateBranch_ShouldReturnForbidden_ForStaff()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 1);
+        var staffId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
+        await IntegrationTestData.AddMemberAsync(
+            _factory, scenario.BusinessId, staffId, Drop.Domain.Businesses.BusinessMemberRole.Staff);
+
+        var response = await CreateClient(staffId)
+            .PutAsJsonAsync($"/api/branches/{scenario.BranchId}", new { name = "Hack" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task Nearby_ShouldReturnBadRequest_WhenRadiusTooLarge()
     {
         var response = await _factory.CreateClient()

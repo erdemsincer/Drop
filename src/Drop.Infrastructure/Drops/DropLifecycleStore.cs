@@ -32,17 +32,43 @@ internal sealed class DropLifecycleStore : IDropLifecycleStore
         return ExecuteAsync(dropId, now, cancel: true, cancellationToken);
     }
 
-    private async Task<DropLifecycleResponse> ExecuteAsync(
+    public async Task<DropLifecycleResponse> UpdateAsync(
         Guid dropId,
+        UpdateDropRequest request,
         DateTimeOffset now,
-        bool cancel,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         await using var transaction =
             await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Same row lock ClaimStore takes, so no claim can slip in mid-cancel.
-        var drop = await _dbContext.Drops
+        var drop = await LockAsync(dropId, cancellationToken);
+
+        var activeCount = await _dbContext.Claims.CountAsync(
+            claim => claim.DropId == dropId && claim.Status == ClaimStatus.Active && claim.ExpiresAt > now,
+            cancellationToken);
+
+        var redeemedCount = await _dbContext.Claims.CountAsync(
+            claim => claim.DropId == dropId && claim.Status == ClaimStatus.Redeemed,
+            cancellationToken);
+
+        drop.UpdateDetails(
+            request.Title,
+            request.Description,
+            request.MinimumSpend,
+            request.Capacity,
+            activeCount + redeemedCount,
+            now);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return new DropLifecycleResponse(drop.Id, drop.Status, drop.EndsAt, activeCount, 0);
+    }
+
+    private async Task<Domain.Drops.Drop> LockAsync(Guid dropId, CancellationToken cancellationToken)
+    {
+        // Same row lock ClaimStore takes, so no claim can slip in mid-change.
+        return await _dbContext.Drops
             .FromSqlInterpolated(
                 $"""
                 SELECT *
@@ -52,6 +78,18 @@ internal sealed class DropLifecycleStore : IDropLifecycleStore
                 """)
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(ErrorCodes.Drop.NotFound, "Drop was not found.");
+    }
+
+    private async Task<DropLifecycleResponse> ExecuteAsync(
+        Guid dropId,
+        DateTimeOffset now,
+        bool cancel,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction =
+            await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var drop = await LockAsync(dropId, cancellationToken);
 
         var activeClaims = await _dbContext.Claims
             .Where(claim =>

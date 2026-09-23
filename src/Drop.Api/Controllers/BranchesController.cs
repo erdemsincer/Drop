@@ -1,6 +1,7 @@
 using Drop.Application.Branches.CreateBranch;
 using Drop.Application.Branches.GetBranch;
 using Drop.Application.Branches.GetBranchQr;
+using Drop.Application.Branches.UpdateBranch;
 using Drop.Application.Branches.GetBranches;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,6 +49,17 @@ public sealed class BranchDetailController : ControllerBase
         CancellationToken cancellationToken)
     {
         return Ok(await service.ExecuteAsync(branchId, cancellationToken));
+    }
+
+    /// <summary>Renames the branch and optionally moves it.</summary>
+    [HttpPut]
+    public async Task<ActionResult<CreateBranchResponse>> Update(
+        Guid branchId,
+        [FromBody] UpdateBranchRequest request,
+        [FromServices] UpdateBranchService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(branchId, request, cancellationToken));
     }
 
     /// <summary>

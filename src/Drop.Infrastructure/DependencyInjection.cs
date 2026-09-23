@@ -12,6 +12,7 @@ using Drop.Application.Branches;
 using Drop.Application.Branches.CreateBranch;
 using Drop.Application.Branches.GetBranch;
 using Drop.Application.Branches.GetBranchQr;
+using Drop.Application.Branches.UpdateBranch;
 using Drop.Application.Branches.GetBranches;
 using Drop.Application.Claims;
 using Drop.Application.Claims.CreateClaim;
@@ -73,6 +74,7 @@ public static class DependencyInjection
 
         services.AddScoped<IBranchRepository, BranchRepository>();
         services.AddScoped<CreateBranchService>();
+        services.AddScoped<UpdateBranchService>();
 
         var qrSection = configuration.GetSection(BranchQrCodeOptions.SectionName);
         services.Configure<BranchQrCodeOptions>(

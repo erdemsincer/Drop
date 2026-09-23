@@ -1,6 +1,6 @@
 import type { Choice } from '@/ui';
 
-import type { CreateDropRequest } from '../types/business';
+import type { BusinessDrop, CreateDropRequest, UpdateDropRequest } from '../types/business';
 
 export const DROP_DURATIONS: Choice<number>[] = [
   { label: '30 dk', value: 30 },
@@ -63,6 +63,21 @@ export const toCreateDropRequest = (values: DropFormValues): CreateDropRequest =
   durationMinutes: values.durationMinutes,
   claimDurationMinutes: values.claimDurationMinutes,
 });
+
+export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
+  title: drop.title,
+  description: drop.description ?? '',
+  minimumSpend: drop.minimumSpend != null ? String(drop.minimumSpend) : '',
+  capacity: String(drop.capacity),
+  // Fixed once live; kept equal so duration validation is a no-op when editing.
+  durationMinutes: drop.claimDurationMinutes,
+  claimDurationMinutes: drop.claimDurationMinutes,
+});
+
+export const toUpdateDropRequest = (values: DropFormValues): UpdateDropRequest => {
+  const { title, description, minimumSpend, capacity } = toCreateDropRequest(values);
+  return { title, description, minimumSpend, capacity };
+};
 
 // Maps FluentValidation property names back onto form fields.
 export const apiFieldMap: Record<string, keyof DropFormValues> = {
