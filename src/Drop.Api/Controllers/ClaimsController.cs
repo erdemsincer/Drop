@@ -4,7 +4,9 @@ using Drop.Application.Claims.MyClaims;
 using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Claims.RedeemClaim;
 using Microsoft.AspNetCore.Authorization;
+using Drop.Api.Configuration;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Drop.Api.Controllers;
 
@@ -37,6 +39,7 @@ public sealed class ClaimsController : ControllerBase
     }
 
     [HttpPost("{claimId:guid}/redeem")]
+    [EnableRateLimiting(RateLimitingSetup.RedeemPolicy)]
     public async Task<ActionResult<RedeemClaimResponse>> Redeem(
         Guid claimId,
         [FromBody] RedeemClaimRequest request,

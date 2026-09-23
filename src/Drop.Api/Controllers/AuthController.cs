@@ -3,12 +3,15 @@ using Drop.Application.Authentication.Logout;
 using Drop.Application.Authentication.PasswordReset;
 using Drop.Application.Authentication.Refresh;
 using Drop.Application.Authentication.Register;
+using Drop.Api.Configuration;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Drop.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting(RateLimitingSetup.AuthPolicy)]
 [Tags("Auth")]
 public sealed class AuthController : ControllerBase
 {

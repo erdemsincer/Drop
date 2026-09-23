@@ -61,6 +61,9 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         // would flip states mid-test and make assertions racy.
         builder.UseSetting("BackgroundJobs:Expiration:Enabled", "false");
 
+        // Tests hammer auth endpoints from one "IP"; rate limits are covered separately.
+        builder.UseSetting("RateLimiting:Enabled", "false");
+
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<Drop.Application.Notifications.IEmailSender>();

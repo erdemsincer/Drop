@@ -1,17 +1,23 @@
-using System.Text.Json.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
+using Drop.Api.Configuration;
 using Drop.Api.ExceptionHandling;
 using Drop.Api.Middleware;
 using Drop.Api.Validation;
 using Drop.Application;
 using Drop.Infrastructure;
 using Drop.Infrastructure.Authentication;
+using Drop.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
+
+const string CorsPolicy = "Drop";
 
 var bootstrap = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -25,6 +31,8 @@ try
     bootstrap.Information("Starting Drop API");
 
     var builder = WebApplication.CreateBuilder(args);
+
+    StartupValidation.Validate(builder.Configuration, builder.Environment);
 
     builder.Host.UseSerilog((context, services, configuration) =>
     {
@@ -47,21 +55,40 @@ try
         });
 
     builder.Services.AddApplication();
-
     builder.Services.AddInfrastructure(builder.Configuration);
-
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddDropRateLimiting(builder.Configuration);
+
+    // Native mobile apps don't need CORS. Development allows any origin (Expo web,
+    // Swagger); elsewhere only the origins listed in Cors:AllowedOrigins.
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
     builder.Services.AddCors(options =>
-{
-    options.AddPolicy("DevelopmentCors", policy =>
     {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        options.AddPolicy(CorsPolicy, policy =>
+        {
+            if (builder.Environment.IsDevelopment())
+                policy.AllowAnyOrigin();
+            else
+                policy.WithOrigins(allowedOrigins);
+
+            policy.AllowAnyHeader().AllowAnyMethod();
+        });
     });
-});
+
+    var reverseProxy = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
+
+    if (reverseProxy)
+    {
+        // Behind a platform load balancer: trust its X-Forwarded-* headers so
+        // rate limiting sees the real client IP and HTTPS is detected.
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+    }
 
     var jwtOptions = builder.Configuration
         .GetSection(JwtOptions.SectionName)
@@ -124,28 +151,39 @@ try
 
     builder.Services.AddAuthorization();
 
- builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    builder.Services.AddSwaggerGen(options =>
     {
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        Description = "JWT token giriniz."
-    });
+        options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "JWT token giriniz."
+        });
 
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
-        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("bearer", document)] = []
+        });
     });
-});
 
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
     var app = builder.Build();
+
+    if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        await scope.ServiceProvider.GetRequiredService<DropDbContext>().Database.MigrateAsync();
+    }
+
+    if (reverseProxy)
+    {
+        app.UseForwardedHeaders();
+    }
 
     if (app.Environment.IsDevelopment())
     {
@@ -169,15 +207,18 @@ builder.Services.AddSwaggerGen(options =>
 
     app.UseExceptionHandler();
 
-app.UseHttpsRedirection();
+    app.UseHttpsRedirection();
 
-app.UseCors("DevelopmentCors");
+    app.UseCors(CorsPolicy);
 
-app.UseAuthentication();
+    app.UseAuthentication();
 
-app.UseMiddleware<UserContextLoggingMiddleware>();
+    app.UseMiddleware<UserContextLoggingMiddleware>();
 
-app.UseAuthorization();
+    app.UseAuthorization();
+
+    // After authentication so the redeem policy can partition by user.
+    app.UseRateLimiter();
 
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {
@@ -195,7 +236,7 @@ app.UseAuthorization();
 
     app.Run();
 }
-catch (Exception exception)
+catch (Exception exception) when (exception is not HostAbortedException)
 {
     Log.Fatal(exception, "Drop API terminated unexpectedly");
 }
@@ -220,6 +261,6 @@ static async Task WriteHealthResponse(HttpContext context, HealthReport report)
     };
 
     await context.Response.WriteAsJsonAsync(response);
-}public partial class Program;
+}
 
-
+public partial class Program;
