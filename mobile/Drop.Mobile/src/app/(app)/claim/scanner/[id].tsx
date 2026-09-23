@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getApiError } from '@/api/getApiError';
 import { useRedeemClaim } from '@/features/claims/hooks/useRedeemClaim';
+import { cancelClaimReminder } from '@/features/notifications/claimReminders';
 import { getRedeemErrorMessage } from '@/features/claims/utils/getRedeemErrorMessage';
 import {
   Button,
@@ -104,6 +105,7 @@ export default function ClaimScannerScreen() {
       {
         onSuccess: result => {
           haptics.success();
+          void cancelClaimReminder(result.claimId);
           router.replace({
             pathname: '/(app)/claim/redeemed/[id]',
             params: { id: result.claimId, redeemedAt: result.redeemedAt },

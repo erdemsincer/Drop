@@ -12,6 +12,7 @@ import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessa
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { useDropDetail } from '@/features/drops/hooks/useDropDetail';
 import type { DropDetail } from '@/features/drops/types/drop';
+import { scheduleClaimReminder } from '@/features/notifications/claimReminders';
 import {
   Avatar,
   Badge,
@@ -77,6 +78,10 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
     claimMutation.mutate(drop.id, {
       onSuccess: claim => {
         haptics.success();
+        void scheduleClaimReminder(
+          { claimId: claim.claimId, expiresAt: claim.expiresAt, dropTitle: drop.title },
+          true,
+        );
         router.replace({
           pathname: '/(app)/claim/[id]',
           params: {
