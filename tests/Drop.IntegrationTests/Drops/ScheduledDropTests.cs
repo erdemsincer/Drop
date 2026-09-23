@@ -61,7 +61,8 @@ public sealed class ScheduledDropTests : IClassFixture<DropApiFactory>, IAsyncLi
             var drop = await scope.ServiceProvider.GetRequiredService<DropDbContext>()
                 .Drops.AsNoTracking().SingleAsync(x => x.Id == dropId);
             drop.Status.Should().Be(DropStatus.Active);
-            drop.EndsAt.Should().Be(startsAt.AddMinutes(60));
+            // PostgreSQL stores microseconds; .NET ticks are 100 ns.
+            drop.EndsAt.Should().BeCloseTo(startsAt.AddMinutes(60), TimeSpan.FromMilliseconds(1));
         }
     }
 
