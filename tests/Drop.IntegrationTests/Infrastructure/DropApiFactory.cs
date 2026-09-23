@@ -57,6 +57,10 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
+        // Expiration is exercised directly via ExpirationSweeper; a live worker
+        // would flip states mid-test and make assertions racy.
+        builder.UseSetting("BackgroundJobs:Expiration:Enabled", "false");
+
         builder.ConfigureServices(services =>
         {
             // Remove existing DbContext registration

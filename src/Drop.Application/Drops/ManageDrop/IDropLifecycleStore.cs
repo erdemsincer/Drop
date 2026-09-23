@@ -8,7 +8,7 @@ public interface IDropLifecycleStore
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Cancels the drop and expires its unused reservations.</summary>
+    /// <summary>Cancels the drop and its unused reservations.</summary>
     Task<DropLifecycleResponse> CancelAsync(
         Guid dropId,
         DateTimeOffset now,

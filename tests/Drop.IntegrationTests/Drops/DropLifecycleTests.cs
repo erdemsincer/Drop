@@ -53,7 +53,7 @@ public sealed class DropLifecycleTests : IClassFixture<DropApiFactory>, IAsyncLi
     }
 
     [Fact]
-    public async Task Cancel_ShouldExpireActiveReservations()
+    public async Task Cancel_ShouldCancelActiveReservations()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
         var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
@@ -69,7 +69,7 @@ public sealed class DropLifecycleTests : IClassFixture<DropApiFactory>, IAsyncLi
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<DropDbContext>();
             (await dbContext.Drops.SingleAsync(x => x.Id == scenario.DropId)).Status.Should().Be(DropStatus.Cancelled);
-            (await dbContext.Claims.SingleAsync(x => x.Id == claimId)).Status.Should().Be(ClaimStatus.Expired);
+            (await dbContext.Claims.SingleAsync(x => x.Id == claimId)).Status.Should().Be(ClaimStatus.Cancelled);
         }
 
         var customer = CreateClient(userId);

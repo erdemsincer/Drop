@@ -68,7 +68,7 @@ internal sealed class DropLifecycleStore : IDropLifecycleStore
 
             foreach (var claim in activeClaims)
             {
-                claim.Expire();
+                claim.Cancel();
             }
 
             released = activeClaims.Count;

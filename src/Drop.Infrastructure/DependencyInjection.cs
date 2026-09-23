@@ -23,6 +23,7 @@ using Drop.Application.Features.Drops.GetDropDetail;
 using Drop.Application.Security;
 using Drop.Application.Users;
 using Drop.Infrastructure.Authentication;
+using Drop.Infrastructure.BackgroundJobs;
 using Drop.Infrastructure.Businesses;
 using Drop.Infrastructure.Claims;
 using Drop.Infrastructure.Drops;
@@ -125,6 +126,19 @@ public static class DependencyInjection
             });
 
         services.AddSingleton(TimeProvider.System);
+
+        var expirationSection = configuration.GetSection(ExpirationOptions.SectionName);
+        services.Configure<ExpirationOptions>(
+            opt =>
+            {
+                if (bool.TryParse(expirationSection["Enabled"], out var enabled))
+                    opt.Enabled = enabled;
+
+                if (int.TryParse(expirationSection["IntervalSeconds"], out var interval))
+                    opt.IntervalSeconds = interval;
+            });
+        services.AddScoped<ExpirationSweeper>();
+        services.AddHostedService<ExpirationWorker>();
 
         return services;
     }

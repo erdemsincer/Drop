@@ -6,7 +6,8 @@ public enum ClaimStatus
 {
     Active = 1,
     Expired = 2,
-    Redeemed = 3
+    Redeemed = 3,
+    Cancelled = 4
 }
 
 public sealed class Claim : Entity
@@ -49,29 +50,31 @@ public sealed class Claim : Entity
 
     public DateTimeOffset? RedeemedAt { get; private set; }
 
-    /// <summary>Invalidates an unused reservation (e.g. the drop was cancelled).</summary>
-    public void Expire()
+    /// <summary>Withdraws an unused reservation because its drop was cancelled.</summary>
+    public void Cancel()
     {
         if (Status == ClaimStatus.Active)
         {
-            Status = ClaimStatus.Expired;
+            Status = ClaimStatus.Cancelled;
         }
     }
 
     public void Redeem(DateTimeOffset now)
     {
+        // Expired is checked first: the expiration job may already have flipped
+        // the status, and the customer should still hear "expired".
+        if (Status == ClaimStatus.Expired || (Status == ClaimStatus.Active && now >= ExpiresAt))
+        {
+            throw new ClaimDomainException(
+                "claim.expired",
+                "Claim has expired.");
+        }
+
         if (Status != ClaimStatus.Active)
         {
             throw new ClaimDomainException(
                 "claim.not_active",
                 "Only active claims can be redeemed.");
-        }
-
-        if (now >= ExpiresAt)
-        {
-            throw new ClaimDomainException(
-                "claim.expired",
-                "Claim has expired.");
         }
 
         Status = ClaimStatus.Redeemed;

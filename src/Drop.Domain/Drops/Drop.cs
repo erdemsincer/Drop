@@ -93,7 +93,7 @@ public sealed class Drop : Entity
     }
 
     /// <summary>
-    /// Withdraws the drop entirely. Callers must also expire its active claims.
+    /// Withdraws the drop entirely. Callers must also cancel its active claims.
     /// </summary>
     public void Cancel(DateTimeOffset now)
     {
