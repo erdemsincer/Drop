@@ -28,7 +28,7 @@ export const useBusinessSignup = () => {
       }
 
       const session = await login({ email: account.email, password: account.password });
-      await authStorage.setAccessToken(session.accessToken);
+      await authStorage.setSession(session);
 
       return createBusiness({ name: businessName });
     },

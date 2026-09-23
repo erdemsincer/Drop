@@ -30,7 +30,7 @@ export default function RegisterScreen() {
     mutationFn: async (request: Parameters<typeof register>[0]) => {
       await register(request);
       const session = await login({ email: request.email, password: request.password });
-      await authStorage.setAccessToken(session.accessToken);
+      await authStorage.setSession(session);
     },
     onSuccess: async () => {
       haptics.success();

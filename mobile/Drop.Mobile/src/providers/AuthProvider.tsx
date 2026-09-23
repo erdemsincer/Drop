@@ -1,6 +1,7 @@
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
 import { setUnauthorizedHandler } from '@/api/apiClient';
+import { logout } from '@/features/auth/api/authApi';
 import { authStorage } from '@/storage/authStorage';
 
 type AuthContextValue = {
@@ -17,7 +18,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(true);
   const refresh = useCallback(async () => setIsAuthenticated(Boolean(await authStorage.getAccessToken())), []);
   const signOut = useCallback(async () => {
-    await authStorage.removeAccessToken();
+    const refreshToken = await authStorage.getRefreshToken();
+    // Revoke server-side too; best effort, signing out must work offline.
+    if (refreshToken) await logout(refreshToken).catch(() => undefined);
+    await authStorage.clear();
     setIsAuthenticated(false);
   }, []);
 

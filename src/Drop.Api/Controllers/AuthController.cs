@@ -1,4 +1,6 @@
 using Drop.Application.Authentication.Login;
+using Drop.Application.Authentication.Logout;
+using Drop.Application.Authentication.Refresh;
 using Drop.Application.Authentication.Register;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,5 +31,27 @@ public sealed class AuthController : ControllerBase
         var response = await service.ExecuteAsync(request, cancellationToken);
 
         return Ok(response);
+    }
+
+    /// <summary>Exchanges a refresh token for a new token pair (the old refresh token is revoked).</summary>
+    [HttpPost("refresh")]
+    public async Task<ActionResult<LoginResponse>> Refresh(
+        [FromBody] RefreshTokenRequest request,
+        [FromServices] RefreshSessionService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(request, cancellationToken));
+    }
+
+    /// <summary>Revokes the refresh token. Works with an expired access token.</summary>
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(
+        [FromBody] RefreshTokenRequest request,
+        [FromServices] LogoutService service,
+        CancellationToken cancellationToken)
+    {
+        await service.ExecuteAsync(request, cancellationToken);
+
+        return NoContent();
     }
 }

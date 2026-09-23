@@ -1,6 +1,8 @@
 using Drop.Application.Abstractions;
 using Drop.Application.Authentication;
 using Drop.Application.Authentication.Login;
+using Drop.Application.Authentication.Logout;
+using Drop.Application.Authentication.Refresh;
 using Drop.Application.Authentication.Register;
 using Drop.Application.Businesses;
 using Drop.Application.Businesses.CreateBusiness;
@@ -115,6 +117,9 @@ public static class DependencyInjection
 
         services.AddScoped<RegisterService>();
         services.AddScoped<LoginService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<RefreshSessionService>();
+        services.AddScoped<LogoutService>();
 
         var jwtSection = configuration.GetSection(JwtOptions.SectionName);
         services.Configure<JwtOptions>(
@@ -123,6 +128,12 @@ public static class DependencyInjection
                 opt.Issuer = jwtSection["Issuer"]!;
                 opt.Audience = jwtSection["Audience"]!;
                 opt.Key = jwtSection["Key"]!;
+
+                if (int.TryParse(jwtSection["AccessTokenMinutes"], out var accessMinutes))
+                    opt.AccessTokenMinutes = accessMinutes;
+
+                if (int.TryParse(jwtSection["RefreshTokenDays"], out var refreshDays))
+                    opt.RefreshTokenDays = refreshDays;
             });
 
         services.AddSingleton(TimeProvider.System);

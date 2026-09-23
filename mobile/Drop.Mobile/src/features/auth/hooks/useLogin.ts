@@ -6,5 +6,5 @@ import { login } from '../api/authApi';
 export const useLogin = () =>
   useMutation({
     mutationFn: login,
-    onSuccess: (data) => authStorage.setAccessToken(data.accessToken),
+    onSuccess: data => authStorage.setSession(data),
   });

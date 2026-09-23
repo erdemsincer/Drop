@@ -21,6 +21,8 @@ internal sealed class JwtTokenProvider : ITokenProvider
         _timeProvider = timeProvider;
     }
 
+    public int AccessTokenLifetimeSeconds => _options.AccessTokenMinutes * 60;
+
     public string Create(UserEntity user)
     {
         var claims = new[]
@@ -38,7 +40,7 @@ internal sealed class JwtTokenProvider : ITokenProvider
             issuer: _options.Issuer,
             audience: _options.Audience,
             claims: claims,
-            expires: _timeProvider.GetUtcNow().AddMinutes(30).UtcDateTime,
+            expires: _timeProvider.GetUtcNow().AddMinutes(_options.AccessTokenMinutes).UtcDateTime,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

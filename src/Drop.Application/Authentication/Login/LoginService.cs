@@ -10,15 +10,18 @@ public sealed class LoginService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenProvider _tokenProvider;
+    private readonly IRefreshTokenService _refreshTokenService;
 
     public LoginService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        ITokenProvider tokenProvider)
+        ITokenProvider tokenProvider,
+        IRefreshTokenService refreshTokenService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenProvider = tokenProvider;
+        _refreshTokenService = refreshTokenService;
     }
 
     public async Task<LoginResponse> ExecuteAsync(
@@ -45,6 +48,11 @@ public sealed class LoginService
                 "User is not active.");
         }
 
-        return new LoginResponse(_tokenProvider.Create(user), 1800);
+        var refreshToken = await _refreshTokenService.IssueAsync(user.Id, cancellationToken);
+
+        return new LoginResponse(
+            _tokenProvider.Create(user),
+            _tokenProvider.AccessTokenLifetimeSeconds,
+            refreshToken);
     }
 }
