@@ -17,8 +17,6 @@ export const statusLabels: Record<DropStatus, string> = {
 
 export const getBusinessErrorMessage = (code?: string, fallback?: string) => {
   switch (code) {
-    case 'business.name_exists':
-      return 'Bu isimde bir işletme zaten var. Farklı bir ad dene.';
     case 'business.access_denied':
       return 'Bu işlem için yetkin yok. İşletme sahibi veya yöneticisi olmalısın.';
     case 'business.not_found':

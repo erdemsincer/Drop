@@ -8,10 +8,6 @@ public interface IBusinessRepository
         Business business,
         CancellationToken cancellationToken = default);
 
-    Task<bool> ExistsByNameAsync(
-        string name,
-        CancellationToken cancellationToken = default);
-
     Task<bool> ExistsAsync(
         Guid id,
         CancellationToken cancellationToken = default);

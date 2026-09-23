@@ -62,6 +62,19 @@ public sealed class BusinessQueryTests : IClassFixture<DropApiFactory>, IAsyncLi
     }
 
     [Fact]
+    public async Task CreateBusiness_ShouldAllowSameNameForDifferentOwners()
+    {
+        var users = await IntegrationTestData.CreateUsersAsync(_factory, count: 2);
+        var name = $"Drop Coffee {Guid.NewGuid():N}";
+
+        var first = await CreateClient(users[0]).PostAsJsonAsync("/api/businesses", new { name });
+        var second = await CreateClient(users[1]).PostAsJsonAsync("/api/businesses", new { name });
+
+        first.StatusCode.Should().Be(HttpStatusCode.Created);
+        second.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
     public async Task GetBranches_ShouldReturnForbidden_WhenUserIsNotMember()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 1);

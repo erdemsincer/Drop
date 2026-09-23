@@ -14,15 +14,6 @@ internal sealed class BusinessRepository : IBusinessRepository
         _dbContext = dbContext;
     }
 
-    public Task<bool> ExistsByNameAsync(
-        string name,
-        CancellationToken cancellationToken = default)
-    {
-        return _dbContext.Businesses.AnyAsync(
-            x => x.Name == name,
-            cancellationToken);
-    }
-
     public async Task AddAsync(
         Business business,
         CancellationToken cancellationToken = default)
