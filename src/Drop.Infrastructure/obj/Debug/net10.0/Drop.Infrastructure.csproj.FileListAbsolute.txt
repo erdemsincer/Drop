@@ -12,6 +12,7 @@
 /Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/Drop.Infrastructure.AssemblyInfo.cs
 /Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/Drop.Infrastructure.csproj.CoreCompileInputs.cache
 /Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/EFCoreNpgsqlNetTopologySuite.cs
+/Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/Drop.Infrastructure.sourcelink.json
 /Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/Drop.Inf.B1DCBDAF.Up2Date
 /Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/Drop.Infrastructure.dll
 /Users/erdemsincer/Project/Drop/src/Drop.Infrastructure/obj/Debug/net10.0/refint/Drop.Infrastructure.dll

@@ -36,6 +36,7 @@ public static class ErrorCodes
     {
         public const string NotFound = "claim.not_found";
         public const string AlreadyExists = "claim.already_exists";
+        public const string ActiveClaimExists = "claim.active_exists";
         public const string NotActive = "claim.not_active";
         public const string Expired = "claim.expired";
     }

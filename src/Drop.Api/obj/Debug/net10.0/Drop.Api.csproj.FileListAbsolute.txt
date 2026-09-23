@@ -139,6 +139,7 @@
 /Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/Drop.Api.csproj.CoreCompileInputs.cache
 /Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/Drop.Api.MvcApplicationPartsAssemblyInfo.cs
 /Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/Drop.Api.MvcApplicationPartsAssemblyInfo.cache
+/Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/Drop.Api.sourcelink.json
 /Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /Users/erdemsincer/Project/Drop/src/Drop.Api/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json

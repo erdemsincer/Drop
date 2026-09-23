@@ -69,6 +69,21 @@ internal sealed class ClaimStore : IClaimStore
                 "User has already claimed this drop.");
         }
 
+        var hasActiveClaim =
+            await _dbContext.Claims.AnyAsync(
+                x =>
+                    x.UserId == userId &&
+                    x.Status == ClaimStatus.Active &&
+                    x.ExpiresAt > now,
+                cancellationToken);
+
+        if (hasActiveClaim)
+        {
+            throw new ConflictException(
+                ErrorCodes.Claim.ActiveClaimExists,
+                "User already has an active claim.");
+        }
+
         var occupiedCount =
             await _dbContext.Claims.CountAsync(
                 x =>

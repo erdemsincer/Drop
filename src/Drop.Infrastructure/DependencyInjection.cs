@@ -13,6 +13,8 @@ using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Drops;
 using Drop.Application.Drops.CreateDrop;
 using Drop.Application.Drops.GetNearbyDrops;
+using Drop.Application.Features.Claims.ActiveClaim;
+using Drop.Application.Features.Drops.GetDropDetail;
 using Drop.Application.Security;
 using Drop.Application.Users;
 using Drop.Infrastructure.Authentication;
@@ -69,6 +71,12 @@ public static class DependencyInjection
 
         services.AddScoped<INearbyDropQuery, NearbyDropQuery>();
         services.AddScoped<GetNearbyDropsService>();
+
+    services.AddScoped<IDropDetailQuery, DropDetailQuery>();
+    services.AddScoped<GetDropDetailService>();
+
+        services.AddScoped<IActiveClaimQuery, ActiveClaimQuery>();
+        services.AddScoped<GetActiveClaimService>();
 
         services.AddScoped<IClaimStore, ClaimStore>();
         services.AddScoped<CreateClaimService>();

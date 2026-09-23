@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Serilog;
 
 var bootstrap = new LoggerConfiguration()
@@ -43,6 +44,17 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
     builder.Services.AddHttpContextAccessor();
+
+    builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevelopmentCors", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
     var jwtOptions = builder.Configuration
         .GetSection(JwtOptions.SectionName)
@@ -105,8 +117,23 @@ try
 
     builder.Services.AddAuthorization();
 
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+ builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT token giriniz."
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
+});
 
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
@@ -133,13 +160,15 @@ try
         };
     });
 
-    app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
-    app.UseAuthentication();
+app.UseCors("DevelopmentCors");
 
-    app.UseMiddleware<UserContextLoggingMiddleware>();
+app.UseAuthentication();
 
-    app.UseAuthorization();
+app.UseMiddleware<UserContextLoggingMiddleware>();
+
+app.UseAuthorization();
 
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {

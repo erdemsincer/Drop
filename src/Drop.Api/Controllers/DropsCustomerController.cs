@@ -1,4 +1,5 @@
 using Drop.Application.Drops.GetNearbyDrops;
+using Drop.Application.Features.Drops.GetDropDetail;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Drop.Api.Controllers;
@@ -23,5 +24,18 @@ public sealed class DropsCustomerController : ControllerBase
             cancellationToken);
 
         return Ok(response);
+    }
+
+    [HttpGet("{dropId:guid}")]
+    public async Task<ActionResult<DropDetailResponse>> GetDetail(
+        Guid dropId,
+        [FromServices] GetDropDetailService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ExecuteAsync(
+            dropId,
+            cancellationToken);
+
+        return Ok(result);
     }
 }

@@ -1,4 +1,5 @@
 using Drop.Application.Claims.CreateClaim;
+using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Claims.RedeemClaim;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,9 +8,29 @@ namespace Drop.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/drops/{dropId:guid}/claims")]
+[Route("api/claims")]
 [Tags("Claims")]
 public sealed class ClaimsController : ControllerBase
+{
+    [HttpGet("me/active")]
+    public async Task<ActionResult> GetActive(
+        [FromServices] GetActiveClaimService service,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ExecuteAsync(cancellationToken);
+
+        if (result is null)
+            return NoContent();
+
+        return Ok(result);
+    }
+}
+
+[Authorize]
+[ApiController]
+[Route("api/drops/{dropId:guid}/claims")]
+[Tags("Claims")]
+public sealed class DropClaimsController : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<CreateClaimResponse>> Create(
