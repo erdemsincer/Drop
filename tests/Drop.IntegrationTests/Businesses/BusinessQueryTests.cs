@@ -116,7 +116,7 @@ public sealed class BusinessQueryTests : IClassFixture<DropApiFactory>, IAsyncLi
         (await client.GetAsync($"/api/branches/{scenario.BranchId}/drops"))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
-        (await client.PostAsync($"/api/branches/{scenario.BranchId}/qr-token", null))
+        (await client.GetAsync($"/api/branches/{scenario.BranchId}/qr"))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
         var drop = await client.PostAsJsonAsync($"/api/branches/{scenario.BranchId}/drops", new

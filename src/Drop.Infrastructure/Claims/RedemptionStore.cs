@@ -2,6 +2,7 @@ using Drop.Application.Claims;
 using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Common.Errors;
 using Drop.Application.Common.Exceptions;
+using Drop.Application.Security;
 using Drop.Domain.Drops;
 using Drop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -11,16 +12,20 @@ namespace Drop.Infrastructure.Claims;
 internal sealed class RedemptionStore : IRedemptionStore
 {
     private readonly DropDbContext _dbContext;
+    private readonly IBranchQrCodeService _qrCodeService;
 
-    public RedemptionStore(DropDbContext dbContext)
+    public RedemptionStore(
+        DropDbContext dbContext,
+        IBranchQrCodeService qrCodeService)
     {
         _dbContext = dbContext;
+        _qrCodeService = qrCodeService;
     }
 
     public async Task<RedeemClaimResponse> RedeemAsync(
         Guid claimId,
         Guid userId,
-        string qrTokenHash,
+        string qrPayload,
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
@@ -61,15 +66,8 @@ internal sealed class RedemptionStore : IRedemptionStore
                 "Drop was not found.");
         }
 
-        var validQr = await _dbContext.BranchQrTokens
-            .AnyAsync(
-                token =>
-                    token.BranchId == drop.BranchId &&
-                    token.TokenHash == qrTokenHash &&
-                    token.IsActive,
-                cancellationToken);
-
-        if (!validQr)
+        // Bound to this drop's branch and to a short time window.
+        if (!_qrCodeService.Verify(qrPayload, drop.BranchId, now))
         {
             throw new ConflictException(
                 ErrorCodes.Qr.Invalid,

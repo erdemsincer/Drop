@@ -108,6 +108,9 @@ export type DropLifecycleResponse = {
   releasedClaimCount: number;
 };
 
-export type BranchQrTokenResponse = {
-  token: string;
+export type BranchQrCode = {
+  /** Short-lived secret: render it as a QR only, never as text or in logs. */
+  payload: string;
+  refreshAt: string;
+  periodSeconds: number;
 };

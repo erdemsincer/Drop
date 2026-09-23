@@ -26,8 +26,6 @@ public sealed class DropDbContext : DbContext, IUnitOfWork
 
     public DbSet<Claim> Claims => Set<Claim>();
 
-    public DbSet<BranchQrToken> BranchQrTokens => Set<BranchQrToken>();
-
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

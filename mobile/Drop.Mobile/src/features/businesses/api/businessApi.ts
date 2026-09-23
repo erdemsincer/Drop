@@ -4,7 +4,7 @@ import type {
   AddMemberRequest,
   Branch,
   BranchDetail,
-  BranchQrTokenResponse,
+  BranchQrCode,
   BusinessDrop,
   BusinessMember,
   CreateBranchRequest,
@@ -55,10 +55,9 @@ export const createDrop = async (branchId: string, request: CreateDropRequest) =
   return response.data;
 };
 
-// Rotates the branch QR: the previous token is revoked server-side.
-// The raw token must only ever be rendered as a QR, never logged or shown as text.
-export const createBranchQrToken = async (branchId: string) => {
-  const response = await apiClient.post<BranchQrTokenResponse>(`/api/branches/${branchId}/qr-token`);
+// The branch's current rotating QR code; fetch again at refreshAt.
+export const getBranchQr = async (branchId: string) => {
+  const response = await apiClient.get<BranchQrCode>(`/api/branches/${branchId}/qr`);
   return response.data;
 };
 

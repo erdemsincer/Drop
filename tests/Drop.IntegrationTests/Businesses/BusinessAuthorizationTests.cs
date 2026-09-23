@@ -28,28 +28,30 @@ public sealed class BusinessAuthorizationTests : IClassFixture<DropApiFactory>, 
     }
 
     [Fact]
-    public async Task CreateQrToken_ShouldReturnForbidden_WhenUserIsNotBusinessMember()
+    public async Task GetQr_ShouldReturnForbidden_WhenUserIsNotBusinessMember()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 1);
         var outsiderId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
 
         var response = await CreateClient(outsiderId)
-            .PostAsync($"/api/branches/{scenario.BranchId}/qr-token", null);
+            .GetAsync($"/api/branches/{scenario.BranchId}/qr");
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await response.Content.ReadAsStringAsync()).Should().Contain("business.access_denied");
     }
 
     [Fact]
-    public async Task CreateQrToken_ShouldReturnToken_WhenUserIsOwner()
+    public async Task GetQr_ShouldReturnRotatingCode_WhenUserIsOwner()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 1);
 
         var response = await CreateClient(scenario.OwnerId)
-            .PostAsync($"/api/branches/{scenario.BranchId}/qr-token", null);
+            .GetAsync($"/api/branches/{scenario.BranchId}/qr");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await response.Content.ReadAsStringAsync()).Should().Contain("token");
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain("\"payload\":\"DROP1.");
+        body.Should().Contain("refreshAt");
     }
 
     [Fact]

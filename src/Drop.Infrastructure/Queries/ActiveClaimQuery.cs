@@ -38,11 +38,13 @@ internal sealed class ActiveClaimQuery : IActiveClaimQuery
             LIMIT 1
             """;
 
-        var result = await _dbContext
+        // The SQL already orders and limits to one row; materialising the list
+        // avoids EF's "FirstOrDefault without OrderBy" warning on raw SQL.
+        var rows = await _dbContext
             .Database
             .SqlQueryRaw<ActiveClaimResponse>(sql, userId, now)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
 
-        return result;
+        return rows.FirstOrDefault();
     }
 }

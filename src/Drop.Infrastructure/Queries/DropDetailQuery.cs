@@ -62,9 +62,12 @@ internal sealed class DropDetailQuery : IDropDetailQuery
             WHERE d."Id" = {0}
             """;
 
-        return await _dbContext
+        // WHERE on the primary key yields at most one row.
+        var rows = await _dbContext
             .Database
             .SqlQueryRaw<DropDetailResponse>(sql, dropId, now)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return rows.FirstOrDefault();
     }
 }

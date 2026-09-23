@@ -11,8 +11,8 @@ using Drop.Application.Businesses.Members;
 using Drop.Application.Branches;
 using Drop.Application.Branches.CreateBranch;
 using Drop.Application.Branches.GetBranch;
+using Drop.Application.Branches.GetBranchQr;
 using Drop.Application.Branches.GetBranches;
-using Drop.Application.BranchQrTokens.Create;
 using Drop.Application.Claims;
 using Drop.Application.Claims.CreateClaim;
 using Drop.Application.Claims.MyClaims;
@@ -74,9 +74,20 @@ public static class DependencyInjection
         services.AddScoped<IBranchRepository, BranchRepository>();
         services.AddScoped<CreateBranchService>();
 
-        services.AddScoped<IBranchQrTokenRepository, BranchQrTokenRepository>();
-        services.AddScoped<IQrTokenGenerator, QrTokenGenerator>();
-        services.AddScoped<CreateBranchQrTokenService>();
+        var qrSection = configuration.GetSection(BranchQrCodeOptions.SectionName);
+        services.Configure<BranchQrCodeOptions>(
+            opt =>
+            {
+                opt.SigningKey = qrSection["SigningKey"]!;
+
+                if (int.TryParse(qrSection["PeriodSeconds"], out var period))
+                    opt.PeriodSeconds = period;
+
+                if (int.TryParse(qrSection["AcceptedPastSteps"], out var pastSteps))
+                    opt.AcceptedPastSteps = pastSteps;
+            });
+        services.AddSingleton<IBranchQrCodeService, BranchQrCodeService>();
+        services.AddScoped<GetBranchQrService>();
 
         services.AddScoped<IDropRepository, DropRepository>();
         services.AddScoped<CreateDropService>();

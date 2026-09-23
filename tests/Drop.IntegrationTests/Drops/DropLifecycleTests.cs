@@ -35,7 +35,7 @@ public sealed class DropLifecycleTests : IClassFixture<DropApiFactory>, IAsyncLi
     public async Task End_ShouldBlockNewClaims_ButKeepExistingReservationRedeemable()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
+        var qrToken = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
         var users = await IntegrationTestData.CreateUsersAsync(_factory, count: 2);
         var claimId = await IntegrationTestData.CreateClaimAsync(
             _factory, scenario.DropId, users[0], DateTimeOffset.UtcNow, TimeSpan.FromMinutes(15));
@@ -56,7 +56,7 @@ public sealed class DropLifecycleTests : IClassFixture<DropApiFactory>, IAsyncLi
     public async Task Cancel_ShouldCancelActiveReservations()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
+        var qrToken = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
         var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
         var claimId = await IntegrationTestData.CreateClaimAsync(
             _factory, scenario.DropId, userId, DateTimeOffset.UtcNow, TimeSpan.FromMinutes(15));

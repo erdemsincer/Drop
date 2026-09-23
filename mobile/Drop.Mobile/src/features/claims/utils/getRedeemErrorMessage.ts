@@ -3,7 +3,7 @@ export const getRedeemErrorMessage = (
 ) => {
   switch (code) {
     case 'qr.invalid':
-      return 'Bu QR kodu bu Drop için geçerli değil.';
+      return 'QR kodu geçersiz ya da süresi geçmiş. Kasadaki güncel kodu okut.';
 
     case 'claim.expired':
       return 'Drop kullanım süren doldu.';

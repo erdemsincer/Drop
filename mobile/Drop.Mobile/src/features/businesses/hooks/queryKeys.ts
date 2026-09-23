@@ -4,4 +4,5 @@ export const businessKeys = {
   members: (businessId: string) => ['businesses', businessId, 'members'] as const,
   branch: (branchId: string) => ['branches', branchId] as const,
   branchDrops: (branchId: string) => ['branches', branchId, 'drops'] as const,
+  branchQr: (branchId: string) => ['branches', branchId, 'qr'] as const,
 };

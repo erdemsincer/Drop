@@ -36,7 +36,7 @@ public sealed class ClaimRedemptionTests : IClassFixture<DropApiFactory>, IAsync
     {
         // Arrange
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
+        var qrToken = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
         var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
         var claimId = await CreateActiveClaimAsync(scenario.DropId, userId);
 
@@ -60,8 +60,8 @@ public sealed class ClaimRedemptionTests : IClassFixture<DropApiFactory>, IAsync
         // Arrange
         var scenarioA = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
         var scenarioB = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenarioA.BranchId);
-        var qrTokenB = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenarioB.BranchId);
+        IntegrationTestData.QrPayloadFor(_factory, scenarioA.BranchId);
+        var qrTokenB = IntegrationTestData.QrPayloadFor(_factory, scenarioB.BranchId);
         var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
         var claimId = await CreateActiveClaimAsync(scenarioA.DropId, userId);
 
@@ -78,33 +78,48 @@ public sealed class ClaimRedemptionTests : IClassFixture<DropApiFactory>, IAsync
     }
 
     [Fact]
-    public async Task Redeem_ShouldReturnConflict_WhenQrTokenWasRevoked()
+    public async Task Redeem_ShouldAcceptRecentCode_WithinScanWindow()
     {
-        // Arrange
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var oldToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<DropDbContext>();
-
-            var tokens = await dbContext.BranchQrTokens
-                .Where(x => x.BranchId == scenario.BranchId)
-                .ToListAsync();
-
-            tokens.ForEach(x => x.Revoke(DateTimeOffset.UtcNow));
-
-            await dbContext.SaveChangesAsync();
-        }
-
-        await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
         var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
         var claimId = await CreateActiveClaimAsync(scenario.DropId, userId);
 
-        // Act
-        var response = await SendRedeemRequestAsync(claimId, userId, oldToken);
+        // Displayed 45 seconds ago; the customer was slow to scan.
+        var recent = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId, DateTimeOffset.UtcNow.AddSeconds(-45));
 
-        // Assert
+        var response = await SendRedeemRequestAsync(claimId, userId, recent);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Redeem_ShouldReturnConflict_WhenQrCodeIsStale()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
+        var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
+        var claimId = await CreateActiveClaimAsync(scenario.DropId, userId);
+
+        // A photo of the counter QR taken five minutes ago.
+        var photographed = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId, DateTimeOffset.UtcNow.AddMinutes(-5));
+
+        var response = await SendRedeemRequestAsync(claimId, userId, photographed);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("qr.invalid");
+    }
+
+    [Fact]
+    public async Task Redeem_ShouldReturnConflict_WhenQrSignatureIsTampered()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
+        var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
+        var claimId = await CreateActiveClaimAsync(scenario.DropId, userId);
+
+        var payload = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
+        var tampered = payload[..^1] + (payload[^1] == 'A' ? 'B' : 'A');
+
+        var response = await SendRedeemRequestAsync(claimId, userId, tampered);
+
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await response.Content.ReadAsStringAsync()).Should().Contain("qr.invalid");
     }
@@ -114,7 +129,7 @@ public sealed class ClaimRedemptionTests : IClassFixture<DropApiFactory>, IAsync
     {
         // Arrange
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
+        var qrToken = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
         var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
 
         var claimId = await IntegrationTestData.CreateClaimAsync(
@@ -140,7 +155,7 @@ public sealed class ClaimRedemptionTests : IClassFixture<DropApiFactory>, IAsync
     {
         // Arrange
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
+        var qrToken = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
         var userIds = await IntegrationTestData.CreateUsersAsync(_factory, count: 2);
         var claimId = await CreateActiveClaimAsync(scenario.DropId, userIds[0]);
 
@@ -160,7 +175,7 @@ public sealed class ClaimRedemptionTests : IClassFixture<DropApiFactory>, IAsync
     {
         // Arrange
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
-        var qrToken = await IntegrationTestData.CreateActiveQrTokenAsync(_factory, scenario.BranchId);
+        var qrToken = IntegrationTestData.QrPayloadFor(_factory, scenario.BranchId);
         var userId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
         var claimId = await CreateActiveClaimAsync(scenario.DropId, userId);
 

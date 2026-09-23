@@ -3,21 +3,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getApiError } from '@/api/getApiError';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
-import { useCreateBranchQrToken } from '@/features/businesses/hooks/useCreateBranchQrToken';
+import { useBranchQr } from '@/features/businesses/hooks/useBranchQr';
 import { getBusinessErrorMessage } from '@/features/businesses/utils/businessLabels';
+import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import {
   Button,
   IconButton,
   Notice,
+  ProgressBar,
   colors,
   gradients,
-  haptics,
   radius,
   shadows,
   spacing,
@@ -34,30 +35,12 @@ export default function BranchQrScreen() {
   useKeepAwake();
 
   const branchQuery = useBranch(branchId);
-  // Explicit user action only: generating a token revokes the previous one,
-  // so we never rotate it from an effect (StrictMode can double-run effects).
-  const qrMutation = useCreateBranchQrToken();
+  // Codes rotate every ~30s and expire about a minute later, so a
+  // photographed code is useless. Fetching has no side effects.
+  const qrQuery = useBranchQr(branchId);
 
-  const token = qrMutation.data?.token;
-  const apiError = qrMutation.error ? getApiError(qrMutation.error) : null;
-
-  const generate = () => {
-    haptics.press();
-    qrMutation.mutate(branchId, {
-      onSuccess: () => haptics.success(),
-      onError: () => haptics.error(),
-    });
-  };
-
-  const confirmRefresh = () =>
-    Alert.alert(
-      'QR kodu yenilensin mi?',
-      'Eski QR kod hemen geçersiz olur. Basılı ya da fotoğrafı çekilmiş eski kodlar artık çalışmaz.',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        { text: 'Yenile', style: 'destructive', onPress: generate },
-      ],
-    );
+  const code = qrQuery.data;
+  const apiError = qrQuery.error ? getApiError(qrQuery.error) : null;
 
   return (
     <LinearGradient colors={gradients.night} style={styles.root}>
@@ -74,42 +57,58 @@ export default function BranchQrScreen() {
         <Text style={styles.branch}>{branchQuery.data?.name ?? ' '}</Text>
 
         <View style={styles.qrCard}>
-          {token ? (
-            <QRCode value={token} size={QR_SIZE} color={colors.ink} backgroundColor="#FFFFFF" ecl="M" />
+          {code ? (
+            <QRCode value={code.payload} size={QR_SIZE} color={colors.ink} backgroundColor="#FFFFFF" ecl="M" />
+          ) : qrQuery.isError ? (
+            <Ionicons name="cloud-offline" size={48} color={colors.textSubtle} />
           ) : (
-            <View style={styles.placeholder}>
-              <View style={styles.placeholderIcon}>
-                <Ionicons name="qr-code" size={44} color={colors.primary} />
-              </View>
-              <Text style={styles.placeholderTitle}>QR kodu hazır değil</Text>
-              <Text style={styles.placeholderText}>
-                Güvenlik için QR kodu her açılışta yeniden oluşturulur.
-              </Text>
-            </View>
+            <ActivityIndicator size="large" color={colors.primary} />
           )}
         </View>
 
+        {code && <RotationBar refreshAt={code.refreshAt} periodSeconds={code.periodSeconds} />}
+
         <View style={styles.hintRow}>
-          <Ionicons name="scan" size={16} color={colors.lime} />
+          <Ionicons name="shield-checkmark" size={16} color={colors.lime} />
           <Text style={styles.hint}>
-            {token
-              ? 'Müşteri Drop’unu kullanmak için bu kodu uygulamadan okutmalı.'
-              : 'Müşteri geldiğinde QR kodu göster.'}
+            Kod güvenlik için sürekli yenilenir; fotoğrafı çekilen kod bir dakika içinde geçersiz olur.
           </Text>
         </View>
 
-        {apiError && <Notice message={getBusinessErrorMessage(apiError.code, apiError.detail)} />}
-        {qrMutation.isError && !apiError && <Notice message="Sunucuya ulaşılamadı." />}
-      </View>
-
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
-        {token ? (
-          <Button title="QR Kodunu Yenile" icon="refresh" variant="light" loading={qrMutation.isPending} onPress={confirmRefresh} />
-        ) : (
-          <Button title="QR Kodunu Göster" icon="qr-code" loading={qrMutation.isPending} onPress={generate} />
+        {qrQuery.isError && (
+          <View style={styles.errorBox}>
+            <Notice
+              message={
+                apiError
+                  ? getBusinessErrorMessage(apiError.code, apiError.detail)
+                  : 'Sunucuya ulaşılamadı. QR kodu için internet bağlantısı gerekli.'
+              }
+            />
+            <Button title="Tekrar dene" icon="refresh" variant="light" size="md" onPress={() => qrQuery.refetch()} />
+          </View>
         )}
       </View>
+
+      <View style={{ height: insets.bottom + spacing.lg }} />
     </LinearGradient>
+  );
+}
+
+function RotationBar({ refreshAt, periodSeconds }: { refreshAt: string; periodSeconds: number }) {
+  const remaining = useCountdown(refreshAt);
+
+  return (
+    <View style={styles.rotation}>
+      <ProgressBar
+        value={remaining.totalSeconds / periodSeconds}
+        color={colors.lime}
+        trackColor="rgba(255,255,255,0.14)"
+        height={5}
+      />
+      <Text style={styles.rotationText}>
+        Yeni kod {Math.max(0, remaining.totalSeconds)} sn sonra
+      </Text>
+    </View>
   );
 }
 
@@ -158,30 +157,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl + 6,
     ...shadows.raised,
   },
-  placeholder: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
+  rotation: {
+    width: QR_SIZE + spacing.xxl * 2,
+    gap: spacing.sm,
   },
-  placeholderIcon: {
-    width: 84,
-    height: 84,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.xl,
-  },
-  placeholderTitle: {
-    marginTop: spacing.lg,
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  placeholderText: {
-    marginTop: 6,
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
+  rotationText: {
+    color: colors.textOnDarkMuted,
+    fontSize: 12,
+    fontWeight: '700',
     textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
   hintRow: {
     flexDirection: 'row',
@@ -195,7 +180,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
-  footer: {
-    paddingHorizontal: spacing.xl,
+  errorBox: {
+    alignSelf: 'stretch',
+    gap: spacing.md,
   },
 });

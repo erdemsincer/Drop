@@ -7,7 +7,7 @@ public interface IRedemptionStore
     Task<RedeemClaimResponse> RedeemAsync(
         Guid claimId,
         Guid userId,
-        string qrTokenHash,
+        string qrPayload,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
 }

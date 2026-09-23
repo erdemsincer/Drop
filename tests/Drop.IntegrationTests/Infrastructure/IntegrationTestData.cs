@@ -73,34 +73,17 @@ public static class IntegrationTestData
     }
 
     /// <summary>
-    /// Creates an active QR token for the branch and returns the raw token.
-    /// Only the SHA-256 hash is persisted, mirroring production.
+    /// The branch QR payload a business device would display at the given time
+    /// (defaults to now), produced by the real signing service.
     /// </summary>
-    public static async Task<string> CreateActiveQrTokenAsync(
+    public static string QrPayloadFor(
         DropApiFactory factory,
-        Guid branchId)
+        Guid branchId,
+        DateTimeOffset? at = null)
     {
-        using var scope = factory.Services.CreateScope();
+        var qrCodes = factory.Services.GetRequiredService<IBranchQrCodeService>();
 
-        var dbContext =
-            scope.ServiceProvider
-                .GetRequiredService<DropDbContext>();
-
-        var tokenGenerator =
-            scope.ServiceProvider
-                .GetRequiredService<IQrTokenGenerator>();
-
-        var rawToken = tokenGenerator.Generate();
-
-        dbContext.BranchQrTokens.Add(
-            new BranchQrToken(
-                branchId,
-                tokenGenerator.Hash(rawToken),
-                DateTimeOffset.UtcNow));
-
-        await dbContext.SaveChangesAsync();
-
-        return rawToken;
+        return qrCodes.Generate(branchId, at ?? DateTimeOffset.UtcNow).Payload;
     }
 
     /// <summary>

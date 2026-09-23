@@ -1,20 +1,15 @@
-using Drop.Application.Security;
-
 namespace Drop.Application.Claims.RedeemClaim;
 
 public sealed class RedeemClaimService
 {
     private readonly IRedemptionStore _redemptionStore;
-    private readonly IQrTokenGenerator _tokenGenerator;
     private readonly TimeProvider _timeProvider;
 
     public RedeemClaimService(
         IRedemptionStore redemptionStore,
-        IQrTokenGenerator tokenGenerator,
         TimeProvider timeProvider)
     {
         _redemptionStore = redemptionStore;
-        _tokenGenerator = tokenGenerator;
         _timeProvider = timeProvider;
     }
 
@@ -24,13 +19,11 @@ public sealed class RedeemClaimService
         RedeemClaimRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Raw token never leaves this method; only its SHA-256 hash reaches the store.
-        var tokenHash = _tokenGenerator.Hash(request.QrToken);
-
+        // The scanned payload is a short-lived secret: it is verified, never logged or stored.
         return _redemptionStore.RedeemAsync(
             claimId,
             userId,
-            tokenHash,
+            request.QrToken,
             _timeProvider.GetUtcNow(),
             cancellationToken);
     }
