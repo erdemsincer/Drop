@@ -52,16 +52,17 @@ public sealed class CreateBranchQrTokenService
                 "Branch was not found.");
         }
 
-        var canManage = await _accessService.CanManageBranchAsync(
+        // Any member may show the QR: presenting it at the counter is the staff's job.
+        var role = await _accessService.GetBranchRoleAsync(
             _currentUser.Id,
             branchId,
             cancellationToken);
 
-        if (!canManage)
+        if (!BusinessRoles.CanShowQr(role))
         {
             throw new ForbiddenException(
                 ErrorCodes.Business.AccessDenied,
-                "You cannot manage this business.");
+                "You are not a member of this business.");
         }
 
         var now = _timeProvider.GetUtcNow();

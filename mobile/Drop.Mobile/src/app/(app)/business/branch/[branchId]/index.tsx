@@ -145,9 +145,16 @@ export default function BranchDashboardScreen() {
       ) : (
         branch && (
           <View style={styles.readOnly}>
-            <Badge label="SADECE GÖRÜNTÜLEME" tone="neutral" icon="eye-outline" />
+            {branch.canShowQr && (
+              <Button
+                title="Şube QR Kodunu Göster"
+                icon="qr-code"
+                onPress={() => router.push({ pathname: '/(app)/business/branch/[branchId]/qr', params: { branchId } })}
+              />
+            )}
+            <Badge label="PERSONEL" tone="neutral" icon="person-outline" />
             <Text style={styles.readOnlyText}>
-              Drop oluşturmak ve QR göstermek için işletme sahibi veya yöneticisi olmalısın.
+              Drop oluşturmak ve yönetmek için işletme sahibi veya yöneticisi olmalısın.
             </Text>
           </View>
         )

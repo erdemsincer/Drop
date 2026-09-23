@@ -46,6 +46,7 @@ public sealed class GetBranchService
             branch.Latitude,
             branch.Longitude,
             role,
-            BusinessRoles.CanManage(role));
+            BusinessRoles.CanManage(role),
+            BusinessRoles.CanShowQr(role));
     }
 }

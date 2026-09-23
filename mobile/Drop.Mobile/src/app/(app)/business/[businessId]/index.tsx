@@ -51,7 +51,18 @@ export default function BusinessDetailScreen() {
 
   return (
     <Screen edges={['top']}>
-      <Header onBack={() => router.back()} />
+      <Header
+        onBack={() => router.back()}
+        right={
+          <Button
+            title="Ekip"
+            icon="people"
+            variant="light"
+            size="md"
+            onPress={() => router.push({ pathname: '/(app)/business/[businessId]/team', params: { businessId } })}
+          />
+        }
+      />
 
       <FlatList
         data={branches}

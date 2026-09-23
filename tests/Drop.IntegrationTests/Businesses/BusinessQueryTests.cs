@@ -100,7 +100,7 @@ public sealed class BusinessQueryTests : IClassFixture<DropApiFactory>, IAsyncLi
     }
 
     [Fact]
-    public async Task Staff_ShouldViewBranchButNotManageIt()
+    public async Task Staff_ShouldViewBranchAndShowQr_ButNotCreateDrops()
     {
         var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 1);
         var staffId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
@@ -111,12 +111,22 @@ public sealed class BusinessQueryTests : IClassFixture<DropApiFactory>, IAsyncLi
         var branch = await client.GetFromJsonAsync<JsonElement>($"/api/branches/{scenario.BranchId}");
         branch.GetProperty("role").GetString().Should().Be("Staff");
         branch.GetProperty("canManage").GetBoolean().Should().BeFalse();
+        branch.GetProperty("canShowQr").GetBoolean().Should().BeTrue();
 
         (await client.GetAsync($"/api/branches/{scenario.BranchId}/drops"))
             .StatusCode.Should().Be(HttpStatusCode.OK);
 
         (await client.PostAsync($"/api/branches/{scenario.BranchId}/qr-token", null))
-            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var drop = await client.PostAsJsonAsync($"/api/branches/{scenario.BranchId}/drops", new
+        {
+            title = "Staff drop",
+            capacity = 5,
+            durationMinutes = 60,
+            claimDurationMinutes = 15
+        });
+        drop.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]

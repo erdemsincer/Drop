@@ -10,4 +10,5 @@ public sealed record BranchDetailResponse(
     double Latitude,
     double Longitude,
     BusinessMemberRole Role,
-    bool CanManage);
+    bool CanManage,
+    bool CanShowQr);

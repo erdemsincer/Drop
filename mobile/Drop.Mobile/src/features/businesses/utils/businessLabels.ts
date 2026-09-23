@@ -23,6 +23,14 @@ export const getBusinessErrorMessage = (code?: string, fallback?: string) => {
       return 'İşletme bulunamadı.';
     case 'branch.not_found':
       return 'Şube bulunamadı.';
+    case 'member.user_not_found':
+      return 'Bu e-postayla kayıtlı bir Drop hesabı yok. Kişinin önce uygulamaya kayıt olması gerekiyor.';
+    case 'member.already_exists':
+      return 'Bu kişi zaten ekipte.';
+    case 'member.cannot_remove_owner':
+      return 'İşletme sahibi ekipten çıkarılamaz.';
+    case 'member.not_found':
+      return 'Bu kişi artık ekipte değil.';
     case 'validation.failed':
       return 'Lütfen alanları kontrol et.';
     default:

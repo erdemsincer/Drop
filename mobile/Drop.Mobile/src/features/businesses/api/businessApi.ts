@@ -1,10 +1,12 @@
 import { apiClient } from '@/api/apiClient';
 
 import type {
+  AddMemberRequest,
   Branch,
   BranchDetail,
   BranchQrTokenResponse,
   BusinessDrop,
+  BusinessMember,
   CreateBranchRequest,
   CreateBranchResponse,
   CreateBusinessRequest,
@@ -68,4 +70,18 @@ export const endDrop = async (dropId: string) => {
 export const cancelDrop = async (dropId: string) => {
   const response = await apiClient.post<DropLifecycleResponse>(`/api/drops/${dropId}/cancel`);
   return response.data;
+};
+
+export const getMembers = async (businessId: string) => {
+  const response = await apiClient.get<BusinessMember[]>(`/api/businesses/${businessId}/members`);
+  return response.data;
+};
+
+export const addMember = async (businessId: string, request: AddMemberRequest) => {
+  const response = await apiClient.post<BusinessMember>(`/api/businesses/${businessId}/members`, request);
+  return response.data;
+};
+
+export const removeMember = async (businessId: string, userId: string) => {
+  await apiClient.delete(`/api/businesses/${businessId}/members/${userId}`);
 };

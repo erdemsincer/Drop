@@ -7,6 +7,7 @@ using Drop.Application.Authentication.Register;
 using Drop.Application.Businesses;
 using Drop.Application.Businesses.CreateBusiness;
 using Drop.Application.Businesses.GetMyBusinesses;
+using Drop.Application.Businesses.Members;
 using Drop.Application.Branches;
 using Drop.Application.Branches.CreateBranch;
 using Drop.Application.Branches.GetBranch;
@@ -92,6 +93,9 @@ public static class DependencyInjection
 
         services.AddScoped<IClaimStore, ClaimStore>();
         services.AddScoped<CreateClaimService>();
+
+        services.AddScoped<IBusinessMembersQuery, BusinessMembersQuery>();
+        services.AddScoped<BusinessMembersService>();
 
         services.AddScoped<IMyBusinessesQuery, MyBusinessesQuery>();
         services.AddScoped<GetMyBusinessesService>();

@@ -24,6 +24,22 @@ export type BranchDetail = {
   longitude: number;
   role: BusinessRole;
   canManage: boolean;
+  canShowQr: boolean;
+};
+
+export type BusinessMember = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: BusinessRole;
+  isCurrentUser: boolean;
+  canRemove: boolean;
+};
+
+export type AddMemberRequest = {
+  email: string;
+  role: Exclude<BusinessRole, 'Owner'>;
 };
 
 export type DropStatus = 'Draft' | 'Active' | 'Expired' | 'Cancelled';

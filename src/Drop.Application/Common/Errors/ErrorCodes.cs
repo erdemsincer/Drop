@@ -21,6 +21,15 @@ public static class ErrorCodes
         public const string AccessDenied = "business.access_denied";
     }
 
+    public static class Member
+    {
+        public const string UserNotFound = "member.user_not_found";
+        public const string AlreadyExists = "member.already_exists";
+        public const string NotFound = "member.not_found";
+        public const string InvalidRole = "member.invalid_role";
+        public const string CannotRemoveOwner = "member.cannot_remove_owner";
+    }
+
     public static class Branch
     {
         public const string NotFound = "branch.not_found";
