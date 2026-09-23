@@ -16,6 +16,7 @@ using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Drops;
 using Drop.Application.Drops.CreateDrop;
 using Drop.Application.Drops.GetBranchDrops;
+using Drop.Application.Drops.ManageDrop;
 using Drop.Application.Drops.GetNearbyDrops;
 using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Features.Drops.GetDropDetail;
@@ -24,6 +25,7 @@ using Drop.Application.Users;
 using Drop.Infrastructure.Authentication;
 using Drop.Infrastructure.Businesses;
 using Drop.Infrastructure.Claims;
+using Drop.Infrastructure.Drops;
 using Drop.Infrastructure.Persistence;
 using Drop.Infrastructure.Queries;
 using Drop.Infrastructure.Repositories;
@@ -72,6 +74,9 @@ public static class DependencyInjection
 
         services.AddScoped<IDropRepository, DropRepository>();
         services.AddScoped<CreateDropService>();
+
+        services.AddScoped<IDropLifecycleStore, DropLifecycleStore>();
+        services.AddScoped<ManageDropService>();
 
         services.AddScoped<INearbyDropQuery, NearbyDropQuery>();
         services.AddScoped<GetNearbyDropsService>();

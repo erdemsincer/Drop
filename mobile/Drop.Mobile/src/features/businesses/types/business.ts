@@ -84,6 +84,14 @@ export type CreateDropResponse = {
   endsAt: string;
 };
 
+export type DropLifecycleResponse = {
+  id: string;
+  status: DropStatus;
+  endsAt?: string | null;
+  activeClaimCount: number;
+  releasedClaimCount: number;
+};
+
 export type BranchQrTokenResponse = {
   token: string;
 };

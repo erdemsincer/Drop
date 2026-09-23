@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { Badge, colors, radius, shadows, spacing } from '@/ui';
@@ -10,9 +10,13 @@ import { statusLabels } from '../utils/businessLabels';
 
 type Props = {
   drop: BusinessDrop;
+  canManage?: boolean;
+  busy?: boolean;
+  onEnd?: () => void;
+  onCancel?: () => void;
 };
 
-export function BusinessDropCard({ drop }: Props) {
+export function BusinessDropCard({ drop, canManage = false, busy = false, onEnd, onCancel }: Props) {
   const remaining = useCountdown(drop.endsAt ?? new Date(0).toISOString());
   const live = drop.status === 'Active' && !remaining.isExpired;
 
@@ -74,6 +78,33 @@ export function BusinessDropCard({ drop }: Props) {
         <Metric color={colors.success} label="Kullanıldı" value={drop.redeemedCount} />
         <Metric color={colors.border} label="Kalan" value={drop.remainingCapacity} />
       </View>
+
+      {live && canManage && (
+        <View style={styles.actions}>
+          {busy ? (
+            <ActivityIndicator color={colors.primary} style={styles.busy} />
+          ) : (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                onPress={onEnd}
+                style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
+              >
+                <Ionicons name="stop-circle-outline" size={16} color={colors.text} />
+                <Text style={styles.actionText}>Erken bitir</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={onCancel}
+                style={({ pressed }) => [styles.action, styles.actionDanger, pressed && styles.actionPressed]}
+              >
+                <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
+                <Text style={[styles.actionText, styles.actionTextDanger]}>İptal et</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -183,6 +214,42 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '700',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceMuted,
+  },
+  action: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 40,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+  },
+  actionDanger: {
+    backgroundColor: colors.dangerSoft,
+  },
+  actionPressed: {
+    opacity: 0.75,
+  },
+  actionText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  actionTextDanger: {
+    color: colors.danger,
+  },
+  busy: {
+    flex: 1,
+    height: 40,
   },
   metricValue: {
     marginTop: 3,

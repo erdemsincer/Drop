@@ -49,6 +49,15 @@ public sealed class Claim : Entity
 
     public DateTimeOffset? RedeemedAt { get; private set; }
 
+    /// <summary>Invalidates an unused reservation (e.g. the drop was cancelled).</summary>
+    public void Expire()
+    {
+        if (Status == ClaimStatus.Active)
+        {
+            Status = ClaimStatus.Expired;
+        }
+    }
+
     public void Redeem(DateTimeOffset now)
     {
         if (Status != ClaimStatus.Active)

@@ -11,6 +11,7 @@ import type {
   CreateBusinessResponse,
   CreateDropRequest,
   CreateDropResponse,
+  DropLifecycleResponse,
   MyBusiness,
 } from '../types/business';
 
@@ -56,5 +57,15 @@ export const createDrop = async (branchId: string, request: CreateDropRequest) =
 // The raw token must only ever be rendered as a QR, never logged or shown as text.
 export const createBranchQrToken = async (branchId: string) => {
   const response = await apiClient.post<BranchQrTokenResponse>(`/api/branches/${branchId}/qr-token`);
+  return response.data;
+};
+
+export const endDrop = async (dropId: string) => {
+  const response = await apiClient.post<DropLifecycleResponse>(`/api/drops/${dropId}/end`);
+  return response.data;
+};
+
+export const cancelDrop = async (dropId: string) => {
+  const response = await apiClient.post<DropLifecycleResponse>(`/api/drops/${dropId}/cancel`);
   return response.data;
 };

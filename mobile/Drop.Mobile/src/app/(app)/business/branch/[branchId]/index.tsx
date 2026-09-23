@@ -1,10 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { BusinessDropCard } from '@/features/businesses/components/BusinessDropCard';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
+import { useDropLifecycle } from '@/features/businesses/hooks/useDropLifecycle';
 import type { BusinessDrop } from '@/features/businesses/types/business';
 import {
   Badge,
@@ -14,6 +15,7 @@ import {
   Skeleton,
   StateView,
   colors,
+  haptics,
   gradients,
   radius,
   spacing,
@@ -27,6 +29,44 @@ export default function BranchDashboardScreen() {
   const { branchId } = useLocalSearchParams<{ branchId: string }>();
   const branchQuery = useBranch(branchId);
   const dropsQuery = useBranchDrops(branchId);
+  const lifecycle = useDropLifecycle(branchId);
+
+  const runLifecycle = (dropId: string, action: 'end' | 'cancel') => {
+    haptics.press();
+    lifecycle.mutate(
+      { dropId, action },
+      {
+        onSuccess: () => haptics.success(),
+        onError: () => {
+          haptics.error();
+          Alert.alert('İşlem tamamlanamadı', 'Drop zaten sona ermiş olabilir. Liste yenilendi.');
+          void dropsQuery.refetch();
+        },
+      },
+    );
+  };
+
+  const confirmEnd = (drop: BusinessDrop) =>
+    Alert.alert(
+      'Drop erken bitirilsin mi?',
+      'Yeni müşteri yakalayamaz. Şu an rezervasyonu olan müşteriler süreleri içinde yine kullanabilir.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Erken bitir', onPress: () => runLifecycle(drop.id, 'end') },
+      ],
+    );
+
+  const confirmCancel = (drop: BusinessDrop) =>
+    Alert.alert(
+      'Drop iptal edilsin mi?',
+      drop.activeClaimCount > 0
+        ? `${drop.activeClaimCount} müşterinin rezervasyonu da iptal olacak ve kullanamayacaklar.`
+        : 'Drop yayından kaldırılacak.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'İptal et', style: 'destructive', onPress: () => runLifecycle(drop.id, 'cancel') },
+      ],
+    );
 
   if (branchQuery.isError) {
     return (
@@ -122,7 +162,15 @@ export default function BranchDashboardScreen() {
       <SectionList
         sections={sections}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <BusinessDropCard drop={item} />}
+        renderItem={({ item }) => (
+          <BusinessDropCard
+            drop={item}
+            canManage={branch?.canManage}
+            busy={lifecycle.isPending && lifecycle.variables?.dropId === item.id}
+            onEnd={() => confirmEnd(item)}
+            onCancel={() => confirmCancel(item)}
+          />
+        )}
         renderSectionHeader={({ section }) => (
           <Text style={styles.sectionTitle}>
             {section.title} · {section.data.length}

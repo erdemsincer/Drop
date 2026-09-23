@@ -69,7 +69,8 @@ public sealed class Drop : Entity
     public void Activate(DateTimeOffset now)
     {
         if (Status != DropStatus.Draft)
-            throw new InvalidOperationException(
+            throw new DropDomainException(
+                "drop.not_draft",
                 "Only draft drops can be activated.");
 
         Status = DropStatus.Active;
@@ -77,12 +78,36 @@ public sealed class Drop : Entity
         EndsAt = now.Add(Duration);
     }
 
-    public void Cancel()
+    public bool IsLive(DateTimeOffset now) =>
+        Status == DropStatus.Active && EndsAt > now;
+
+    /// <summary>
+    /// Stops new claims now. Existing reservations stay valid and can still be redeemed.
+    /// </summary>
+    public void End(DateTimeOffset now)
     {
-        if (Status is DropStatus.Expired or DropStatus.Cancelled)
-            throw new InvalidOperationException(
-                "Drop cannot be cancelled.");
+        EnsureLive(now);
+
+        Status = DropStatus.Expired;
+        EndsAt = now;
+    }
+
+    /// <summary>
+    /// Withdraws the drop entirely. Callers must also expire its active claims.
+    /// </summary>
+    public void Cancel(DateTimeOffset now)
+    {
+        EnsureLive(now);
 
         Status = DropStatus.Cancelled;
+        EndsAt = now;
+    }
+
+    private void EnsureLive(DateTimeOffset now)
+    {
+        if (!IsLive(now))
+            throw new DropDomainException(
+                "drop.not_active",
+                "Only live drops can be ended or cancelled.");
     }
 }
