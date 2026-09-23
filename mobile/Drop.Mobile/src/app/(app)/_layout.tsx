@@ -1,8 +1,7 @@
-import * as Notifications from 'expo-notifications';
 import { Redirect, Stack, router } from 'expo-router';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 
+import { getNotifications } from '@/features/notifications/notificationsModule';
 import { useAuth } from '@/providers/AuthProvider';
 import { Screen, StateView, colors } from '@/ui';
 
@@ -11,9 +10,10 @@ export default function AppLayout() {
 
   // Tapping a claim reminder opens that claim's ticket.
   useEffect(() => {
-    if (Platform.OS === 'web' || !isAuthenticated) return;
+    const notifications = getNotifications();
+    if (!notifications || !isAuthenticated) return;
 
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+    const subscription = notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as { claimId?: string; expiresAt?: string };
 
       if (data?.claimId && data.expiresAt) {

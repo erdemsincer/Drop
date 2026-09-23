@@ -1,5 +1,4 @@
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { getNotifications } from './notificationsModule';
 
 const REMIND_BEFORE_MS = 5 * 60_000;
 const MIN_LEAD_MS = 15_000;
@@ -11,23 +10,14 @@ export type ReminderClaim = {
   dropTitle?: string;
 };
 
-const supported = Platform.OS !== 'web';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+type Notifications = NonNullable<ReturnType<typeof getNotifications>>;
 
 // Asked only when the user actually claims a drop, where the value is obvious.
-const ensurePermission = async () => {
-  const current = await Notifications.getPermissionsAsync();
+const ensurePermission = async (notifications: Notifications) => {
+  const current = await notifications.getPermissionsAsync();
   if (current.granted) return true;
   if (!current.canAskAgain) return false;
-  return (await Notifications.requestPermissionsAsync()).granted;
+  return (await notifications.requestPermissionsAsync()).granted;
 };
 
 /**
@@ -35,21 +25,22 @@ const ensurePermission = async () => {
  * safe to call on every active-claim refresh. Best effort: never throws.
  */
 export const scheduleClaimReminder = async (claim: ReminderClaim, askPermission = false) => {
-  if (!supported) return;
+  const notifications = getNotifications();
+  if (!notifications) return;
 
   try {
     const fireAt = new Date(claim.expiresAt).getTime() - REMIND_BEFORE_MS;
     if (fireAt - Date.now() < MIN_LEAD_MS) return;
 
     const granted = askPermission
-      ? await ensurePermission()
-      : (await Notifications.getPermissionsAsync()).granted;
+      ? await ensurePermission(notifications)
+      : (await notifications.getPermissionsAsync()).granted;
     if (!granted) return;
 
     const identifier = PREFIX + claim.claimId;
-    await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => undefined);
+    await notifications.cancelScheduledNotificationAsync(identifier).catch(() => undefined);
 
-    await Notifications.scheduleNotificationAsync({
+    await notifications.scheduleNotificationAsync({
       identifier,
       content: {
         title: "Drop'unun süresi dolmak üzere ⏳",
@@ -58,7 +49,7 @@ export const scheduleClaimReminder = async (claim: ReminderClaim, askPermission 
           : "5 dakikan kaldı. İşletmede QR kodu okutmayı unutma!",
         data: { claimId: claim.claimId, expiresAt: claim.expiresAt },
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(fireAt) },
+      trigger: { type: notifications.SchedulableTriggerInputTypes.DATE, date: new Date(fireAt) },
     });
   } catch {
     // Reminders are a convenience; claiming must never fail because of them.
@@ -66,21 +57,23 @@ export const scheduleClaimReminder = async (claim: ReminderClaim, askPermission 
 };
 
 export const cancelClaimReminder = async (claimId: string) => {
-  if (!supported) return;
-  await Notifications.cancelScheduledNotificationAsync(PREFIX + claimId).catch(() => undefined);
+  const notifications = getNotifications();
+  if (!notifications) return;
+  await notifications.cancelScheduledNotificationAsync(PREFIX + claimId).catch(() => undefined);
 };
 
 /** Drops reminders for claims that are no longer active (redeemed, cancelled, expired). */
 export const syncClaimReminders = async (activeClaimId: string | null) => {
-  if (!supported) return;
+  const notifications = getNotifications();
+  if (!notifications) return;
 
   try {
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const scheduled = await notifications.getAllScheduledNotificationsAsync();
 
     await Promise.all(
       scheduled
         .filter(item => item.identifier.startsWith(PREFIX) && item.identifier !== PREFIX + activeClaimId)
-        .map(item => Notifications.cancelScheduledNotificationAsync(item.identifier)),
+        .map(item => notifications.cancelScheduledNotificationAsync(item.identifier)),
     );
   } catch {
     // ignore
