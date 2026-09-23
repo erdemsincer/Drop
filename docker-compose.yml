@@ -5,11 +5,38 @@ services:
     environment:
       POSTGRES_DB: dropdb
       POSTGRES_USER: drop
-      POSTGRES_PASSWORD: drop_dev_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-drop_dev_password}
     ports:
       - "5432:5432"
     volumes:
       - drop_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drop -d dropdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Full stack: docker compose --profile api up --build
+  # Plain `docker compose up -d` still starts only Postgres for local `dotnet run`.
+  api:
+    profiles: ["api"]
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=dropdb;Username=drop;Password=${POSTGRES_PASSWORD:-drop_dev_password}
+      # Required. Missing or development values stop the API at startup.
+      Jwt__Key: ${JWT_KEY:-}
+      Qr__SigningKey: ${QR_SIGNING_KEY:-}
+      Database__MigrateOnStartup: "true"
+      Email__SmtpHost: ${SMTP_HOST:-}
+      Email__SmtpPort: ${SMTP_PORT:-587}
+      Email__SmtpUser: ${SMTP_USER:-}
+      Email__SmtpPassword: ${SMTP_PASSWORD:-}
+      Email__From: ${EMAIL_FROM:-Drop <no-reply@drop.app>}
+    ports:
+      - "8080:8080"
 
 volumes:
   drop_postgres_data:
