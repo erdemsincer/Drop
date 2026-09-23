@@ -91,7 +91,7 @@ export default function RedeemedScreen() {
       </View>
 
       <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.lg }]}>
-        <Button title="Ana Sayfaya Dön" variant="light" icon="home" onPress={() => router.replace('/(app)')} />
+        <Button title="Ana Sayfaya Dön" variant="light" icon="home" onPress={() => router.replace('/(app)/(tabs)')} />
       </View>
     </LinearGradient>
   );

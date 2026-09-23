@@ -36,7 +36,7 @@ export default function LoginScreen() {
         onSuccess: async () => {
           haptics.success();
           await refresh();
-          router.replace('/(app)');
+          router.replace('/(app)/(tabs)');
         },
         onError: () => haptics.error(),
       },

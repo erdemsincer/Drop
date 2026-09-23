@@ -26,7 +26,7 @@ export const useCreateClaim = () => {
         }),
 
         queryClient.invalidateQueries({
-          queryKey: ['claims', 'active'],
+          queryKey: ['claims'],
         }),
       ]);
     },

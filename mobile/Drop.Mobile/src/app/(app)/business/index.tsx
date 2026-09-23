@@ -24,7 +24,7 @@ export default function BusinessHomeScreen() {
   const businessesQuery = useMyBusinesses();
   const businesses = businessesQuery.data ?? [];
 
-  const goCustomer = () => (router.canGoBack() ? router.back() : router.replace('/(app)'));
+  const goCustomer = () => (router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)'));
   const goCreate = () => router.push('/(app)/business/create');
 
   if (businessesQuery.isError) {
@@ -45,7 +45,7 @@ export default function BusinessHomeScreen() {
 
   // Only business members reach this screen; anyone else goes back to the feed.
   if (!businessesQuery.isLoading && businesses.length === 0) {
-    return <Redirect href="/(app)" />;
+    return <Redirect href="/(app)/(tabs)" />;
   }
 
   return (

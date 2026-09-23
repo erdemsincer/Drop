@@ -1,5 +1,6 @@
 using Drop.Application.Authentication;
 using Drop.Application.Claims.CreateClaim;
+using Drop.Application.Claims.MyClaims;
 using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Claims.RedeemClaim;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,15 @@ namespace Drop.Api.Controllers;
 [Tags("Claims")]
 public sealed class ClaimsController : ControllerBase
 {
+    /// <summary>The current user's claims, newest first (max 50).</summary>
+    [HttpGet("me")]
+    public async Task<ActionResult<IReadOnlyList<MyClaimResponse>>> GetMine(
+        [FromServices] GetMyClaimsService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(cancellationToken));
+    }
+
     [HttpGet("me/active")]
     public async Task<ActionResult> GetActive(
         [FromServices] GetActiveClaimService service,

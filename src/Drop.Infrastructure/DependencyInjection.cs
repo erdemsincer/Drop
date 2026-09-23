@@ -15,6 +15,7 @@ using Drop.Application.Branches.GetBranches;
 using Drop.Application.BranchQrTokens.Create;
 using Drop.Application.Claims;
 using Drop.Application.Claims.CreateClaim;
+using Drop.Application.Claims.MyClaims;
 using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Drops;
 using Drop.Application.Drops.CreateDrop;
@@ -25,6 +26,7 @@ using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Features.Drops.GetDropDetail;
 using Drop.Application.Security;
 using Drop.Application.Users;
+using Drop.Application.Users.Me;
 using Drop.Infrastructure.Authentication;
 using Drop.Infrastructure.BackgroundJobs;
 using Drop.Infrastructure.Businesses;
@@ -87,6 +89,10 @@ public static class DependencyInjection
 
         services.AddScoped<IDropDetailQuery, DropDetailQuery>();
         services.AddScoped<GetDropDetailService>();
+
+        services.AddScoped<IMyClaimsQuery, MyClaimsQuery>();
+        services.AddScoped<GetMyClaimsService>();
+        services.AddScoped<GetMeService>();
 
         services.AddScoped<IActiveClaimQuery, ActiveClaimQuery>();
         services.AddScoped<GetActiveClaimService>();

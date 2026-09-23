@@ -182,7 +182,7 @@ export default function ClaimScannerScreen() {
           <View style={styles.errorContent}>
             <Notice message={errorMessage} />
             {terminal ? (
-              <Button title="Ana Sayfaya Dön" variant="dark" icon="home" onPress={() => router.replace('/(app)')} />
+              <Button title="Ana Sayfaya Dön" variant="dark" icon="home" onPress={() => router.replace('/(app)/(tabs)')} />
             ) : (
               <Button title="Tekrar Tara" icon="refresh" onPress={handleRetry} />
             )}

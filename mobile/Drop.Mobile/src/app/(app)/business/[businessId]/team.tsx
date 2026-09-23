@@ -103,7 +103,7 @@ export default function TeamScreen() {
             removeMutation.mutate(member.userId, {
               onSuccess: () => {
                 haptics.success();
-                if (member.isCurrentUser) router.replace('/(app)');
+                if (member.isCurrentUser) router.replace('/(app)/(tabs)');
               },
               onError: error => {
                 haptics.error();

@@ -3,6 +3,7 @@ import { apiClient } from '@/api/apiClient';
 import type {
   ActiveClaim,
   CreateClaimResponse,
+  MyClaim,
   RedeemClaimRequest,
   RedeemClaimResponse,
 } from '../types/claim';
@@ -41,5 +42,10 @@ export const redeemClaim = async (
       { qrToken } satisfies RedeemClaimRequest,
     );
 
+  return response.data;
+};
+
+export const getMyClaims = async () => {
+  const response = await apiClient.get<MyClaim[]>('/api/claims/me');
   return response.data;
 };

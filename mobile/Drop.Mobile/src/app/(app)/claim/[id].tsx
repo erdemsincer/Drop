@@ -35,7 +35,7 @@ export default function ClaimScreen() {
   const totalSeconds = Number(durationMinutes) * 60;
   const progress = totalSeconds > 0 ? remaining.totalSeconds / totalSeconds : null;
 
-  const goHome = () => router.replace('/(app)');
+  const goHome = () => router.replace('/(app)/(tabs)');
 
   return (
     <Screen>

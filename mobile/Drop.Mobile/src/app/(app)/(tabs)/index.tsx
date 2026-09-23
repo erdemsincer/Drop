@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { ActiveClaimBanner } from '@/features/claims/components/ActiveClaimBanner';
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
@@ -13,9 +13,7 @@ import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
 import { useCurrentLocation } from '@/features/location/hooks/useCurrentLocation';
-import { useAuth } from '@/providers/AuthProvider';
 import {
-  IconButton,
   Screen,
   StateView,
   colors,
@@ -26,7 +24,6 @@ import {
 } from '@/ui';
 
 export default function HomeScreen() {
-  const { signOut } = useAuth();
   const [radiusKm, setRadiusKm] = useState(5);
 
   const locationQuery = useCurrentLocation();
@@ -42,13 +39,6 @@ export default function HomeScreen() {
   });
 
   const drops = nearbyQuery.data ?? [];
-
-  const confirmLogout = () => {
-    Alert.alert('Çıkış yap', 'Hesabından çıkmak istediğine emin misin?', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Çıkış yap', style: 'destructive', onPress: () => void signOut() },
-    ]);
-  };
 
   const openClaim = (claim: ActiveClaim) =>
     router.push({
@@ -109,7 +99,6 @@ export default function HomeScreen() {
               <Text style={styles.modeButtonText}>İşletme</Text>
             </Pressable>
           )}
-          <IconButton icon="log-out-outline" accessibilityLabel="Çıkış yap" onPress={confirmLogout} />
         </View>
       </View>
 

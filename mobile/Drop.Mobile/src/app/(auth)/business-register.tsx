@@ -56,7 +56,7 @@ export default function BusinessRegisterScreen() {
         onSuccess: async business => {
           haptics.success();
           await refresh();
-          router.replace('/(app)');
+          router.replace('/(app)/(tabs)');
           router.push({ pathname: '/(app)/business/[businessId]', params: { businessId: business.id } });
         },
         onError: () => haptics.error(),

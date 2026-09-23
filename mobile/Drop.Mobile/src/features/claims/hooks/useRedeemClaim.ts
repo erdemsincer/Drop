@@ -26,7 +26,7 @@ export const useRedeemClaim = () => {
     onSuccess: async data => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ['claims', 'active'],
+          queryKey: ['claims'],
         }),
 
         queryClient.invalidateQueries({

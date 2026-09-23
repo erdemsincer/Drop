@@ -14,5 +14,5 @@ export default function IndexScreen() {
     );
   }
 
-  return <Redirect href={isAuthenticated ? '/(app)' : '/(auth)/login'} />;
+  return <Redirect href={isAuthenticated ? '/(app)/(tabs)' : '/(auth)/login'} />;
 }

@@ -23,3 +23,17 @@ export type RedeemClaimResponse = {
   dropId: string;
   redeemedAt: string;
 };
+
+export type ClaimStatus = 'Active' | 'Expired' | 'Redeemed' | 'Cancelled';
+
+export type MyClaim = {
+  claimId: string;
+  dropId: string;
+  dropTitle: string;
+  businessName: string;
+  branchName: string;
+  status: ClaimStatus;
+  createdAt: string;
+  expiresAt: string;
+  redeemedAt?: string | null;
+};
