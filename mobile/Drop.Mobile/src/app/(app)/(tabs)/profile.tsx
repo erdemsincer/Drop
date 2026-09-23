@@ -74,6 +74,10 @@ export default function ProfileScreen() {
           <Row icon="ticket" title="Drop'larım" onPress={() => router.navigate('/(app)/(tabs)/claims')} />
           <Row icon="log-out" title="Çıkış yap" danger onPress={confirmLogout} />
         </Section>
+
+        <Section title="Gizlilik">
+          <Row icon="trash" title="Hesabımı sil" danger onPress={() => router.push('/(app)/account/delete')} />
+        </Section>
       </ScrollView>
     </Screen>
   );

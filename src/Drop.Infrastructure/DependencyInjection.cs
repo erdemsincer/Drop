@@ -2,6 +2,7 @@ using Drop.Application.Abstractions;
 using Drop.Application.Authentication;
 using Drop.Application.Authentication.Login;
 using Drop.Application.Authentication.Logout;
+using Drop.Application.Authentication.PasswordReset;
 using Drop.Application.Authentication.Refresh;
 using Drop.Application.Authentication.Register;
 using Drop.Application.Businesses;
@@ -19,6 +20,7 @@ using Drop.Application.Claims.CreateClaim;
 using Drop.Application.Claims.MyClaims;
 using Drop.Application.Claims.RedeemClaim;
 using Drop.Application.Drops;
+using Drop.Application.Notifications;
 using Drop.Application.Drops.CreateDrop;
 using Drop.Application.Drops.GetBranchDrops;
 using Drop.Application.Drops.ManageDrop;
@@ -27,16 +29,19 @@ using Drop.Application.Features.Claims.ActiveClaim;
 using Drop.Application.Features.Drops.GetDropDetail;
 using Drop.Application.Security;
 using Drop.Application.Users;
+using Drop.Application.Users.DeleteAccount;
 using Drop.Application.Users.Me;
 using Drop.Infrastructure.Authentication;
 using Drop.Infrastructure.BackgroundJobs;
 using Drop.Infrastructure.Businesses;
 using Drop.Infrastructure.Claims;
 using Drop.Infrastructure.Drops;
+using Drop.Infrastructure.Notifications;
 using Drop.Infrastructure.Persistence;
 using Drop.Infrastructure.Queries;
 using Drop.Infrastructure.Repositories;
 using Drop.Infrastructure.Security;
+using Drop.Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -106,6 +111,8 @@ public static class DependencyInjection
         services.AddScoped<IMyClaimsQuery, MyClaimsQuery>();
         services.AddScoped<GetMyClaimsService>();
         services.AddScoped<GetMeService>();
+        services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();
+        services.AddScoped<DeleteAccountService>();
 
         services.AddScoped<IActiveClaimQuery, ActiveClaimQuery>();
         services.AddScoped<GetActiveClaimService>();
@@ -143,6 +150,29 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<RefreshSessionService>();
         services.AddScoped<LogoutService>();
+        services.AddScoped<IPasswordResetStore, PasswordResetStore>();
+        services.AddScoped<PasswordResetService>();
+
+        var emailSection = configuration.GetSection(EmailOptions.SectionName);
+        services.Configure<EmailOptions>(
+            opt =>
+            {
+                opt.SmtpHost = emailSection["SmtpHost"];
+                opt.SmtpUser = emailSection["SmtpUser"];
+                opt.SmtpPassword = emailSection["SmtpPassword"];
+                opt.From = emailSection["From"] ?? opt.From;
+
+                if (int.TryParse(emailSection["SmtpPort"], out var port))
+                    opt.SmtpPort = port;
+
+                if (bool.TryParse(emailSection["EnableSsl"], out var ssl))
+                    opt.EnableSsl = ssl;
+            });
+
+        if (string.IsNullOrWhiteSpace(emailSection["SmtpHost"]))
+            services.AddSingleton<IEmailSender, DevelopmentEmailSender>();
+        else
+            services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         var jwtSection = configuration.GetSection(JwtOptions.SectionName);
         services.Configure<JwtOptions>(

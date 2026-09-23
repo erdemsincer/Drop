@@ -13,6 +13,7 @@ public static class ErrorCodes
         public const string EmailExists = "auth.email_exists";
         public const string UserInactive = "auth.user_inactive";
         public const string InvalidRefreshToken = "auth.invalid_refresh_token";
+        public const string InvalidResetCode = "auth.invalid_reset_code";
     }
 
     public static class Business

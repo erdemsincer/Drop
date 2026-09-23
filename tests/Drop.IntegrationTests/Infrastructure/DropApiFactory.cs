@@ -63,6 +63,11 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
 
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<Drop.Application.Notifications.IEmailSender>();
+            services.AddSingleton<CapturingEmailSender>();
+            services.AddSingleton<Drop.Application.Notifications.IEmailSender>(
+                sp => sp.GetRequiredService<CapturingEmailSender>());
+
             // Remove existing DbContext registration
             services.RemoveAll<DbContextOptions<DropDbContext>>();
 

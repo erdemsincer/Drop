@@ -18,3 +18,11 @@ export const register = async (request: RegisterRequest) => {
 export const logout = async (refreshToken: string) => {
   await apiClient.post('/api/auth/logout', { refreshToken });
 };
+
+export const requestPasswordReset = async (email: string) => {
+  await apiClient.post('/api/auth/forgot-password', { email });
+};
+
+export const resetPassword = async (request: { email: string; code: string; newPassword: string }) => {
+  await apiClient.post('/api/auth/reset-password', request);
+};

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { getApiErrorMessage } from '@/api/apiError';
 import { getApiError } from '@/api/getApiError';
@@ -9,7 +10,7 @@ import { BusinessSignupLink } from '@/features/auth/components/BusinessSignupLin
 import { useLogin } from '@/features/auth/hooks/useLogin';
 import { type AuthFormErrors, validateLogin } from '@/features/auth/utils/authValidation';
 import { useAuth } from '@/providers/AuthProvider';
-import { Button, Notice, TextField, haptics } from '@/ui';
+import { Button, Notice, TextField, colors, haptics } from '@/ui';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -105,6 +106,15 @@ export default function LoginScreen() {
         error={apiError?.errors ? passwordError : formErrors.password}
       />
 
+      <Pressable
+        accessibilityRole="link"
+        hitSlop={8}
+        style={styles.forgot}
+        onPress={() => router.push({ pathname: '/(auth)/forgot-password', params: { email: email.trim() } })}
+      >
+        <Text style={styles.forgotText}>Şifremi unuttum</Text>
+      </Pressable>
+
       {generalError && <Notice message={generalError} />}
 
       <Button
@@ -116,3 +126,15 @@ export default function LoginScreen() {
     </AuthShell>
   );
 }
+
+const styles = StyleSheet.create({
+  forgot: {
+    alignSelf: 'flex-end',
+    marginTop: -6,
+  },
+  forgotText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+});

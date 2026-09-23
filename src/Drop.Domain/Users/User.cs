@@ -44,4 +44,14 @@ public sealed class User : Entity
     public DateTimeOffset CreatedAt { get; private set; }
 
     public UserStatus Status { get; private set; }
+
+    public void ChangePassword(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            throw new ArgumentException("Password hash cannot be empty.");
+        }
+
+        PasswordHash = passwordHash;
+    }
 }

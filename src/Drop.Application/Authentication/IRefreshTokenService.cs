@@ -19,6 +19,11 @@ public interface IRefreshTokenService
     Task RevokeAsync(
         string rawToken,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Signs the user out everywhere (e.g. after a password reset).</summary>
+    Task RevokeAllAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record RefreshRotation(Guid UserId, string RefreshToken);

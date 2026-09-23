@@ -1,5 +1,6 @@
 using Drop.Application.Authentication.Login;
 using Drop.Application.Authentication.Logout;
+using Drop.Application.Authentication.PasswordReset;
 using Drop.Application.Authentication.Refresh;
 using Drop.Application.Authentication.Register;
 using Microsoft.AspNetCore.Mvc;
@@ -51,6 +52,30 @@ public sealed class AuthController : ControllerBase
         CancellationToken cancellationToken)
     {
         await service.ExecuteAsync(request, cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>E-mails a 6-digit reset code. Always 202, whether or not the account exists.</summary>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        [FromServices] PasswordResetService service,
+        CancellationToken cancellationToken)
+    {
+        await service.RequestAsync(request, cancellationToken);
+
+        return Accepted();
+    }
+
+    /// <summary>Sets a new password with the e-mailed code and signs out every session.</summary>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        [FromServices] PasswordResetService service,
+        CancellationToken cancellationToken)
+    {
+        await service.ResetAsync(request, cancellationToken);
 
         return NoContent();
     }

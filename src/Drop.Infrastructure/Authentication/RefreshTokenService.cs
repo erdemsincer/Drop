@@ -104,6 +104,11 @@ internal sealed class RefreshTokenService : IRefreshTokenService
             .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.RevokedAt, now), cancellationToken);
     }
 
+    public Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return RevokeAllAsync(userId, _timeProvider.GetUtcNow(), cancellationToken);
+    }
+
     private Task RevokeAllAsync(Guid userId, DateTimeOffset now, CancellationToken cancellationToken)
     {
         return _dbContext.RefreshTokens

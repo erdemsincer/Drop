@@ -20,8 +20,8 @@ export const apiClient = create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Endpoints where a 401 means "bad credentials", not "expired access token".
-const NO_REFRESH_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh', '/api/auth/logout'];
+// On auth endpoints a 401 means "bad credentials", not "expired access token".
+const NO_REFRESH_PREFIX = '/api/auth/';
 
 type RetriableConfig = AxiosRequestConfig & { _retried?: boolean };
 
@@ -72,7 +72,7 @@ apiClient.interceptors.response.use(
     }
 
     const config = error.config as RetriableConfig;
-    const skip = NO_REFRESH_PATHS.some(path => config.url?.includes(path));
+    const skip = config.url?.includes(NO_REFRESH_PREFIX) ?? false;
 
     if (skip || config._retried) {
       return Promise.reject(error);
