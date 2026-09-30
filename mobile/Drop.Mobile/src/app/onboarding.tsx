@@ -74,6 +74,11 @@ const slides: Slide[] = [
   },
 ];
 
+// Plain values only: anything a worklet closes over is copied to the UI thread,
+// and `slides` holds React components that must never be copied there.
+const glowColors = slides.map(slide => slide.glow);
+const lastIndex = slides.length - 1;
+
 export default function OnboardingScreen() {
   const { replay } = useLocalSearchParams<{ replay?: string }>();
   const { width, height } = useWindowDimensions();
@@ -108,13 +113,13 @@ export default function OnboardingScreen() {
     router.replace(destination);
   };
 
-  const glow = useAnimatedStyle(() => {
-    const input = slides.map((_, i) => i * width);
-    return {
-      backgroundColor: interpolateColor(scrollX.value, input, slides.map(slide => slide.glow)),
-      transform: [{ translateX: interpolate(scrollX.value, [0, width * (slides.length - 1)], [40, -40]) }],
-    };
-  });
+  const glowInput = glowColors.map((_, i) => i * width);
+  const glowEnd = width * lastIndex;
+
+  const glow = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(scrollX.value, glowInput, glowColors),
+    transform: [{ translateX: interpolate(scrollX.value, [0, glowEnd], [40, -40]) }],
+  }));
 
   return (
     <View style={styles.root}>

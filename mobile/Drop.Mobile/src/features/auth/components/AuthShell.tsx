@@ -87,7 +87,7 @@ export function AuthShell({ eyebrow, title, subtitle, footer, children }: Props)
             </Animated.View>
           </LinearGradient>
 
-          <Animated.View entering={FadeInUp.delay(120).duration(480).springify().damping(18)} style={styles.sheet}>
+          <Animated.View entering={FadeInUp.delay(120).springify().damping(18)} style={styles.sheet}>
             {children}
           </Animated.View>
 

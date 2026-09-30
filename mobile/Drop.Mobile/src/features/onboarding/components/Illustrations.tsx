@@ -113,6 +113,8 @@ function MapPin({ top, left, icon, label, delay }: (typeof pins)[number]) {
 /* ---------------------------------- 2 · Card -------------------------------- */
 
 const COUNTDOWN_FROM = 14 * 60 + 52;
+// Card width minus its padding: the bar animates in points, not percentages.
+const TRACK_WIDTH = 256 - 16 * 2;
 
 const formatClock = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
@@ -130,7 +132,9 @@ export function DropCardIllustration() {
 
   const card = useFloat(float, 10, -3);
   const sticker = useFloat(float, 4, 12);
-  const bar = useAnimatedStyle(() => ({ width: `${interpolate(fill.value, [0, 1], [38, 72])}%` }));
+  const bar = useAnimatedStyle(() => ({
+    width: interpolate(fill.value, [0, 1], [TRACK_WIDTH * 0.38, TRACK_WIDTH * 0.72]),
+  }));
   const button = useAnimatedStyle(() => ({ transform: [{ scale: interpolate(tap.value, [0, 1], [1, 1.05]) }] }));
 
   return (
