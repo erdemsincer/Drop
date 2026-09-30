@@ -1,4 +1,5 @@
 using Drop.Application.Drops.GetNearbyDrops;
+using Drop.Domain.Drops;
 using Drop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +19,10 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
         double longitude,
         double radiusKm,
         DateTimeOffset now,
+        DropCategory? category,
         CancellationToken cancellationToken = default)
     {
-        const string sql =
+        const string select =
             """
             SELECT
                 d."Id" AS "Id",
@@ -59,7 +61,9 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
                     )
                 )::int AS "DistanceMeters",
 
-                d."EndsAt" AS "EndsAt"
+                d."EndsAt" AS "EndsAt",
+
+                d."Category" AS "Category"
 
             FROM drops d
 
@@ -83,6 +87,10 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
                     )::geography,
                     {2}
               )
+            """;
+
+        const string order =
+            """
 
             ORDER BY "DistanceMeters"
             LIMIT 100;
@@ -90,13 +98,16 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
 
         var radiusMeters = radiusKm * 1000;
 
+        object[] parameters = category is { } filter
+            ? [latitude, longitude, radiusMeters, now, filter.ToString()]
+            : [latitude, longitude, radiusMeters, now];
+
+        var sql = category is null
+            ? select + order
+            : select + "\n  AND d.\"Category\" = {4}" + order;
+
         return await _dbContext.Database
-            .SqlQueryRaw<NearbyDropResponse>(
-                sql,
-                latitude,
-                longitude,
-                radiusMeters,
-                now)
+            .SqlQueryRaw<NearbyDropResponse>(sql, parameters)
             .ToListAsync(cancellationToken);
     }
 }

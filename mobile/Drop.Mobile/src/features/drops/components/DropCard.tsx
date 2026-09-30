@@ -6,6 +6,7 @@ import { formatCurrency } from '@/utils/formatCurrency';
 
 import { useCountdown } from '../hooks/useCountdown';
 import type { NearbyDrop } from '../types/drop';
+import { categoryInfo, categoryOf } from '../utils/categories';
 import { formatDistance } from '../utils/formatDistance';
 
 type Props = {
@@ -69,6 +70,14 @@ export function DropCard({ drop, onPress }: Props) {
           <Badge label={`SON ${drop.remainingCapacity}`} tone="danger" icon="flame" />
         ) : (
           <Badge label="AKTİF" tone="success" live />
+        )}
+
+        {categoryOf(drop.category) !== 'Other' && (
+          <Badge
+            label={categoryInfo[categoryOf(drop.category)].label}
+            tone="primary"
+            icon={categoryInfo[categoryOf(drop.category)].icon}
+          />
         )}
 
         {drop.minimumSpend != null && (

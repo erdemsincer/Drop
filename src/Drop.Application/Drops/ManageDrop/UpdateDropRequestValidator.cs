@@ -25,5 +25,9 @@ public sealed class UpdateDropRequestValidator
         RuleFor(x => x.Capacity)
             .InclusiveBetween(1, 1000)
             .WithErrorCode("capacity.out_of_range");
+
+        RuleFor(x => x.Category)
+            .IsInEnum()
+            .WithErrorCode("category.invalid");
     }
 }

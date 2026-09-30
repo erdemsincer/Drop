@@ -4,6 +4,7 @@ import { type ReactNode, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getApiError } from '@/api/getApiError';
+import { CategoryPicker } from '@/features/businesses/components/CategoryPicker';
 import { StartTimePicker } from '@/features/businesses/components/StartTimePicker';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
 import { useCreateDrop } from '@/features/businesses/hooks/useCreateDrop';
@@ -46,6 +47,7 @@ const initialValues: DropFormValues = {
   durationMinutes: 60,
   claimDurationMinutes: 15,
   startsAt: null,
+  category: 'Other',
 };
 
 /**
@@ -199,6 +201,10 @@ export default function DropFormScreen() {
               maxLength={1000}
               error={errorFor('description')}
             />
+          </Section>
+
+          <Section title="Kategori" icon="grid">
+            <CategoryPicker value={values.category} onChange={value => set('category', value)} />
           </Section>
 
           <Section title="Koşullar" icon="options">

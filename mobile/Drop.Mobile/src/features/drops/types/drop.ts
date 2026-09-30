@@ -17,6 +17,9 @@ export type NearbyDrop = {
   distanceMeters: number;
 
   endsAt: string;
+
+  /** DropCategory name; see utils/categories. */
+  category: string;
 };
 
 export type DropDetail = {
@@ -42,4 +45,6 @@ export type DropDetail = {
 
   latitude: number;
   longitude: number;
+
+  category: string;
 };

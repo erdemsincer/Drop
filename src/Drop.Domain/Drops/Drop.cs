@@ -15,7 +15,8 @@ public sealed class Drop : Entity
         decimal? minimumSpend,
         int capacity,
         TimeSpan duration,
-        TimeSpan claimDuration)
+        TimeSpan claimDuration,
+        DropCategory category = DropCategory.Other)
     {
         if (branchId == Guid.Empty)
             throw new ArgumentException("Branch id cannot be empty.");
@@ -42,6 +43,7 @@ public sealed class Drop : Entity
         Capacity = capacity;
         Duration = duration;
         ClaimDuration = claimDuration;
+        Category = category;
 
         Status = DropStatus.Draft;
     }
@@ -59,6 +61,8 @@ public sealed class Drop : Entity
     public TimeSpan Duration { get; private set; }
 
     public TimeSpan ClaimDuration { get; private set; }
+
+    public DropCategory Category { get; private set; }
 
     public DropStatus Status { get; private set; }
 
@@ -134,7 +138,8 @@ public sealed class Drop : Entity
         decimal? minimumSpend,
         int capacity,
         int occupied,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        DropCategory? category = null)
     {
         EnsureLiveOrScheduled(now);
 
@@ -156,6 +161,7 @@ public sealed class Drop : Entity
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         MinimumSpend = minimumSpend;
         Capacity = capacity;
+        Category = category ?? Category;
     }
 
     private void EnsureLiveOrScheduled(DateTimeOffset now)

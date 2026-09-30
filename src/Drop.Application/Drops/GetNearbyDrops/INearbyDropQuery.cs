@@ -7,5 +7,6 @@ public interface INearbyDropQuery
         double longitude,
         double radiusKm,
         DateTimeOffset now,
+        Drop.Domain.Drops.DropCategory? category,
         CancellationToken cancellationToken = default);
 }

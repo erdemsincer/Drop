@@ -21,6 +21,7 @@ public sealed class DropsCustomerController : ControllerBase
             request.Latitude,
             request.Longitude,
             request.RadiusKm,
+            request.Category,
             cancellationToken);
 
         return Ok(response);

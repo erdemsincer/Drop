@@ -1,4 +1,5 @@
 using Drop.Application.Abstractions;
+using Drop.Domain.Drops;
 using Drop.Application.Authentication;
 using Drop.Application.Branches;
 using Drop.Application.Businesses;
@@ -86,7 +87,8 @@ public sealed class CreateDropService
             request.MinimumSpend,
             request.Capacity,
             TimeSpan.FromMinutes(request.DurationMinutes),
-            TimeSpan.FromMinutes(request.ClaimDurationMinutes));
+            TimeSpan.FromMinutes(request.ClaimDurationMinutes),
+            request.Category ?? DropCategory.Other);
 
         var now = _timeProvider.GetUtcNow();
 

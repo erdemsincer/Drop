@@ -12,4 +12,5 @@ public sealed record NearbyDropResponse(
     int ClaimedCount,
     int RemainingCapacity,
     int DistanceMeters,
-    DateTimeOffset EndsAt);
+    DateTimeOffset EndsAt,
+    string Category);

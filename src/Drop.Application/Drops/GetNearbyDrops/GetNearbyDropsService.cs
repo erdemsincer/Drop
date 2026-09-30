@@ -19,6 +19,7 @@ public sealed class GetNearbyDropsService
         double latitude,
         double longitude,
         double radiusKm,
+        Drop.Domain.Drops.DropCategory? category = null,
         CancellationToken cancellationToken = default)
     {
         if (latitude is < -90 or > 90)
@@ -35,6 +36,7 @@ public sealed class GetNearbyDropsService
             longitude,
             radiusKm,
             _timeProvider.GetUtcNow(),
+            category,
             cancellationToken);
     }
 }

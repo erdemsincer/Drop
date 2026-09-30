@@ -17,7 +17,8 @@ namespace Drop.IntegrationTests.Infrastructure;
 public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres =
-        new PostgreSqlBuilder("postgres:17")
+        // Same PostGIS image as docker-compose, so spatial queries (nearby feed) run in tests too.
+        new PostgreSqlBuilder("postgis/postgis:16-3.4")
             .WithDatabase("drop_test")
             .WithUsername("drop")
             .WithPassword("drop_test_password")

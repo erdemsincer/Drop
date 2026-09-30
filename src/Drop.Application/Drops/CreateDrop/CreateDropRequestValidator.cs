@@ -46,5 +46,9 @@ public sealed class CreateDropRequestValidator
             .LessThanOrEqualTo(x => x.DurationMinutes)
             .WithErrorCode("claim_duration.exceeds_drop_duration")
             .WithMessage("Claim duration cannot be longer than drop duration.");
+
+        RuleFor(x => x.Category)
+            .IsInEnum()
+            .WithErrorCode("category.invalid");
     }
 }

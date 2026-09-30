@@ -8,10 +8,12 @@ import { ActiveClaimBanner } from '@/features/claims/components/ActiveClaimBanne
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import { useActiveClaim } from '@/features/claims/hooks/useActiveClaim';
 import type { ActiveClaim } from '@/features/claims/types/claim';
+import { CategoryFilter } from '@/features/drops/components/CategoryFilter';
 import { DropCard } from '@/features/drops/components/DropCard';
 import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
+import { type DropCategory, categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import { useCurrentLocation } from '@/features/location/hooks/useCurrentLocation';
 import {
   Screen,
@@ -25,6 +27,7 @@ import {
 
 export default function HomeScreen() {
   const [radiusKm, setRadiusKm] = useState(5);
+  const [category, setCategory] = useState<DropCategory | null>(null);
 
   const locationQuery = useCurrentLocation();
   const activeClaimQuery = useActiveClaim();
@@ -38,7 +41,18 @@ export default function HomeScreen() {
     radiusKm,
   });
 
-  const drops = nearbyQuery.data ?? [];
+  const allDrops = nearbyQuery.data ?? [];
+
+  // Filtered on the device: switching chips is instant and each chip shows its count.
+  const counts: Partial<Record<DropCategory, number>> = {};
+  for (const drop of allDrops) {
+    const key = categoryOf(drop.category);
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+
+  // A category that just ran out of drops quietly falls back to "all".
+  const activeCategory = category && counts[category] ? category : null;
+  const drops = activeCategory ? allDrops.filter(drop => categoryOf(drop.category) === activeCategory) : allDrops;
 
   const openClaim = (claim: ActiveClaim) =>
     router.push({
@@ -116,8 +130,12 @@ export default function HomeScreen() {
 
       <RadiusFilter value={radiusKm} onChange={setRadiusKm} />
 
+      <CategoryFilter counts={counts} total={allDrops.length} value={activeCategory} onChange={setCategory} />
+
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Aktif Drop&apos;lar</Text>
+        <Text style={styles.sectionTitle}>
+          {activeCategory ? categoryInfo[activeCategory].label : 'Aktif Drop\'lar'}
+        </Text>
         {!nearbyQuery.isLoading && (
           <View style={styles.countPill}>
             <Text style={styles.countText}>{drops.length}</Text>

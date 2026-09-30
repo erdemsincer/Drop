@@ -19,4 +19,5 @@ public sealed record BusinessDropResponse(
     int ClaimDurationMinutes,
     DropStatus Status,
     DateTimeOffset? StartsAt,
-    DateTimeOffset? EndsAt);
+    DateTimeOffset? EndsAt,
+    DropCategory Category);

@@ -1,3 +1,5 @@
+using Drop.Domain.Drops;
+
 namespace Drop.Application.Drops.CreateDrop;
 
 public sealed record CreateDropRequest(
@@ -7,4 +9,5 @@ public sealed record CreateDropRequest(
     int Capacity,
     int DurationMinutes,
     int ClaimDurationMinutes,
-    DateTimeOffset? StartsAt = null);
+    DateTimeOffset? StartsAt = null,
+    DropCategory? Category = null);

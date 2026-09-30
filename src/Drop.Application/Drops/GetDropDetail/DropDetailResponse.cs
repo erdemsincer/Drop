@@ -15,4 +15,5 @@ public sealed record DropDetailResponse(
     DateTimeOffset EndsAt,
     int ClaimDurationMinutes,
     double Latitude,
-    double Longitude);
+    double Longitude,
+    string Category);

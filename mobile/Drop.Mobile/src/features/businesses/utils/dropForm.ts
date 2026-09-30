@@ -1,3 +1,4 @@
+import { type DropCategory, categoryOf } from '@/features/drops/utils/categories';
 import type { Choice } from '@/ui';
 
 import type { BusinessDrop, CreateDropRequest, UpdateDropRequest } from '../types/business';
@@ -25,6 +26,7 @@ export type DropFormValues = {
   claimDurationMinutes: number;
   /** ISO start time, or null to publish now. */
   startsAt: string | null;
+  category: DropCategory;
 };
 
 export type DropFormErrors = Partial<Record<keyof DropFormValues, string>>;
@@ -71,6 +73,7 @@ export const toCreateDropRequest = (values: DropFormValues): CreateDropRequest =
   durationMinutes: values.durationMinutes,
   claimDurationMinutes: values.claimDurationMinutes,
   startsAt: values.startsAt,
+  category: values.category,
 });
 
 export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
@@ -82,6 +85,7 @@ export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
   durationMinutes: drop.claimDurationMinutes,
   claimDurationMinutes: drop.claimDurationMinutes,
   startsAt: null,
+  category: categoryOf(drop.category),
 });
 
 /** Everything of a previous drop, durations included, to publish it again. */
@@ -117,8 +121,8 @@ export const withOption = (options: Choice<number>[], value: number): Choice<num
     : [...options, { label: minutesLabel(value), value }].sort((a, b) => a.value - b.value);
 
 export const toUpdateDropRequest = (values: DropFormValues): UpdateDropRequest => {
-  const { title, description, minimumSpend, capacity } = toCreateDropRequest(values);
-  return { title, description, minimumSpend, capacity };
+  const { title, description, minimumSpend, capacity, category } = toCreateDropRequest(values);
+  return { title, description, minimumSpend, capacity, category };
 };
 
 // Maps FluentValidation property names back onto form fields.

@@ -1,3 +1,5 @@
+import type { DropCategory } from '@/features/drops/utils/categories';
+
 export type BusinessRole = 'Owner' | 'Manager' | 'Staff';
 
 export type BusinessStatus = 'Pending' | 'Approved' | 'Rejected' | 'Suspended';
@@ -68,6 +70,7 @@ export type BusinessDrop = {
   status: DropStatus;
   startsAt?: string | null;
   endsAt?: string | null;
+  category: DropCategory;
 };
 
 export type CreateBusinessRequest = {
@@ -103,6 +106,7 @@ export type CreateDropRequest = {
   claimDurationMinutes: number;
   /** ISO time; omit or null to publish immediately. */
   startsAt?: string | null;
+  category: DropCategory;
 };
 
 export type UpdateDropRequest = {
@@ -110,6 +114,7 @@ export type UpdateDropRequest = {
   description?: string | null;
   minimumSpend?: number | null;
   capacity: number;
+  category?: DropCategory;
 };
 
 export type UpdateBranchRequest = {

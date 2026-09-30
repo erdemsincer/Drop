@@ -20,5 +20,9 @@ public sealed class GetNearbyDropsRequestValidator
             .WithErrorCode("radius.invalid")
             .LessThanOrEqualTo(20)
             .WithErrorCode("radius.too_large");
+
+        RuleFor(x => x.Category)
+            .IsInEnum()
+            .WithErrorCode("category.invalid");
     }
 }

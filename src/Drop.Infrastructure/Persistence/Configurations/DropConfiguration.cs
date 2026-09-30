@@ -32,6 +32,13 @@ internal sealed class DropConfiguration
         builder.Property(x => x.ClaimDuration)
             .IsRequired();
 
+        builder.Property(x => x.Category)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .IsRequired();
+
+        builder.HasIndex(x => x.Category);
+
         builder.Property(x => x.Status)
             .HasConversion<string>()
             .HasMaxLength(30)

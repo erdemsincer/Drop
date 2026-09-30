@@ -57,7 +57,8 @@ internal sealed class DropLifecycleStore : IDropLifecycleStore
             request.MinimumSpend,
             request.Capacity,
             activeCount + redeemedCount,
-            now);
+            now,
+            request.Category);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
