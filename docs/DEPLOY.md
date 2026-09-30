@@ -51,6 +51,27 @@ ve hiçbir işletme onaylanamaz (sahibinin e-postası doğrulanamaz).
 3. Mobil build'de `EXPO_PUBLIC_API_URL` olarak bu adresi kullan
    (`mobile/Drop.Mobile/eas.json` içindeki `preview` ve `production` profilleri).
 
+## 5. Mobil build (EAS)
+
+Bir kez, `mobile/Drop.Mobile` klasöründe:
+
+```bash
+npx eas-cli@latest login     # Expo hesabı (ücretsiz)
+npx eas-cli@latest init      # projeyi Expo'ya bağlar, app.json'a projectId ekler
+```
+
+`eas.json` içindeki `REPLACE-WITH-RAILWAY-DOMAIN` kısımlarını 4. adımdaki adresle değiştir.
+Kimlik: `app.json` → `ios.bundleIdentifier` / `android.package` = `app.drop.mobile`
+(mağazaya çıkmadan önce istersen değiştir; sonra değiştirilemez).
+
+- **Android test (APK, hesap gerekmez):** `npx eas-cli@latest build -p android --profile preview`
+  → bitince verilen linkten telefona kur.
+- **iOS test (TestFlight, Apple Developer hesabı gerekir, yıllık $99):**
+  `npx eas-cli@latest build -p ios --profile production` ardından
+  `npx eas-cli@latest submit -p ios`.
+
+Push bildirimleri Expo Go'da değil, bu build'lerde çalışır.
+
 ## Sonra
 
 - Hata takibi: `Sentry__Dsn` değişkenini ekle (bkz. README).

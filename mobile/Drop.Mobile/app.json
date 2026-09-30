@@ -12,6 +12,11 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Yakınındaki aktif Drop fırsatlarını gösterebilmek için konumunu kullanıyoruz.",
         "NSCameraUsageDescription": "İşletmedeki Drop QR kodunu okutabilmek için kamera erişimine ihtiyacımız var."
+      },
+      "bundleIdentifier": "app.drop.mobile",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -21,7 +26,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "app.drop.mobile"
     },
     "web": {
       "output": "static",
