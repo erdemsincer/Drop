@@ -55,6 +55,8 @@ development secrets.
 | `ReverseProxy__Enabled` | behind a load balancer | trusts `X-Forwarded-*` for client IP/HTTPS |
 | `RateLimiting__AuthPerMinute` / `RedeemPerMinute` | no | defaults 10 / 20 |
 | `Admin__Emails` | for business review | comma-separated e-mails of platform admins |
+| `Sentry__Dsn` | no | reports unexpected (5xx) errors to Sentry; no request bodies or IPs are sent |
+| `DATABASE_URL` / `PORT` | on Railway & co. | used when `ConnectionStrings__Database` / URLs aren't set; see `docs/DEPLOY.md` |
 
 New businesses start as **Pending** and can publish drops only after an admin
 approves them (Profile → Yönetim in the app, or `POST /api/admin/businesses/{id}/approve`).

@@ -35,6 +35,19 @@ try
     PlatformConfiguration.Apply(builder);
     StartupValidation.Validate(builder.Configuration, builder.Environment);
 
+    // Error reporting, only when Sentry:Dsn is set. Expected 4xx outcomes are not reported.
+    if (!string.IsNullOrWhiteSpace(builder.Configuration["Sentry:Dsn"]))
+    {
+        builder.WebHost.UseSentry(options =>
+        {
+            options.Environment = builder.Environment.EnvironmentName;
+            options.TracesSampleRate = 0;
+            // No IPs, cookies or bodies: requests carry passwords, tokens and QR payloads.
+            options.SendDefaultPii = false;
+            options.MaxRequestBodySize = Sentry.Extensibility.RequestSize.None;
+        });
+    }
+
     builder.Host.UseSerilog((context, services, configuration) =>
     {
         configuration

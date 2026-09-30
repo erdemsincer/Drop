@@ -74,5 +74,7 @@ Push bildirimleri Expo Go'da değil, bu build'lerde çalışır.
 
 ## Sonra
 
-- Hata takibi: `Sentry__Dsn` değişkenini ekle (bkz. README).
+- Hata takibi: https://sentry.io'da iki proje aç (ASP.NET Core ve React Native).
+  API için Railway'e `Sentry__Dsn`, mobil için `eas.json`'daki `EXPO_PUBLIC_SENTRY_DSN`
+  alanlarına DSN'leri yaz. Boş bırakılırsa raporlama kapalıdır; Expo Go'da hiç yüklenmez.
 - Yedek: Railway PostGIS servisinde **Backups**'ı aç.

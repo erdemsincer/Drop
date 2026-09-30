@@ -190,6 +190,10 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         if (statusCode >= 500)
         {
             _logger.LogError(exception, "Unhandled exception occurred.");
+
+            // The handler swallows the exception, so Sentry's middleware never sees it.
+            // No-op when Sentry isn't configured.
+            SentrySdk.CaptureException(exception);
         }
         else
         {

@@ -2,11 +2,18 @@ import { Redirect, Stack, router } from 'expo-router';
 import { useEffect } from 'react';
 
 import { getNotifications } from '@/features/notifications/notificationsModule';
+import { useMe } from '@/features/users/hooks/useMe';
 import { useAuth } from '@/providers/AuthProvider';
+import { setMonitoringUser } from '@/services/monitoring';
 import { Screen, StateView, colors } from '@/ui';
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const meId = useMe({ enabled: isAuthenticated }).data?.id;
+
+  useEffect(() => {
+    setMonitoringUser(meId ?? null);
+  }, [meId]);
 
   // Tapping a claim reminder opens that claim's ticket.
   useEffect(() => {
