@@ -83,7 +83,8 @@ public static class DependencyInjection
             .AddNpgSql(
                 connectionString,
                 name: "postgresql",
-                tags: ["ready"]);
+                tags: ["ready"])
+            .AddCheck<Persistence.Health.PostGisHealthCheck>("postgis", tags: ["ready"]);
 
         services.AddScoped<IUnitOfWork>(
             sp => sp.GetRequiredService<DropDbContext>());
