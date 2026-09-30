@@ -1,3 +1,7 @@
+using Drop.Application.Follows;
+using Drop.Application.Notifications.Push;
+using Drop.Infrastructure.Follows;
+using Drop.Infrastructure.Notifications.Push;
 using Drop.Application.Businesses.Stats;
 using Drop.Application.Branches.BranchLifecycle;
 using Drop.Application.Businesses.RenameBusiness;
@@ -226,6 +230,27 @@ public static class DependencyInjection
             });
         services.AddScoped<ExpirationSweeper>();
         services.AddHostedService<ExpirationWorker>();
+
+        services.AddScoped<IFollowStore, FollowStore>();
+        services.AddScoped<FollowService>();
+        services.AddScoped<IDeviceTokenStore, DeviceTokenStore>();
+        services.AddScoped<DeviceTokenService>();
+
+        services.AddHttpClient(ExpoPushSender.ClientName, client =>
+        {
+            client.BaseAddress = new Uri("https://exp.host");
+            client.Timeout = TimeSpan.FromSeconds(15);
+
+            // Only needed if "enhanced push security" is switched on in the Expo project.
+            if (configuration["Push:ExpoAccessToken"] is { Length: > 0 } accessToken)
+            {
+                client.DefaultRequestHeaders.Authorization = new("Bearer", accessToken);
+            }
+        });
+        services.AddScoped<IPushSender, ExpoPushSender>();
+        services.AddSingleton<DropLiveQueue>();
+        services.AddSingleton<IDropLiveNotifier>(sp => sp.GetRequiredService<DropLiveQueue>());
+        services.AddHostedService<DropLiveDispatcher>();
 
         return services;
     }

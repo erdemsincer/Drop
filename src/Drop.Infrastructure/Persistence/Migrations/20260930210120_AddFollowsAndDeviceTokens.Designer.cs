@@ -3,6 +3,7 @@ using System;
 using Drop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Drop.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DropDbContext))]
-    partial class DropDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930210120_AddFollowsAndDeviceTokens")]
+    partial class AddFollowsAndDeviceTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

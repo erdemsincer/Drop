@@ -70,7 +70,10 @@ Kimlik: `app.json` → `ios.bundleIdentifier` / `android.package` = `app.drop.mo
   `npx eas-cli@latest build -p ios --profile production` ardından
   `npx eas-cli@latest submit -p ios`.
 
-Push bildirimleri Expo Go'da değil, bu build'lerde çalışır.
+Push bildirimleri (takip edilen işletme yeni Drop yayınlayınca) `eas init` ile
+proje kimliği eklendikten sonra çalışır; API, Expo'nun push servisine ek bir anahtar
+olmadan gönderir. Expo projesinde "enhanced push security" açarsan Railway'e
+`Push__ExpoAccessToken` ekle.
 
 ## Sonra
 

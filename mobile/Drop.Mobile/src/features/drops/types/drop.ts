@@ -25,6 +25,7 @@ export type NearbyDrop = {
 export type DropDetail = {
   id: string;
   branchId: string;
+  businessId: string;
 
   businessName: string;
   branchName: string;

@@ -1,5 +1,7 @@
 using Drop.Api.Configuration;
 using Drop.Application.Authentication.Login;
+using Drop.Application.Follows;
+using Drop.Application.Notifications.Push;
 using Drop.Application.Users.ChangePassword;
 using Drop.Application.Users.DeleteAccount;
 using Drop.Application.Users.EmailVerification;
@@ -71,6 +73,37 @@ public sealed class UsersController : ControllerBase
         await service.ResendAsync(cancellationToken);
 
         return Accepted();
+    }
+
+    /// <summary>Businesses the user follows, most recent first.</summary>
+    [HttpGet("me/follows")]
+    public async Task<ActionResult<IReadOnlyList<FollowedBusinessResponse>>> GetFollows(
+        [FromServices] FollowService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ListMineAsync(cancellationToken));
+    }
+
+    /// <summary>Registers this device's Expo push token for the signed-in user.</summary>
+    [HttpPut("me/push-token")]
+    public async Task<IActionResult> RegisterPushToken(
+        [FromBody] RegisterDeviceTokenRequest request,
+        [FromServices] DeviceTokenService service,
+        CancellationToken cancellationToken)
+    {
+        await service.RegisterAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Stops pushes to this device (called on sign-out).</summary>
+    [HttpPost("me/push-token/remove")]
+    public async Task<IActionResult> RemovePushToken(
+        [FromBody] RegisterDeviceTokenRequest request,
+        [FromServices] DeviceTokenService service,
+        CancellationToken cancellationToken)
+    {
+        await service.UnregisterAsync(request.Token, cancellationToken);
+        return NoContent();
     }
 
     /// <summary>

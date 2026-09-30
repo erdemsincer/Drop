@@ -2,6 +2,7 @@ import { Redirect, Stack, router } from 'expo-router';
 import { useEffect } from 'react';
 
 import { getNotifications } from '@/features/notifications/notificationsModule';
+import { registerPushToken } from '@/features/notifications/pushRegistration';
 import { useMe } from '@/features/users/hooks/useMe';
 import { useAuth } from '@/providers/AuthProvider';
 import { setMonitoringUser } from '@/services/monitoring';
@@ -15,13 +16,28 @@ export default function AppLayout() {
     setMonitoringUser(meId ?? null);
   }, [meId]);
 
+  // Keep the push token fresh without prompting; the prompt comes with the first follow.
+  useEffect(() => {
+    if (isAuthenticated) void registerPushToken({ askPermission: false });
+  }, [isAuthenticated]);
+
   // Tapping a claim reminder opens that claim's ticket.
   useEffect(() => {
     const notifications = getNotifications();
     if (!notifications || !isAuthenticated) return;
 
     const subscription = notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data as { claimId?: string; expiresAt?: string };
+      const data = response.notification.request.content.data as {
+        claimId?: string;
+        expiresAt?: string;
+        dropId?: string;
+      };
+
+      // "New drop" push from a followed business.
+      if (data?.dropId) {
+        router.push({ pathname: '/(app)/drop/[id]', params: { id: data.dropId } });
+        return;
+      }
 
       if (data?.claimId && data.expiresAt) {
         router.push({ pathname: '/(app)/claim/[id]', params: { id: data.claimId, expiresAt: data.expiresAt } });

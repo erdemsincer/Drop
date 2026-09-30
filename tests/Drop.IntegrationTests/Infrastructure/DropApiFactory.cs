@@ -76,6 +76,12 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
             services.AddSingleton<Drop.Application.Notifications.IEmailSender>(
                 sp => sp.GetRequiredService<CapturingEmailSender>());
 
+            // Never call Expo from tests; record what would have been pushed.
+            services.RemoveAll<Drop.Application.Notifications.Push.IPushSender>();
+            services.AddSingleton<CapturingPushSender>();
+            services.AddSingleton<Drop.Application.Notifications.Push.IPushSender>(
+                sp => sp.GetRequiredService<CapturingPushSender>());
+
             // Remove existing DbContext registration
             services.RemoveAll<DbContextOptions<DropDbContext>>();
 

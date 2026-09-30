@@ -4,6 +4,7 @@ import { createContext, type PropsWithChildren, useCallback, useContext, useEffe
 import { setUnauthorizedHandler } from '@/api/apiClient';
 import { logout } from '@/features/auth/api/authApi';
 import { syncClaimReminders } from '@/features/notifications/claimReminders';
+import { unregisterPushToken } from '@/features/notifications/pushRegistration';
 import { setMonitoringUser } from '@/services/monitoring';
 import { authStorage } from '@/storage/authStorage';
 
@@ -28,6 +29,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setIsAuthenticated(Boolean(await authStorage.getAccessToken()));
   }, [queryClient]);
   const signOut = useCallback(async () => {
+    // While the session still works, so the next account on this phone doesn't get our pushes.
+    await unregisterPushToken();
     const refreshToken = await authStorage.getRefreshToken();
     // Revoke server-side too; best effort, signing out must work offline.
     if (refreshToken) await logout(refreshToken).catch(() => undefined);

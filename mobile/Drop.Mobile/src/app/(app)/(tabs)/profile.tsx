@@ -7,6 +7,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import { roleLabels } from '@/features/businesses/utils/businessLabels';
 import { useMyClaims } from '@/features/claims/hooks/useMyClaims';
+import { useFollows, useToggleFollow } from '@/features/follows/hooks/useFollows';
 import { useMe } from '@/features/users/hooks/useMe';
 import { useAuth } from '@/providers/AuthProvider';
 import { Avatar, Skeleton, Screen, colors, gradients, radius, shadows, spacing, typography } from '@/ui';
@@ -16,6 +17,8 @@ export default function ProfileScreen() {
   const meQuery = useMe();
   const businessesQuery = useMyBusinesses();
   const claimsQuery = useMyClaims();
+  const follows = useFollows().data ?? [];
+  const toggleFollow = useToggleFollow();
 
   const me = meQuery.data;
   const fullName = me ? `${me.firstName} ${me.lastName}` : '';
@@ -95,6 +98,30 @@ export default function ProfileScreen() {
               subtitle="Başvuruları incele, onayla veya reddet"
               onPress={() => router.push('/(app)/admin')}
             />
+          </Section>
+        )}
+
+        {follows.length > 0 && (
+          <Section title="Takip ettiklerim">
+            {follows.map(follow => (
+              <Row
+                key={follow.businessId}
+                icon="notifications"
+                title={follow.name}
+                subtitle="Yeni Drop'larında bildirim alırsın · Bırakmak için dokun"
+                onPress={() =>
+                  Alert.alert(`${follow.name} takibi bırakılsın mı?`, 'Bu işletmenin yeni Drop bildirimlerini almayacaksın.', [
+                    { text: 'Vazgeç', style: 'cancel' },
+                    {
+                      text: 'Takibi bırak',
+                      style: 'destructive',
+                      onPress: () =>
+                        toggleFollow.mutate({ businessId: follow.businessId, name: follow.name, follow: false }),
+                    },
+                  ])
+                }
+              />
+            ))}
           </Section>
         )}
 

@@ -3,6 +3,7 @@ namespace Drop.Application.Features.Drops.GetDropDetail;
 public sealed record DropDetailResponse(
     Guid Id,
     Guid BranchId,
+    Guid BusinessId,
     string BusinessName,
     string BranchName,
     string Title,

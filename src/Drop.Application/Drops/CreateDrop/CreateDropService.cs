@@ -1,4 +1,5 @@
 using Drop.Application.Abstractions;
+using Drop.Application.Notifications.Push;
 using Drop.Domain.Drops;
 using Drop.Application.Authentication;
 using Drop.Application.Branches;
@@ -17,6 +18,7 @@ public sealed class CreateDropService
     private readonly TimeProvider _timeProvider;
     private readonly IBusinessAccessService _accessService;
     private readonly ICurrentUser _currentUser;
+    private readonly IDropLiveNotifier _dropLiveNotifier;
 
     public CreateDropService(
         IBranchRepository branchRepository,
@@ -25,7 +27,8 @@ public sealed class CreateDropService
         IUnitOfWork unitOfWork,
         TimeProvider timeProvider,
         IBusinessAccessService accessService,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IDropLiveNotifier dropLiveNotifier)
     {
         _branchRepository = branchRepository;
         _businessRepository = businessRepository;
@@ -34,6 +37,7 @@ public sealed class CreateDropService
         _timeProvider = timeProvider;
         _accessService = accessService;
         _currentUser = currentUser;
+        _dropLiveNotifier = dropLiveNotifier;
     }
 
     public async Task<CreateDropResponse> ExecuteAsync(
@@ -104,6 +108,12 @@ public sealed class CreateDropService
 
         await _unitOfWork.SaveChangesAsync(
             cancellationToken);
+
+        // Scheduled drops are announced by the sweep when they go live.
+        if (drop.Status == DropStatus.Active)
+        {
+            _dropLiveNotifier.Enqueue(drop.Id);
+        }
 
         return new CreateDropResponse(
             drop.Id,

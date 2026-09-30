@@ -23,6 +23,7 @@ internal sealed class DropDetailQuery : IDropDetailQuery
             SELECT
                 d."Id" AS "Id",
                 b."Id" AS "BranchId",
+                bus."Id" AS "BusinessId",
                 bus."Name" AS "BusinessName",
                 b."Name" AS "BranchName",
                 d."Title" AS "Title",

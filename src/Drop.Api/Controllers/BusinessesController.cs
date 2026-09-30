@@ -2,6 +2,7 @@ using Drop.Application.Businesses.CreateBusiness;
 using Drop.Application.Businesses.GetMyBusinesses;
 using Drop.Application.Businesses.RenameBusiness;
 using Drop.Application.Businesses.Stats;
+using Drop.Application.Follows;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,5 +54,26 @@ public sealed class BusinessesController : ControllerBase
         [FromQuery] int days = 30)
     {
         return Ok(await service.ExecuteAsync(businessId, days, cancellationToken));
+    }
+
+    /// <summary>Follow to get a push when this business publishes a drop. Idempotent.</summary>
+    [HttpPost("{businessId:guid}/follow")]
+    public async Task<IActionResult> Follow(
+        Guid businessId,
+        [FromServices] FollowService service,
+        CancellationToken cancellationToken)
+    {
+        await service.FollowAsync(businessId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{businessId:guid}/follow")]
+    public async Task<IActionResult> Unfollow(
+        Guid businessId,
+        [FromServices] FollowService service,
+        CancellationToken cancellationToken)
+    {
+        await service.UnfollowAsync(businessId, cancellationToken);
+        return NoContent();
     }
 }

@@ -30,6 +30,10 @@ public sealed class DropDbContext : DbContext, IUnitOfWork
 
     public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
 
+    public DbSet<BusinessFollow> BusinessFollows => Set<BusinessFollow>();
+
+    public DbSet<Domain.Notifications.DeviceToken> DeviceTokens => Set<Domain.Notifications.DeviceToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(

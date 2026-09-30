@@ -11,6 +11,7 @@ import { useCreateClaim } from '@/features/claims/hooks/useCreateClaim';
 import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessage';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { useDropDetail } from '@/features/drops/hooks/useDropDetail';
+import { FollowButton } from '@/features/follows/components/FollowButton';
 import type { DropDetail } from '@/features/drops/types/drop';
 import { scheduleClaimReminder } from '@/features/notifications/claimReminders';
 import {
@@ -132,6 +133,7 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
                   {drop.branchName}
                 </Text>
               </View>
+              <FollowButton businessId={drop.businessId} businessName={drop.businessName} />
             </View>
             <IconButton
               icon="navigate"
