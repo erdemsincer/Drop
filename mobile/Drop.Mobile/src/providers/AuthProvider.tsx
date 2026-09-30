@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
 import { setUnauthorizedHandler } from '@/api/apiClient';
 import { logout } from '@/features/auth/api/authApi';
+import { syncClaimReminders } from '@/features/notifications/claimReminders';
 import { authStorage } from '@/storage/authStorage';
 
 type AuthContextValue = {
@@ -16,14 +18,24 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const refresh = useCallback(async () => setIsAuthenticated(Boolean(await authStorage.getAccessToken())), []);
+  const queryClient = useQueryClient();
+
+  // Cached queries (profile, businesses, claims...) belong to one account; drop
+  // them whenever the session changes so the next user never sees them.
+  const refresh = useCallback(async () => {
+    queryClient.clear();
+    setIsAuthenticated(Boolean(await authStorage.getAccessToken()));
+  }, [queryClient]);
   const signOut = useCallback(async () => {
     const refreshToken = await authStorage.getRefreshToken();
     // Revoke server-side too; best effort, signing out must work offline.
     if (refreshToken) await logout(refreshToken).catch(() => undefined);
     await authStorage.clear();
+    // The previous account's "5 minutes left" reminders must not fire for the next one.
+    await syncClaimReminders(null);
     setIsAuthenticated(false);
-  }, []);
+    queryClient.clear();
+  }, [queryClient]);
 
   useEffect(() => {
     let isActive = true;
@@ -38,9 +50,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    setUnauthorizedHandler(() => setIsAuthenticated(false));
+    setUnauthorizedHandler(() => {
+      setIsAuthenticated(false);
+      queryClient.clear();
+    });
     return () => setUnauthorizedHandler(null);
-  }, []);
+  }, [queryClient]);
 
   return <AuthContext.Provider value={{ isAuthenticated, isLoading, signOut, refresh }}>{children}</AuthContext.Provider>;
 }

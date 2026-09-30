@@ -1,18 +1,21 @@
 import { Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
 
+import { BrandSplash } from '@/features/onboarding/components/BrandSplash';
 import { useAuth } from '@/providers/AuthProvider';
-import { Screen, StateView } from '@/ui';
+import { onboardingStorage } from '@/storage/onboardingStorage';
 
 export default function IndexScreen() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
-  if (isLoading) {
-    return (
-      <Screen>
-        <StateView loading title="Drop" />
-      </Screen>
-    );
-  }
+  useEffect(() => {
+    void onboardingStorage.hasSeen().then(setHasSeenOnboarding);
+  }, []);
 
-  return <Redirect href={isAuthenticated ? '/(app)/(tabs)' : '/(auth)/login'} />;
+  if (isLoading || hasSeenOnboarding === null) return <BrandSplash />;
+
+  if (isAuthenticated) return <Redirect href="/(app)/(tabs)" />;
+
+  return <Redirect href={hasSeenOnboarding ? '/(auth)/login' : '/onboarding'} />;
 }

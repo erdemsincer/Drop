@@ -1,11 +1,13 @@
 export { Avatar } from './components/Avatar';
 export { Badge } from './components/Badge';
+export { BrandMark } from './components/BrandMark';
 export { Button } from './components/Button';
 export { ChoiceChips, type Choice } from './components/ChoiceChips';
 export { Header } from './components/Header';
 export { IconButton } from './components/IconButton';
 export { Notice } from './components/Notice';
 export { ProgressBar } from './components/ProgressBar';
+export { PulseDot } from './components/PulseDot';
 export { Screen } from './components/Screen';
 export { Skeleton } from './components/Skeleton';
 export { StateView } from './components/StateView';

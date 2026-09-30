@@ -83,6 +83,12 @@ export default function ProfileScreen() {
 
         <Section title="Hesap">
           <Row icon="ticket" title="Drop'larım" onPress={() => router.navigate('/(app)/(tabs)/claims')} />
+          <Row
+            icon="sparkles"
+            title="Drop'u tanı"
+            subtitle="Uygulama tanıtımını tekrar izle"
+            onPress={() => router.push({ pathname: '/onboarding', params: { replay: '1' } })}
+          />
           <Row icon="log-out" title="Çıkış yap" danger onPress={confirmLogout} />
         </Section>
 
