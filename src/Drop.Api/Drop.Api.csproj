@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Drop.Infrastructure\Drop.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Drop.IntegrationTests" />
+  </ItemGroup>
+
 </Project>

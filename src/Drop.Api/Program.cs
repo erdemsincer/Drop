@@ -32,6 +32,7 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    PlatformConfiguration.Apply(builder);
     StartupValidation.Validate(builder.Configuration, builder.Environment);
 
     builder.Host.UseSerilog((context, services, configuration) =>
