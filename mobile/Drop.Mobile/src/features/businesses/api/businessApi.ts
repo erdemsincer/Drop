@@ -7,6 +7,7 @@ import type {
   BranchQrCode,
   BusinessDrop,
   BusinessMember,
+  BusinessStats,
   CreateBranchRequest,
   CreateBranchResponse,
   CreateBusinessRequest,
@@ -109,5 +110,10 @@ export const reopenBranch = async (branchId: string) => {
 /** Owner only. */
 export const renameBusiness = async (businessId: string, name: string) => {
   const response = await apiClient.put<{ id: string; name: string }>(`/api/businesses/${businessId}`, { name });
+  return response.data;
+};
+
+export const getBusinessStats = async (businessId: string, days: number) => {
+  const response = await apiClient.get<BusinessStats>(`/api/businesses/${businessId}/stats`, { params: { days } });
   return response.data;
 };

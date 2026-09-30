@@ -96,6 +96,23 @@ export default function BusinessDetailScreen() {
               </View>
             )}
 
+            {canManage && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/(app)/business/[businessId]/stats', params: { businessId } })}
+                style={({ pressed }) => [styles.statsCard, pressed && styles.pressed]}
+              >
+                <View style={styles.statsIcon}>
+                  <Ionicons name="stats-chart" size={20} color={colors.lime} />
+                </View>
+                <View style={styles.cardText}>
+                  <Text style={styles.statsTitle}>İstatistikler</Text>
+                  <Text style={styles.statsSubtitle}>Kaç müşteri geldi, hangi Drop işe yaradı</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.textOnDarkMuted} />
+              </Pressable>
+            )}
+
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Şubeler</Text>
               {canManage && branches.length > 0 && (
@@ -173,6 +190,34 @@ function BranchCard({ branch, onPress }: { branch: Branch; onPress: () => void }
 }
 
 const styles = StyleSheet.create({
+  statsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    padding: spacing.lg,
+    backgroundColor: colors.ink,
+    borderRadius: radius.lg,
+  },
+  statsIcon: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 13,
+  },
+  statsTitle: {
+    color: colors.textOnDark,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  statsSubtitle: {
+    marginTop: 2,
+    color: colors.textOnDarkMuted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   cardClosed: {
     opacity: 0.6,
   },

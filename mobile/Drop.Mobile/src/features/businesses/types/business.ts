@@ -146,3 +146,17 @@ export type BranchQrCode = {
   refreshAt: string;
   periodSeconds: number;
 };
+
+export type BusinessStats = {
+  days: number;
+  dropsPublished: number;
+  reservations: number;
+  redemptions: number;
+  /** 0–1: share of the period's reservations that were used. */
+  redemptionRate: number;
+  uniqueCustomers: number;
+  returningCustomers: number;
+  daily: { date: string; reservations: number; redemptions: number }[];
+  topDrops: { dropId: string; title: string; branchName: string; reservations: number; redemptions: number }[];
+  branches: { branchId: string; name: string; redemptions: number }[];
+};

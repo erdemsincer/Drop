@@ -1,3 +1,4 @@
+using Drop.Application.Businesses.Stats;
 using Drop.Application.Branches.BranchLifecycle;
 using Drop.Application.Businesses.RenameBusiness;
 using Drop.Infrastructure.Branches;
@@ -151,6 +152,8 @@ public static class DependencyInjection
         services.AddScoped<IBranchLifecycleStore, BranchLifecycleStore>();
         services.AddScoped<BranchLifecycleService>();
         services.AddScoped<RenameBusinessService>();
+        services.AddScoped<IBusinessStatsQuery, BusinessStatsQuery>();
+        services.AddScoped<BusinessStatsService>();
 
         services.AddScoped<IBranchDropsQuery, BranchDropsQuery>();
         services.AddScoped<GetBranchDropsService>();

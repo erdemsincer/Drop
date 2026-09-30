@@ -1,6 +1,7 @@
 using Drop.Application.Businesses.CreateBusiness;
 using Drop.Application.Businesses.GetMyBusinesses;
 using Drop.Application.Businesses.RenameBusiness;
+using Drop.Application.Businesses.Stats;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -41,5 +42,16 @@ public sealed class BusinessesController : ControllerBase
         CancellationToken cancellationToken)
     {
         return Ok(await service.ExecuteAsync(businessId, request, cancellationToken));
+    }
+
+    /// <summary>Reservations, redemptions and customers over the last N days (1–90, default 30).</summary>
+    [HttpGet("{businessId:guid}/stats")]
+    public async Task<ActionResult<BusinessStatsResponse>> Stats(
+        Guid businessId,
+        [FromServices] BusinessStatsService service,
+        CancellationToken cancellationToken,
+        [FromQuery] int days = 30)
+    {
+        return Ok(await service.ExecuteAsync(businessId, days, cancellationToken));
     }
 }
