@@ -1,3 +1,10 @@
+using Drop.Application.Branches.BranchLifecycle;
+using Drop.Application.Businesses.RenameBusiness;
+using Drop.Infrastructure.Branches;
+using Drop.Application.Users.ChangePassword;
+using Drop.Application.Users.EmailVerification;
+using Drop.Application.Users.UpdateProfile;
+using Drop.Application.Claims.CancelClaim;
 using Drop.Application.Abstractions;
 using Drop.Application.Admin;
 using Drop.Application.Authentication;
@@ -115,12 +122,16 @@ public static class DependencyInjection
         services.AddScoped<GetMeService>();
         services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();
         services.AddScoped<DeleteAccountService>();
+        services.AddScoped<UpdateProfileService>();
+        services.AddScoped<ChangePasswordService>();
+        services.AddScoped<EmailVerificationService>();
 
         services.AddScoped<IActiveClaimQuery, ActiveClaimQuery>();
         services.AddScoped<GetActiveClaimService>();
 
         services.AddScoped<IClaimStore, ClaimStore>();
         services.AddScoped<CreateClaimService>();
+        services.AddScoped<CancelClaimService>();
 
         services.AddScoped<IAdminAccess, ConfiguredAdminAccess>();
         services.AddScoped<IAdminBusinessStore, AdminBusinessStore>();
@@ -137,6 +148,9 @@ public static class DependencyInjection
 
         services.AddScoped<IBranchDetailQuery, BranchDetailQuery>();
         services.AddScoped<GetBranchService>();
+        services.AddScoped<IBranchLifecycleStore, BranchLifecycleStore>();
+        services.AddScoped<BranchLifecycleService>();
+        services.AddScoped<RenameBusinessService>();
 
         services.AddScoped<IBranchDropsQuery, BranchDropsQuery>();
         services.AddScoped<GetBranchDropsService>();
@@ -156,7 +170,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<RefreshSessionService>();
         services.AddScoped<LogoutService>();
-        services.AddScoped<IPasswordResetStore, PasswordResetStore>();
+        services.AddScoped<IVerificationCodeStore, VerificationCodeStore>();
         services.AddScoped<PasswordResetService>();
 
         var emailSection = configuration.GetSection(EmailOptions.SectionName);

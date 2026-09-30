@@ -50,6 +50,7 @@ public sealed class GetBranchService
             BusinessRoles.CanManage(role),
             BusinessRoles.CanShowQr(role),
             branch.BusinessStatus,
-            BusinessRoles.CanManage(role) && branch.BusinessStatus == BusinessStatus.Approved);
+            branch.IsClosed,
+            BusinessRoles.CanManage(role) && branch.BusinessStatus == BusinessStatus.Approved && !branch.IsClosed);
     }
 }

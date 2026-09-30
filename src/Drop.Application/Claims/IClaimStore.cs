@@ -7,4 +7,11 @@ public interface IClaimStore
         Guid userId,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Cancels the user's own active claim under a row lock.</summary>
+    Task WithdrawAsync(
+        Guid claimId,
+        Guid userId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
 }

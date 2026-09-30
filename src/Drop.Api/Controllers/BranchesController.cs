@@ -1,3 +1,4 @@
+using Drop.Application.Branches.BranchLifecycle;
 using Drop.Application.Branches.CreateBranch;
 using Drop.Application.Branches.GetBranch;
 using Drop.Application.Branches.GetBranchQr;
@@ -60,6 +61,32 @@ public sealed class BranchDetailController : ControllerBase
         CancellationToken cancellationToken)
     {
         return Ok(await service.ExecuteAsync(branchId, request, cancellationToken));
+    }
+
+    /// <summary>
+    /// Closes the branch: its live and scheduled drops (and their unused
+    /// reservations) are cancelled and it can't publish until reopened.
+    /// </summary>
+    [HttpPost("close")]
+    public async Task<IActionResult> Close(
+        Guid branchId,
+        [FromServices] BranchLifecycleService service,
+        CancellationToken cancellationToken)
+    {
+        await service.CloseAsync(branchId, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("reopen")]
+    public async Task<IActionResult> Reopen(
+        Guid branchId,
+        [FromServices] BranchLifecycleService service,
+        CancellationToken cancellationToken)
+    {
+        await service.ReopenAsync(branchId, cancellationToken);
+
+        return NoContent();
     }
 
     /// <summary>

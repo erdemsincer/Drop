@@ -44,6 +44,16 @@ public sealed class AdminBusinessesService
     public Task<AdminBusinessResponse> ApproveAsync(Guid businessId, CancellationToken cancellationToken = default) =>
         ModerateAsync(
             businessId,
+            // Approval unlocks publishing and mails the owner, so the address must be real.
+            before =>
+            {
+                if (!before.OwnerEmailVerified)
+                {
+                    throw new ConflictException(
+                        ErrorCodes.Business.OwnerEmailUnverified,
+                        "The owner has not verified their e-mail yet.");
+                }
+            },
             (business, now) => business.Approve(now),
             name => (
                 $"{name} Drop'ta onaylandı 🎉",
@@ -56,6 +66,7 @@ public sealed class AdminBusinessesService
         CancellationToken cancellationToken = default) =>
         ModerateAsync(
             businessId,
+            _ => { },
             (business, now) => business.Reject(request.Reason, now),
             name => (
                 $"{name} başvurusu hakkında",
@@ -68,6 +79,7 @@ public sealed class AdminBusinessesService
         CancellationToken cancellationToken = default) =>
         ModerateAsync(
             businessId,
+            _ => { },
             (business, now) => business.Suspend(request.Reason, now),
             name => (
                 $"{name} askıya alındı",
@@ -76,6 +88,7 @@ public sealed class AdminBusinessesService
 
     private async Task<AdminBusinessResponse> ModerateAsync(
         Guid businessId,
+        Action<AdminBusinessResponse> guard,
         Action<Business, DateTimeOffset> change,
         Func<string, (string Subject, string Body)> email,
         CancellationToken cancellationToken)
@@ -84,6 +97,8 @@ public sealed class AdminBusinessesService
 
         var business = await _businessRepository.GetByIdAsync(businessId, cancellationToken)
             ?? throw new NotFoundException(ErrorCodes.Business.NotFound, "Business was not found.");
+
+        guard((await _store.GetAsync(businessId, cancellationToken))!);
 
         var now = _timeProvider.GetUtcNow();
 

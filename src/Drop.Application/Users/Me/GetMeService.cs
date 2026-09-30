@@ -31,6 +31,12 @@ public sealed class GetMeService
 
         var isAdmin = await _adminAccess.IsAdminAsync(user.Id, cancellationToken);
 
-        return new MeResponse(user.Id, user.Email, user.FirstName, user.LastName, isAdmin);
+        return new MeResponse(
+            user.Id,
+            user.Email,
+            user.FirstName,
+            user.LastName,
+            user.IsEmailVerified,
+            isAdmin);
     }
 }

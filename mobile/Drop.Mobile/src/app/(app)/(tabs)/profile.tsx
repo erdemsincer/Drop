@@ -54,6 +54,23 @@ export default function ProfileScreen() {
           </View>
         </LinearGradient>
 
+        {me && !me.emailVerified && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/(app)/account/verify-email')}
+            style={({ pressed }) => [styles.verify, pressed && styles.rowPressed]}
+          >
+            <View style={styles.verifyIcon}>
+              <Ionicons name="mail-unread" size={20} color={colors.warning} />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={styles.rowTitle}>E-postanı doğrula</Text>
+              <Text style={styles.rowSubtitle}>{me.email} adresine gelen kodu gir</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSubtle} />
+          </Pressable>
+        )}
+
         {businesses.length > 0 && (
           <Section title="İşletme">
             {businesses.map(business => (
@@ -82,6 +99,8 @@ export default function ProfileScreen() {
         )}
 
         <Section title="Hesap">
+          <Row icon="person-circle" title="Profili düzenle" onPress={() => router.push('/(app)/account/edit')} />
+          <Row icon="key" title="Şifreyi değiştir" onPress={() => router.push('/(app)/account/password')} />
           <Row icon="ticket" title="Drop'larım" onPress={() => router.navigate('/(app)/(tabs)/claims')} />
           <Row
             icon="sparkles"
@@ -150,6 +169,23 @@ function Row({ icon, title, subtitle, danger = false, onPress }: RowProps) {
 }
 
 const styles = StyleSheet.create({
+  verify: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    padding: spacing.lg,
+    backgroundColor: colors.warningSoft,
+    borderRadius: radius.lg,
+  },
+  verifyIcon: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+  },
   content: {
     padding: spacing.xl,
     paddingBottom: spacing.xxxl,

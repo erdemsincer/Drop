@@ -28,7 +28,7 @@ public sealed class DropDbContext : DbContext, IUnitOfWork
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
-    public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
+    public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

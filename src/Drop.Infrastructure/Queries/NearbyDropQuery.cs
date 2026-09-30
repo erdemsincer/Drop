@@ -71,6 +71,8 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
 
             WHERE d."Status" = 'Active'
 
+              AND b."ClosedAt" IS NULL
+
               AND d."EndsAt" > {3}
 
               AND ST_DWithin(

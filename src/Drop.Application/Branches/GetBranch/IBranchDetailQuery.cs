@@ -7,7 +7,8 @@ public sealed record BranchDetailData(
     string BusinessName,
     double Latitude,
     double Longitude,
-    Drop.Domain.Businesses.BusinessStatus BusinessStatus);
+    Drop.Domain.Businesses.BusinessStatus BusinessStatus,
+    bool IsClosed);
 
 public interface IBranchDetailQuery
 {

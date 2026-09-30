@@ -49,3 +49,8 @@ export const getMyClaims = async () => {
   const response = await apiClient.get<MyClaim[]>('/api/claims/me');
   return response.data;
 };
+
+/** Gives an unused reservation back; the same drop can't be claimed again. */
+export const cancelClaim = async (claimId: string) => {
+  await apiClient.post(`/api/claims/${claimId}/cancel`);
+};

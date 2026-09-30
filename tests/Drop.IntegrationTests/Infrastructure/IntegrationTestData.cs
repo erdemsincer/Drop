@@ -37,6 +37,7 @@ public static class IntegrationTestData
             "Drop",
             "Owner",
             now);
+        user.MarkEmailVerified(now);
 
         var business = new Business("Drop Coffee", now);
         business.Approve(now);
@@ -167,9 +168,13 @@ public static class IntegrationTestData
     /// <summary>
     /// Creates multiple test users for concurrent claim testing.
     /// </summary>
+    /// <param name="emailVerified">
+    /// Seeded users stand for established accounts, so they are verified unless a test says otherwise.
+    /// </param>
     public static async Task<IReadOnlyList<Guid>> CreateUsersAsync(
         DropApiFactory factory,
-        int count)
+        int count,
+        bool emailVerified = true)
     {
         using var scope = factory.Services.CreateScope();
 
@@ -192,6 +197,11 @@ public static class IntegrationTestData
                     $"User{index}",
                     now))
             .ToList();
+
+        if (emailVerified)
+        {
+            users.ForEach(user => user.MarkEmailVerified(now));
+        }
 
         dbContext.Users.AddRange(users);
 

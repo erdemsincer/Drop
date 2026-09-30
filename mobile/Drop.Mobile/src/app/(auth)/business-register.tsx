@@ -56,8 +56,11 @@ export default function BusinessRegisterScreen() {
         onSuccess: async business => {
           haptics.success();
           await refresh();
-          router.replace('/(app)/(tabs)');
-          router.push({ pathname: '/(app)/business/[businessId]', params: { businessId: business.id } });
+          // Approval needs a verified owner e-mail, so ask for the code right away.
+          router.replace({
+            pathname: '/(app)/account/verify-email',
+            params: { from: 'signup', businessId: business.id },
+          });
         },
         onError: () => haptics.error(),
       },

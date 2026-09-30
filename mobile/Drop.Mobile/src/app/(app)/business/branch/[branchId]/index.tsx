@@ -14,6 +14,7 @@ import {
   Button,
   Header,
   IconButton,
+  Notice,
   Screen,
   Skeleton,
   StateView,
@@ -167,6 +168,15 @@ export default function BranchDashboardScreen() {
       {branch && branch.businessStatus !== 'Approved' && (
         <View style={styles.notice}>
           <BusinessStatusNotice status={branch.businessStatus} />
+        </View>
+      )}
+
+      {branch?.isClosed && (
+        <View style={styles.notice}>
+          <Notice
+            tone="warning"
+            message="Bu şube kapalı. Drop yayınlamak için şube ayarlarından yeniden açabilirsin."
+          />
         </View>
       )}
 

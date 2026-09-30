@@ -126,4 +126,52 @@ internal sealed class ClaimStore : IClaimStore
             claim.ExpiresAt,
             drop.Capacity - occupiedCount - 1);
     }
+
+    public async Task WithdrawAsync(
+        Guid claimId,
+        Guid userId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction =
+            await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        // Locked so a cancel can't race a redemption of the same claim.
+        var claim = await _dbContext.Claims
+            .FromSqlInterpolated(
+                $"""
+                SELECT *
+                FROM claims
+                WHERE "Id" = {claimId}
+                FOR UPDATE
+                """)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (claim is null)
+        {
+            throw new NotFoundException(
+                ErrorCodes.Claim.NotFound,
+                "Claim was not found.");
+        }
+
+        if (claim.UserId != userId)
+        {
+            throw new ForbiddenException(
+                ErrorCodes.Claim.AccessDenied,
+                "You cannot cancel this claim.");
+        }
+
+        try
+        {
+            claim.Withdraw(now);
+        }
+        catch (ClaimDomainException ex)
+        {
+            throw new ConflictException(ex.Code, ex.Message);
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+    }
 }

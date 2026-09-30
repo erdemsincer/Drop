@@ -14,7 +14,7 @@ public sealed class PasswordResetService
     private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);
 
     private readonly IUserRepository _userRepository;
-    private readonly IPasswordResetStore _resetStore;
+    private readonly IVerificationCodeStore _codeStore;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IEmailSender _emailSender;
@@ -23,7 +23,7 @@ public sealed class PasswordResetService
 
     public PasswordResetService(
         IUserRepository userRepository,
-        IPasswordResetStore resetStore,
+        IVerificationCodeStore codeStore,
         IPasswordHasher passwordHasher,
         IRefreshTokenService refreshTokenService,
         IEmailSender emailSender,
@@ -31,7 +31,7 @@ public sealed class PasswordResetService
         TimeProvider timeProvider)
     {
         _userRepository = userRepository;
-        _resetStore = resetStore;
+        _codeStore = codeStore;
         _passwordHasher = passwordHasher;
         _refreshTokenService = refreshTokenService;
         _emailSender = emailSender;
@@ -55,7 +55,7 @@ public sealed class PasswordResetService
         }
 
         var now = _timeProvider.GetUtcNow();
-        var latest = await _resetStore.GetLatestAsync(user.Id, cancellationToken);
+        var latest = await _codeStore.GetLatestAsync(user.Id, VerificationPurpose.PasswordReset, cancellationToken);
 
         if (latest is not null && now - latest.CreatedAt < ResendCooldown)
         {
@@ -64,8 +64,13 @@ public sealed class PasswordResetService
 
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 
-        await _resetStore.ReplaceAsync(
-            new PasswordResetCode(user.Id, _resetStore.Hash(user.Id, code), now, CodeLifetime),
+        await _codeStore.ReplaceAsync(
+            new VerificationCode(
+                user.Id,
+                VerificationPurpose.PasswordReset,
+                _codeStore.Hash(user.Id, VerificationPurpose.PasswordReset, code),
+                now,
+                CodeLifetime),
             now,
             cancellationToken);
 
@@ -88,14 +93,16 @@ public sealed class PasswordResetService
     {
         var now = _timeProvider.GetUtcNow();
         var user = await _userRepository.GetByEmailAsync(Normalize(request.Email), cancellationToken);
-        var stored = user is null ? null : await _resetStore.GetLatestAsync(user.Id, cancellationToken);
+        var stored = user is null
+            ? null
+            : await _codeStore.GetLatestAsync(user.Id, VerificationPurpose.PasswordReset, cancellationToken);
 
         if (user is null || stored is null || !stored.IsUsable(now))
         {
             throw InvalidCode();
         }
 
-        if (!_resetStore.Matches(stored, user.Id, request.Code))
+        if (!_codeStore.Matches(stored, request.Code))
         {
             stored.RegisterFailedAttempt();
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -103,6 +110,8 @@ public sealed class PasswordResetService
         }
 
         user.ChangePassword(_passwordHasher.Hash(request.NewPassword));
+        // The code arrived by e-mail, so it also proves the user owns the inbox.
+        user.MarkEmailVerified(now);
         stored.MarkUsed(now);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

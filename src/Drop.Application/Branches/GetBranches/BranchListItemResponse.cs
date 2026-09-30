@@ -5,4 +5,5 @@ public sealed record BranchListItemResponse(
     string Name,
     double Latitude,
     double Longitude,
-    int ActiveDropCount);
+    int ActiveDropCount,
+    bool IsClosed);

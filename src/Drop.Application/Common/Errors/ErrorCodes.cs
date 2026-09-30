@@ -14,6 +14,7 @@ public static class ErrorCodes
         public const string UserInactive = "auth.user_inactive";
         public const string InvalidRefreshToken = "auth.invalid_refresh_token";
         public const string InvalidResetCode = "auth.invalid_reset_code";
+        public const string InvalidVerificationCode = "auth.invalid_verification_code";
     }
 
     public static class Business
@@ -21,6 +22,7 @@ public static class ErrorCodes
         public const string NotFound = "business.not_found";
         public const string AccessDenied = "business.access_denied";
         public const string NotApproved = "business.not_approved";
+        public const string OwnerEmailUnverified = "business.owner_email_unverified";
     }
 
     public static class Admin
@@ -40,6 +42,7 @@ public static class ErrorCodes
     public static class Branch
     {
         public const string NotFound = "branch.not_found";
+        public const string Closed = "branch.closed";
     }
 
     public static class Drop

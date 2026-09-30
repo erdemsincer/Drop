@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useMe } from '@/features/users/hooks/useMe';
 import { colors, radius, spacing } from '@/ui';
 
 import type { BusinessStatus } from '../types/business';
@@ -36,7 +38,12 @@ const palette = {
 
 /** Explains why a business can't publish yet; renders nothing once approved. */
 export function BusinessStatusNotice({ status, reason }: Props) {
+  const me = useMe().data;
+
   if (status === 'Approved') return null;
+
+  // Approval waits on a verified owner e-mail; say so instead of leaving them waiting.
+  const needsVerification = status === 'Pending' && me?.emailVerified === false;
 
   const { title, body, tone } = content[status];
   const { bg, fg, icon } = palette[tone];
@@ -52,6 +59,17 @@ export function BusinessStatusNotice({ status, reason }: Props) {
             <Text style={styles.reasonLabel}>Gerekçe: </Text>
             {reason}
           </Text>
+        )}
+        {needsVerification && (
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => router.push('/(app)/account/verify-email')}
+            style={styles.verify}
+          >
+            <Text style={styles.verifyText}>Onay için önce e-postanı doğrula</Text>
+            <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+          </Pressable>
         )}
       </View>
     </View>
@@ -86,6 +104,17 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   reasonLabel: {
+    fontWeight: '800',
+  },
+  verify: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.xs,
+  },
+  verifyText: {
+    color: colors.primary,
+    fontSize: 13,
     fontWeight: '800',
   },
 });

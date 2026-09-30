@@ -1,4 +1,5 @@
 using Drop.Application.Authentication;
+using Drop.Application.Claims.CancelClaim;
 using Drop.Application.Claims.CreateClaim;
 using Drop.Application.Claims.MyClaims;
 using Drop.Application.Features.Claims.ActiveClaim;
@@ -54,6 +55,18 @@ public sealed class ClaimsController : ControllerBase
             cancellationToken);
 
         return Ok(response);
+    }
+
+    /// <summary>Gives an unused reservation back. The same drop can't be claimed again.</summary>
+    [HttpPost("{claimId:guid}/cancel")]
+    public async Task<IActionResult> Cancel(
+        Guid claimId,
+        [FromServices] CancelClaimService service,
+        CancellationToken cancellationToken)
+    {
+        await service.ExecuteAsync(claimId, cancellationToken);
+
+        return NoContent();
     }
 }
 

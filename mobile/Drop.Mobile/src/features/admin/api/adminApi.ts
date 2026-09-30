@@ -10,6 +10,7 @@ export type AdminBusiness = {
   statusChangedAt: string;
   ownerName?: string | null;
   ownerEmail?: string | null;
+  ownerEmailVerified: boolean;
   branchCount: number;
 };
 

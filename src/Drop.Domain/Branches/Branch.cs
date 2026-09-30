@@ -39,6 +39,30 @@ public sealed class Branch : Entity
 
     public Location Location { get; private set; } = null!;
 
+    /// <summary>
+    /// Set while the branch is closed (moved out, shut for renovation...).
+    /// A closed branch keeps its history but can't publish drops.
+    /// </summary>
+    public DateTimeOffset? ClosedAt { get; private set; }
+
+    public bool IsClosed => ClosedAt is not null;
+
+    public void Close(DateTimeOffset now)
+    {
+        if (IsClosed)
+            throw new BranchDomainException("branch.already_closed", "Branch is already closed.");
+
+        ClosedAt = now;
+    }
+
+    public void Reopen()
+    {
+        if (!IsClosed)
+            throw new BranchDomainException("branch.not_closed", "Branch is not closed.");
+
+        ClosedAt = null;
+    }
+
     public void Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

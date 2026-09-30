@@ -17,6 +17,7 @@ export type Branch = {
   latitude: number;
   longitude: number;
   activeDropCount: number;
+  isClosed: boolean;
 };
 
 export type BranchDetail = {
@@ -30,7 +31,9 @@ export type BranchDetail = {
   canManage: boolean;
   canShowQr: boolean;
   businessStatus: BusinessStatus;
-  /** Manager/owner of an approved business. */
+  /** Closed branches can't publish until reopened. */
+  isClosed: boolean;
+  /** Manager/owner of an approved business, and the branch is open. */
   canPublishDrops: boolean;
 };
 

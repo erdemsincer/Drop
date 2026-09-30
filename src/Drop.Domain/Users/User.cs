@@ -27,8 +27,7 @@ public sealed class User : Entity
 
         Email = email.Trim().ToLowerInvariant();
         PasswordHash = passwordHash;
-        FirstName = firstName.Trim();
-        LastName = lastName.Trim();
+        SetName(firstName, lastName);
         CreatedAt = createdAt;
         Status = UserStatus.Active;
     }
@@ -45,6 +44,15 @@ public sealed class User : Entity
 
     public UserStatus Status { get; private set; }
 
+    /// <summary>When the user proved they own <see cref="Email"/>; null until then.</summary>
+    public DateTimeOffset? EmailVerifiedAt { get; private set; }
+
+    public bool IsEmailVerified => EmailVerifiedAt is not null;
+
+    public void MarkEmailVerified(DateTimeOffset now) => EmailVerifiedAt ??= now;
+
+    public void Rename(string firstName, string lastName) => SetName(firstName, lastName);
+
     public void ChangePassword(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
@@ -53,5 +61,16 @@ public sealed class User : Entity
         }
 
         PasswordHash = passwordHash;
+    }
+
+    private void SetName(string firstName, string lastName)
+    {
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        {
+            throw new ArgumentException("First and last name cannot be empty.");
+        }
+
+        FirstName = firstName.Trim();
+        LastName = lastName.Trim();
     }
 }

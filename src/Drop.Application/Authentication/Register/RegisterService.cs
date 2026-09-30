@@ -2,6 +2,7 @@ using Drop.Application.Abstractions;
 using Drop.Application.Common.Errors;
 using Drop.Application.Common.Exceptions;
 using Drop.Application.Users;
+using Drop.Application.Users.EmailVerification;
 using Drop.Domain.Users;
 
 namespace Drop.Application.Authentication.Register;
@@ -12,17 +13,20 @@ public sealed class RegisterService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _timeProvider;
+    private readonly EmailVerificationService _emailVerification;
 
     public RegisterService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IUnitOfWork unitOfWork,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        EmailVerificationService emailVerification)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _unitOfWork = unitOfWork;
         _timeProvider = timeProvider;
+        _emailVerification = emailVerification;
     }
 
     public async Task<RegisterResponse> ExecuteAsync(
@@ -54,6 +58,17 @@ public sealed class RegisterService
         await _userRepository.AddAsync(user, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // The account exists either way; a mail hiccup must not fail sign-up
+        // (the app offers "resend code").
+        try
+        {
+            await _emailVerification.SendCodeAsync(user, cancellationToken);
+        }
+        catch
+        {
+            // Best effort.
+        }
 
         return new RegisterResponse(user.Id, user.Email);
     }

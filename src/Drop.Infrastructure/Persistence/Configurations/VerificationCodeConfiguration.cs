@@ -4,14 +4,19 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Drop.Infrastructure.Persistence.Configurations;
 
-internal sealed class PasswordResetCodeConfiguration
-    : IEntityTypeConfiguration<PasswordResetCode>
+internal sealed class VerificationCodeConfiguration
+    : IEntityTypeConfiguration<VerificationCode>
 {
-    public void Configure(EntityTypeBuilder<PasswordResetCode> builder)
+    public void Configure(EntityTypeBuilder<VerificationCode> builder)
     {
-        builder.ToTable("password_reset_codes");
+        builder.ToTable("verification_codes");
 
         builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Purpose)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .IsRequired();
 
         builder.Property(x => x.CodeHash)
             .HasMaxLength(64)
@@ -22,6 +27,6 @@ internal sealed class PasswordResetCodeConfiguration
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(x => new { x.UserId, x.CreatedAt });
+        builder.HasIndex(x => new { x.UserId, x.Purpose, x.CreatedAt });
     }
 }

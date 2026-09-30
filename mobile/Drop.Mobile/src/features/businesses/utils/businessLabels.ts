@@ -34,6 +34,8 @@ export const getBusinessErrorMessage = (code?: string, fallback?: string) => {
       return 'İşletme bulunamadı.';
     case 'branch.not_found':
       return 'Şube bulunamadı.';
+    case 'branch.closed':
+      return 'Bu şube kapalı. Drop yayınlamak için önce şubeyi yeniden aç.';
     case 'business.not_approved':
       return 'İşletmen onaylanmadan Drop yayınlayamazsın. İnceleme genellikle kısa sürer.';
     case 'member.user_not_found':

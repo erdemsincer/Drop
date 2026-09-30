@@ -12,6 +12,7 @@ import {
   Badge,
   Button,
   Header,
+  IconButton,
   Screen,
   Skeleton,
   StateView,
@@ -80,6 +81,13 @@ export default function BusinessDetailScreen() {
                 </Text>
                 {business && <Badge label={roleLabels[business.role].toUpperCase()} tone="primary" />}
               </View>
+              {business?.role === 'Owner' && (
+                <IconButton
+                  icon="create-outline"
+                  accessibilityLabel="İşletme adını düzenle"
+                  onPress={() => router.push({ pathname: '/(app)/business/[businessId]/edit', params: { businessId } })}
+                />
+              )}
             </View>
 
             {business && (
@@ -133,14 +141,14 @@ export default function BusinessDetailScreen() {
 }
 
 function BranchCard({ branch, onPress }: { branch: Branch; onPress: () => void }) {
-  const live = branch.activeDropCount > 0;
+  const live = !branch.isClosed && branch.activeDropCount > 0;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${branch.name} şubesi`}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, branch.isClosed && styles.cardClosed, pressed && styles.pressed]}
     >
       <View style={styles.cardIcon}>
         <Ionicons name="storefront" size={22} color={colors.primary} />
@@ -149,9 +157,13 @@ function BranchCard({ branch, onPress }: { branch: Branch; onPress: () => void }
         <Text style={styles.cardTitle} numberOfLines={1}>
           {branch.name}
         </Text>
-        <Text style={styles.cardSubtitle}>Drop&apos;ları ve QR kodunu yönet</Text>
+        <Text style={styles.cardSubtitle}>
+          {branch.isClosed ? 'Kapalı · Drop yayınlanamaz' : "Drop'ları ve QR kodunu yönet"}
+        </Text>
       </View>
-      {live ? (
+      {branch.isClosed ? (
+        <Badge label="KAPALI" tone="neutral" />
+      ) : live ? (
         <Badge label={`${branch.activeDropCount} YAYINDA`} tone="success" live />
       ) : (
         <Ionicons name="chevron-forward" size={20} color={colors.textSubtle} />
@@ -161,6 +173,9 @@ function BranchCard({ branch, onPress }: { branch: Branch; onPress: () => void }
 }
 
 const styles = StyleSheet.create({
+  cardClosed: {
+    opacity: 0.6,
+  },
   list: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,

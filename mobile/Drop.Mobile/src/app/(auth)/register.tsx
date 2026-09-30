@@ -35,7 +35,7 @@ export default function RegisterScreen() {
     onSuccess: async () => {
       haptics.success();
       await refresh();
-      router.replace('/(app)/(tabs)');
+      router.replace({ pathname: '/(app)/account/verify-email', params: { from: 'signup' } });
     },
     onError: () => haptics.error(),
   });

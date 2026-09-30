@@ -95,7 +95,11 @@ export default function AdminBusinessesScreen() {
             <ChoiceChips options={FILTERS} value={status} onChange={setStatus} />
             {moderate.isError && (
               <Notice
-                message={getApiError(moderate.error)?.detail ?? 'İşlem tamamlanamadı. Liste yenilendi.'}
+                message={
+                  getApiError(moderate.error)?.code === 'business.owner_email_unverified'
+                    ? 'İşletme sahibi e-postasını henüz doğrulamadı; doğrulayınca onaylayabilirsin.'
+                    : (getApiError(moderate.error)?.detail ?? 'İşlem tamamlanamadı. Liste yenilendi.')
+                }
               />
             )}
           </View>
@@ -173,6 +177,13 @@ function AdminBusinessCard({
           {business.ownerEmail ? ` · ${business.ownerEmail}` : ''}
         </Text>
       </View>
+
+      {business.ownerEmail && !business.ownerEmailVerified && (
+        <View style={styles.unverified}>
+          <Ionicons name="alert-circle" size={15} color={colors.warning} />
+          <Text style={styles.unverifiedText}>E-posta doğrulanmadı · onay için doğrulanması gerekiyor</Text>
+        </View>
+      )}
 
       {!!business.statusReason && (
         <Text style={styles.reason}>
@@ -277,6 +288,22 @@ function ReasonSheet({
 }
 
 const styles = StyleSheet.create({
+  unverified: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.warningSoft,
+    borderRadius: radius.md,
+  },
+  unverifiedText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   list: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,

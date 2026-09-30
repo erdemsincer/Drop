@@ -2,9 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { getApiError } from '@/api/getApiError';
 import { useActiveClaim } from '@/features/claims/hooks/useActiveClaim';
+import { useCancelClaim } from '@/features/claims/hooks/useCancelClaim';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { openDirections } from '@/utils/openDirections';
 import {
@@ -15,6 +17,7 @@ import {
   Screen,
   colors,
   gradients,
+  haptics,
   radius,
   shadows,
   spacing,
@@ -41,6 +44,40 @@ export default function ClaimScreen() {
   const progress = totalSeconds > 0 ? remaining.totalSeconds / totalSeconds : null;
 
   const goHome = () => router.replace('/(app)/(tabs)');
+
+  const cancelMutation = useCancelClaim();
+
+  const confirmCancel = () =>
+    Alert.alert(
+      'Rezervasyondan vazgeçilsin mi?',
+      "Yerin başka birine açılacak ve bu Drop'u tekrar yakalayamayacaksın.",
+      [
+        { text: 'Vazgeçme', style: 'cancel' },
+        {
+          text: 'Evet, iptal et',
+          style: 'destructive',
+          onPress: () =>
+            cancelMutation.mutate(id, {
+              onSuccess: () => {
+                haptics.success();
+                goHome();
+              },
+              onError: error => {
+                haptics.error();
+                const code = getApiError(error)?.code;
+                Alert.alert(
+                  'İptal edilemedi',
+                  code === 'claim.expired'
+                    ? 'Rezervasyonun süresi zaten dolmuş.'
+                    : code === 'claim.not_active'
+                      ? 'Bu rezervasyon zaten kullanılmış ya da iptal edilmiş.'
+                      : 'Bir sorun oluştu, lütfen tekrar dene.',
+                );
+              },
+            }),
+        },
+      ],
+    );
 
   return (
     <Screen>
@@ -120,6 +157,20 @@ export default function ClaimScreen() {
             </View>
           </View>
         </View>
+
+        {!expired && (
+          <Pressable
+            accessibilityRole="button"
+            disabled={cancelMutation.isPending}
+            hitSlop={8}
+            onPress={confirmCancel}
+            style={({ pressed }) => [styles.cancel, (pressed || cancelMutation.isPending) && styles.cancelPressed]}
+          >
+            <Text style={styles.cancelText}>
+              {cancelMutation.isPending ? 'İptal ediliyor…' : 'Rezervasyondan vazgeç'}
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       <View style={styles.actions}>
@@ -320,5 +371,19 @@ const styles = StyleSheet.create({
   },
   directions: {
     marginBottom: spacing.sm,
+  },
+  cancel: {
+    alignSelf: 'center',
+    marginTop: spacing.xl,
+    paddingVertical: spacing.sm,
+  },
+  cancelPressed: {
+    opacity: 0.6,
+  },
+  cancelText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });

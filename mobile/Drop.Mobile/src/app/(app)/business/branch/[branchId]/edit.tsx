@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +16,7 @@ import {
 import { getApiErrorMessage } from '@/api/apiError';
 import { getApiError } from '@/api/getApiError';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
+import { useBranchLifecycle } from '@/features/businesses/hooks/useBranchLifecycle';
 import { useUpdateBranch } from '@/features/businesses/hooks/useUpdateBranch';
 import { getBusinessErrorMessage } from '@/features/businesses/utils/businessLabels';
 import { useCurrentLocation } from '@/features/location/hooks/useCurrentLocation';
@@ -55,6 +57,29 @@ function EditBranchForm({ branch }: { branch: NonNullable<ReturnType<typeof useB
 
   const locationQuery = useCurrentLocation();
   const mutation = useUpdateBranch(branch.id);
+  const lifecycle = useBranchLifecycle(branch.id);
+
+  const runLifecycle = (action: 'close' | 'reopen') =>
+    lifecycle.mutate(action, {
+      onSuccess: () => {
+        haptics.success();
+        if (action === 'close') router.back();
+      },
+      onError: () => {
+        haptics.error();
+        Alert.alert('İşlem tamamlanamadı', 'Şubenin durumu değişmiş olabilir. Sayfayı yenileyip tekrar dene.');
+      },
+    });
+
+  const confirmClose = () =>
+    Alert.alert(
+      'Şube kapatılsın mı?',
+      "Yayındaki ve planlanan tüm Drop'lar iptal edilir, müşterilerin kullanılmamış rezervasyonları da düşer. Şubeyi istediğin zaman yeniden açabilirsin.",
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Şubeyi kapat', style: 'destructive', onPress: () => runLifecycle('close') },
+      ],
+    );
   const apiError = mutation.error ? getApiError(mutation.error) : null;
   const here = locationQuery.data;
 
@@ -148,6 +173,23 @@ function EditBranchForm({ branch }: { branch: NonNullable<ReturnType<typeof useB
             <Notice message={getBusinessErrorMessage(apiError.code, apiError.detail)} />
           )}
           {mutation.isError && !apiError && <Notice message="Sunucuya ulaşılamadı." />}
+
+          <View style={[styles.lifecycle, branch.isClosed ? styles.lifecycleReopen : styles.lifecycleClose]}>
+            <Text style={styles.lifecycleTitle}>{branch.isClosed ? 'Şube kapalı' : 'Şubeyi kapat'}</Text>
+            <Text style={styles.lifecycleText}>
+              {branch.isClosed
+                ? "Yeniden açtığında bu şubeden tekrar Drop yayınlayabilirsin. Geçmiş Drop'lar korunur."
+                : "Taşındıysan ya da bir süre hizmet vermeyeceksen şubeyi kapat. Aktif Drop'lar iptal edilir, geçmiş kayıtlar silinmez."}
+            </Text>
+            <Button
+              title={branch.isClosed ? 'Şubeyi yeniden aç' : 'Şubeyi kapat'}
+              icon={branch.isClosed ? 'refresh' : 'close-circle-outline'}
+              variant={branch.isClosed ? 'primary' : 'light'}
+              size="md"
+              loading={lifecycle.isPending}
+              onPress={branch.isClosed ? () => runLifecycle('reopen') : confirmClose}
+            />
+          </View>
         </ScrollView>
 
         <View style={styles.footer}>
@@ -165,6 +207,29 @@ function EditBranchForm({ branch }: { branch: NonNullable<ReturnType<typeof useB
 }
 
 const styles = StyleSheet.create({
+  lifecycle: {
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+  },
+  lifecycleClose: {
+    backgroundColor: colors.dangerSoft,
+  },
+  lifecycleReopen: {
+    backgroundColor: colors.primarySoft,
+  },
+  lifecycleTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  lifecycleText: {
+    marginBottom: spacing.xs,
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
   flex: {
     flex: 1,
   },

@@ -2,20 +2,28 @@ using Drop.Domain.Common;
 
 namespace Drop.Domain.Users;
 
+public enum VerificationPurpose
+{
+    PasswordReset = 1,
+    EmailVerification = 2
+}
+
 /// <summary>
-/// One-time code e-mailed for a password reset. Only its hash is stored,
-/// and it dies after a few wrong guesses so six digits can't be brute-forced.
+/// One-time code e-mailed to prove access to the inbox (password reset or
+/// e-mail verification). Only its hash is stored, and it dies after a few
+/// wrong guesses so six digits can't be brute-forced.
 /// </summary>
-public sealed class PasswordResetCode : Entity
+public sealed class VerificationCode : Entity
 {
     public const int MaxAttempts = 5;
 
-    private PasswordResetCode()
+    private VerificationCode()
     {
     }
 
-    public PasswordResetCode(
+    public VerificationCode(
         Guid userId,
+        VerificationPurpose purpose,
         string codeHash,
         DateTimeOffset createdAt,
         TimeSpan lifetime)
@@ -27,12 +35,15 @@ public sealed class PasswordResetCode : Entity
             throw new ArgumentException("Code hash cannot be empty.", nameof(codeHash));
 
         UserId = userId;
+        Purpose = purpose;
         CodeHash = codeHash;
         CreatedAt = createdAt;
         ExpiresAt = createdAt.Add(lifetime);
     }
 
     public Guid UserId { get; private set; }
+
+    public VerificationPurpose Purpose { get; private set; }
 
     public string CodeHash { get; private set; } = null!;
 

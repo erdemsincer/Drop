@@ -73,7 +73,7 @@ internal sealed class AdminBusinessStore : IAdminBusinessStore
             from member in _dbContext.BusinessMembers
             join user in _dbContext.Users on member.UserId equals user.Id
             where member.BusinessId == business.Id && member.Role == BusinessMemberRole.Owner
-            select new { Name = user.FirstName + " " + user.LastName, user.Email }
+            select new { Name = user.FirstName + " " + user.LastName, user.Email, user.EmailVerifiedAt }
         ).FirstOrDefault()
         select new AdminBusinessResponse(
             business.Id,
@@ -84,5 +84,6 @@ internal sealed class AdminBusinessStore : IAdminBusinessStore
             business.StatusChangedAt,
             owner != null ? owner.Name : null,
             owner != null ? owner.Email : null,
+            owner != null && owner.EmailVerifiedAt != null,
             _dbContext.Branches.Count(branch => branch.BusinessId == business.Id));
 }

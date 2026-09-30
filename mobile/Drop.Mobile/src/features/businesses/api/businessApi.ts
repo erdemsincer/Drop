@@ -96,3 +96,18 @@ export const updateBranch = async (branchId: string, request: UpdateBranchReques
   const response = await apiClient.put<CreateBranchResponse>(`/api/branches/${branchId}`, request);
   return response.data;
 };
+
+/** Cancels the branch's live and scheduled drops and blocks publishing until reopened. */
+export const closeBranch = async (branchId: string) => {
+  await apiClient.post(`/api/branches/${branchId}/close`);
+};
+
+export const reopenBranch = async (branchId: string) => {
+  await apiClient.post(`/api/branches/${branchId}/reopen`);
+};
+
+/** Owner only. */
+export const renameBusiness = async (businessId: string, name: string) => {
+  const response = await apiClient.put<{ id: string; name: string }>(`/api/businesses/${businessId}`, { name });
+  return response.data;
+};

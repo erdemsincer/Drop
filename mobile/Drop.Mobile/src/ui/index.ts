@@ -3,6 +3,7 @@ export { Badge } from './components/Badge';
 export { BrandMark } from './components/BrandMark';
 export { Button } from './components/Button';
 export { ChoiceChips, type Choice } from './components/ChoiceChips';
+export { CodeInput } from './components/CodeInput';
 export { Header } from './components/Header';
 export { IconButton } from './components/IconButton';
 export { Notice } from './components/Notice';

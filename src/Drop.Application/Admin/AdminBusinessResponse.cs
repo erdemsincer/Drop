@@ -11,4 +11,5 @@ public sealed record AdminBusinessResponse(
     DateTimeOffset StatusChangedAt,
     string? OwnerName,
     string? OwnerEmail,
+    bool OwnerEmailVerified,
     int BranchCount);

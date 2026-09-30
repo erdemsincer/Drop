@@ -59,6 +59,29 @@ public sealed class Claim : Entity
         }
     }
 
+    /// <summary>
+    /// The customer gives an unused reservation back, freeing its place on the drop.
+    /// The same drop cannot be claimed again, so a place can't be held and re-held.
+    /// </summary>
+    public void Withdraw(DateTimeOffset now)
+    {
+        if (Status == ClaimStatus.Expired || (Status == ClaimStatus.Active && now >= ExpiresAt))
+        {
+            throw new ClaimDomainException(
+                "claim.expired",
+                "Claim has expired.");
+        }
+
+        if (Status != ClaimStatus.Active)
+        {
+            throw new ClaimDomainException(
+                "claim.not_active",
+                "Only active claims can be cancelled.");
+        }
+
+        Status = ClaimStatus.Cancelled;
+    }
+
     public void Redeem(DateTimeOffset now)
     {
         // Expired is checked first: the expiration job may already have flipped

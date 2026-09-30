@@ -63,6 +63,13 @@ public sealed class CreateDropService
                 "You cannot manage this business.");
         }
 
+        if (branch.IsClosed)
+        {
+            throw new ConflictException(
+                ErrorCodes.Branch.Closed,
+                "Reopen the branch before publishing drops.");
+        }
+
         var business = await _businessRepository.GetByBranchIdAsync(branchId, cancellationToken);
 
         if (business is null || !business.CanPublishDrops)

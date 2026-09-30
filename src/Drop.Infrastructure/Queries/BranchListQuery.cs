@@ -29,7 +29,9 @@ internal sealed class BranchListQuery : IBranchListQuery
         return await _dbContext.Branches
             .AsNoTracking()
             .Where(branch => branch.BusinessId == businessId)
-            .OrderBy(branch => branch.Name)
+            // Open branches first, then alphabetical.
+            .OrderBy(branch => branch.ClosedAt != null)
+            .ThenBy(branch => branch.Name)
             .Select(branch => new BranchListItemResponse(
                 branch.Id,
                 branch.Name,
@@ -38,7 +40,8 @@ internal sealed class BranchListQuery : IBranchListQuery
                 _dbContext.Drops.Count(drop =>
                     drop.BranchId == branch.Id &&
                     drop.Status == DropStatus.Active &&
-                    drop.EndsAt > now)))
+                    drop.EndsAt > now),
+                branch.ClosedAt != null))
             .ToListAsync(cancellationToken);
     }
 }

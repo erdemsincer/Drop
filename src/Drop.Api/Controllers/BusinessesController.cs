@@ -1,5 +1,6 @@
 using Drop.Application.Businesses.CreateBusiness;
 using Drop.Application.Businesses.GetMyBusinesses;
+using Drop.Application.Businesses.RenameBusiness;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,5 +30,16 @@ public sealed class BusinessesController : ControllerBase
         var response = await service.ExecuteAsync(request, cancellationToken);
 
         return Created($"/api/businesses/{response.Id}", response);
+    }
+
+    /// <summary>Renames the business (owner only).</summary>
+    [HttpPut("{businessId:guid}")]
+    public async Task<ActionResult<RenameBusinessResponse>> Rename(
+        Guid businessId,
+        [FromBody] RenameBusinessRequest request,
+        [FromServices] RenameBusinessService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(businessId, request, cancellationToken));
     }
 }

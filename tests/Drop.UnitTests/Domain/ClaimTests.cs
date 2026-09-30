@@ -64,4 +64,37 @@ public sealed class ClaimTests
 
         Assert.Equal(ClaimStatus.Redeemed, claim.Status);
     }
+
+    [Fact]
+    public void Withdraw_ShouldCancel_WhenActiveAndInTime()
+    {
+        var claim = NewClaim();
+
+        claim.Withdraw(Now.AddMinutes(1));
+
+        Assert.Equal(ClaimStatus.Cancelled, claim.Status);
+    }
+
+    [Fact]
+    public void Withdraw_ShouldRejectAsExpired_AfterExpiry()
+    {
+        var claim = NewClaim();
+
+        var error = Assert.Throws<ClaimDomainException>(() => claim.Withdraw(claim.ExpiresAt));
+
+        Assert.Equal("claim.expired", error.Code);
+        Assert.Equal(ClaimStatus.Active, claim.Status);
+    }
+
+    [Fact]
+    public void Withdraw_ShouldRejectAsNotActive_WhenRedeemed()
+    {
+        var claim = NewClaim();
+        claim.Redeem(Now);
+
+        var error = Assert.Throws<ClaimDomainException>(() => claim.Withdraw(Now.AddMinutes(1)));
+
+        Assert.Equal("claim.not_active", error.Code);
+        Assert.Equal(ClaimStatus.Redeemed, claim.Status);
+    }
 }

@@ -13,4 +13,5 @@ public sealed record BranchDetailResponse(
     bool CanManage,
     bool CanShowQr,
     BusinessStatus BusinessStatus,
+    bool IsClosed,
     bool CanPublishDrops);
