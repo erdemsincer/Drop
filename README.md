@@ -50,7 +50,7 @@ development secrets.
 | `ConnectionStrings__Database` | yes | PostgreSQL with PostGIS |
 | `Jwt__Key` | yes | ≥ 32 chars, e.g. `openssl rand -base64 48` |
 | `Qr__SigningKey` | yes | ≥ 32 chars; signs the rotating branch QR codes |
-| `Email__SmtpHost` / `SmtpPort` / `SmtpUser` / `SmtpPassword` / `From` | for password reset | any SMTP provider |
+| `Email__SmtpHost` / `SmtpPort` / `SmtpUser` / `SmtpPassword` / `From` | for e-mail codes | any SMTP provider; sends sign-up verification and password-reset codes |
 | `Cors__AllowedOrigins__0` | no | only for browser clients; the mobile app needs none |
 | `ReverseProxy__Enabled` | behind a load balancer | trusts `X-Forwarded-*` for client IP/HTTPS |
 | `RateLimiting__AuthPerMinute` / `RedeemPerMinute` | no | defaults 10 / 20 |
@@ -58,6 +58,9 @@ development secrets.
 
 New businesses start as **Pending** and can publish drops only after an admin
 approves them (Profile → Yönetim in the app, or `POST /api/admin/businesses/{id}/approve`).
+Approval also requires the owner to have verified their e-mail with the code
+sent at sign-up. Without SMTP, Development writes the codes to the API log; other
+environments send nothing, so configure SMTP before inviting real businesses.
 
 Rotating the JWT key signs everyone out; rotating the QR key invalidates codes
 on screen for at most ~1 minute.
