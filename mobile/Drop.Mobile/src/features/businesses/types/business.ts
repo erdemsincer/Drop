@@ -74,6 +74,9 @@ export type BusinessDrop = {
   originalPrice?: number | null;
   dealPrice?: number | null;
   photoId?: string | null;
+  startPrice?: number | null;
+  isMystery?: boolean;
+  hint?: string | null;
 };
 
 export type CreateBusinessRequest = {
@@ -113,6 +116,9 @@ export type CreateDropRequest = {
   originalPrice?: number | null;
   dealPrice?: number | null;
   photoId?: string | null;
+  startPrice?: number | null;
+  isMystery?: boolean;
+  hint?: string | null;
 };
 
 export type UpdateDropRequest = {
@@ -124,6 +130,9 @@ export type UpdateDropRequest = {
   originalPrice?: number | null;
   dealPrice?: number | null;
   photoId?: string | null;
+  startPrice?: number | null;
+  isMystery?: boolean;
+  hint?: string | null;
 };
 
 export type UpdateBranchRequest = {

@@ -24,16 +24,19 @@ import {
   spacing,
   typography,
 } from '@/ui';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 const URGENT_SECONDS = 3 * 60;
 
 export default function ClaimScreen() {
-  const { id, expiresAt, durationMinutes, celebrate } = useLocalSearchParams<{
+  const { id, expiresAt, durationMinutes, celebrate, price } = useLocalSearchParams<{
     id: string;
     expiresAt: string;
     durationMinutes?: string;
     /** "1" right after catching the drop: confetti once. */
     celebrate?: string;
+    /** The price locked in when catching (falling-price drops). */
+    price?: string;
   }>();
   const [burst] = useState(celebrate === '1' ? 1 : 0);
 
@@ -115,6 +118,15 @@ export default function ClaimScreen() {
             <Text style={styles.title}>
               {expired ? 'Bu fırsatın süresi doldu' : 'Drop senin için ayrıldı!'}
             </Text>
+
+            {price != null && !expired && (
+              <View style={styles.locked}>
+                <Ionicons name="lock-closed" size={13} color={colors.ink} />
+                <Text style={styles.lockedText}>
+                  {Number(price) === 0 ? 'Bedava kilitlendi' : `${formatCurrency(Number(price))} fiyata kilitlendi`}
+                </Text>
+              </View>
+            )}
 
             <Text style={styles.timerLabel}>KALAN SÜRE</Text>
             <Text style={styles.timer}>{expired ? '00:00' : remaining.label}</Text>
@@ -267,6 +279,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 36,
+  },
+  locked: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: spacing.md,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.lime,
+    borderRadius: radius.pill,
+  },
+  lockedText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '900',
   },
   badge: {
     alignSelf: 'center',

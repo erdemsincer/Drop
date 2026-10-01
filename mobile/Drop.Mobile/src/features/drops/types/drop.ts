@@ -34,6 +34,13 @@ export type NearbyDrop = {
   /** Average stars of the business (one decimal), null until rated. */
   businessRating?: number | null;
   businessRatingCount?: number;
+  /** Treasure-hunt drop; while locked the deal is hidden by the server (title, business, price...). */
+  isMystery?: boolean;
+  hint?: string | null;
+  isLocked?: boolean;
+  /** Falling-price drop: opening price, sliding to dealPrice by endsAt. */
+  startPrice?: number | null;
+  startsAt?: string;
 };
 
 export type DropDetail = {
@@ -70,6 +77,14 @@ export type DropDetail = {
   /** Average stars of the business (one decimal), null until rated. */
   businessRating?: number | null;
   businessRatingCount?: number;
+  /** Treasure-hunt drop; while locked the deal is hidden by the server (title, business, price...). */
+  isMystery?: boolean;
+  hint?: string | null;
+  isLocked?: boolean;
+  /** Falling-price drop: opening price, sliding to dealPrice by endsAt. */
+  startPrice?: number | null;
+  /** From the position sent with the request. */
+  distanceMeters?: number | null;
 };
 
 /** A scheduled drop nearby, shown before it starts so customers can set a reminder. */
@@ -87,4 +102,6 @@ export type UpcomingDrop = {
   originalPrice?: number | null;
   dealPrice?: number | null;
   photoId?: string | null;
+  isMystery?: boolean;
+  startPrice?: number | null;
 };

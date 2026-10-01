@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import type { ComponentProps } from 'react';
+import { type ComponentProps, useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +12,12 @@ import { getApiError } from '@/api/getApiError';
 import { useCatchDrop } from '@/features/claims/hooks/useCatchDrop';
 import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessage';
 import { DealPrice } from '@/features/drops/components/DealPrice';
+import { FallingPrice } from '@/features/drops/components/FallingPrice';
+import { LockedMystery } from '@/features/drops/components/LockedMystery';
+import { UnlockReveal } from '@/features/drops/components/UnlockReveal';
+import { useFallingPrice } from '@/features/drops/hooks/useFallingPrice';
+import { useCurrentLocation } from '@/features/location/hooks/useCurrentLocation';
+import { type Position, useLiveLocation } from '@/features/location/hooks/useLiveLocation';
 import { DropLocationCard } from '@/features/drops/components/DropLocationCard';
 import { RatingPill } from '@/features/drops/components/RatingPill';
 import { useDropReminders } from '@/features/drops/hooks/useDropReminders';
@@ -45,7 +51,23 @@ import { mediaUrl } from '@/utils/media';
 
 export default function DropDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const dropQuery = useDropDetail(id);
+  const lastKnown = useCurrentLocation().data;
+  const [mystery, setMystery] = useState(false);
+  // Mystery drops follow the phone so the box can open on arrival; others don't need GPS.
+  const live = useLiveLocation(mystery);
+  const at = live ?? (lastKnown ? { latitude: lastKnown.latitude, longitude: lastKnown.longitude } : null);
+  const dropQuery = useDropDetail(id, at);
+  const drop = dropQuery.data;
+
+  // Remember the previous lock state, to celebrate the moment it flips open.
+  const [wasLocked, setWasLocked] = useState<boolean | undefined>(undefined);
+  const [revealing, setRevealing] = useState(false);
+  if (drop && drop.isMystery && !mystery) setMystery(true);
+  if (drop && drop.isLocked !== wasLocked) {
+    setWasLocked(drop.isLocked);
+    if (wasLocked && !drop.isLocked) setRevealing(true);
+  }
+  const endReveal = useCallback(() => setRevealing(false), []);
 
   if (dropQuery.isLoading) {
     return (
@@ -55,7 +77,7 @@ export default function DropDetailScreen() {
     );
   }
 
-  if (dropQuery.isError || !dropQuery.data) {
+  if (dropQuery.isError || !drop) {
     return (
       <Screen>
         <StateView
@@ -70,10 +92,19 @@ export default function DropDetailScreen() {
     );
   }
 
-  return <DropDetailContent drop={dropQuery.data} />;
+  if (drop.isLocked) {
+    return <LockedMystery drop={drop} hasLocation={at !== null} />;
+  }
+
+  return (
+    <>
+      <DropDetailContent drop={drop} at={at} />
+      {revealing && <UnlockReveal onDone={endReveal} />}
+    </>
+  );
 }
 
-function DropDetailContent({ drop }: { drop: DropDetail }) {
+function DropDetailContent({ drop, at }: { drop: DropDetail; at: Position | null }) {
   const insets = useSafeAreaInsets();
   const remaining = useCountdown(drop.endsAt);
   const untilStart = useCountdown(drop.startsAt);
@@ -89,7 +120,8 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
   const unavailable = soldOut || ended || notStarted;
   const reminderOn = reminders.isSet(drop.id);
 
-  const handleClaim = () => catchDrop(drop);
+  const falling = useFallingPrice(drop);
+  const handleClaim = () => catchDrop(drop, at ?? undefined);
 
   const claimedRatio = drop.capacity > 0 ? drop.claimedCount / drop.capacity : 1;
   const category = categoryInfo[categoryOf(drop.category)];
@@ -180,10 +212,16 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
             </View>
             <Text style={styles.title}>{drop.title}</Text>
             {!!drop.description && <Text style={styles.description}>{drop.description}</Text>}
-            {deal && (
+            {falling ? (
               <View style={styles.dealRow}>
-                <DealPrice deal={deal} size="lg" inverted />
+                <FallingPrice state={falling} original={drop.originalPrice} size="lg" inverted />
               </View>
+            ) : (
+              deal && (
+                <View style={styles.dealRow}>
+                  <DealPrice deal={deal} size="lg" inverted />
+                </View>
+              )
             )}
           </Animated.View>
         </LinearGradient>

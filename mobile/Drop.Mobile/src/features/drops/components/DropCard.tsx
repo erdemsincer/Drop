@@ -12,7 +12,10 @@ import { useCountdown } from '../hooks/useCountdown';
 import type { NearbyDrop } from '../types/drop';
 import { categoryInfo, categoryOf } from '../utils/categories';
 import { formatDistance } from '../utils/formatDistance';
+import { useFallingPrice } from '../hooks/useFallingPrice';
 import { dealOf } from '../utils/pricing';
+import { FallingPrice } from './FallingPrice';
+import { MysteryCard } from './MysteryCard';
 import { DealPrice } from './DealPrice';
 import { RatingPill } from './RatingPill';
 
@@ -24,7 +27,13 @@ type Props = {
 const URGENT_SECONDS = 10 * 60;
 
 export function DropCard({ drop, onPress }: Props) {
+  if (drop.isLocked) return <MysteryCard drop={drop} onPress={onPress} />;
+  return <OpenDropCard drop={drop} onPress={onPress} />;
+}
+
+function OpenDropCard({ drop, onPress }: Props) {
   const remaining = useCountdown(drop.endsAt);
+  const falling = useFallingPrice(drop);
 
   if (remaining.isExpired) {
     return null;
@@ -128,9 +137,22 @@ export function DropCard({ drop, onPress }: Props) {
             </Text>
           )}
 
-          {deal && (
+          {falling ? (
             <View style={styles.price}>
-              <DealPrice deal={deal} />
+              <FallingPrice state={falling} original={drop.originalPrice} />
+            </View>
+          ) : (
+            deal && (
+              <View style={styles.price}>
+                <DealPrice deal={deal} />
+              </View>
+            )
+          )}
+
+          {drop.isMystery && (
+            <View style={styles.unlocked}>
+              <Ionicons name="gift" size={13} color={colors.primary} />
+              <Text style={styles.unlockedText}>Gizli Drop&apos;u buldun!</Text>
             </View>
           )}
 
@@ -242,6 +264,22 @@ const styles = StyleSheet.create({
   },
   price: {
     marginTop: spacing.sm,
+  },
+  unlocked: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: spacing.sm,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.pill,
+  },
+  unlockedText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
   },
   watermark: {
     position: 'absolute',

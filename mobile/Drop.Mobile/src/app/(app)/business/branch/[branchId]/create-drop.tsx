@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { getApiError } from '@/api/getApiError';
 import { CategoryPicker } from '@/features/businesses/components/CategoryPicker';
@@ -58,6 +58,10 @@ const initialValues: DropFormValues = {
   originalPrice: '',
   dealPrice: '',
   photoId: null,
+  isFalling: false,
+  startPrice: '',
+  isMystery: false,
+  hint: '',
 };
 
 /**
@@ -255,6 +259,57 @@ export default function DropFormScreen() {
             </Text>
           </Section>
 
+          <Section title="Drop türü" icon="sparkles">
+            {!isEdit && (
+              <SpecialToggle
+                icon="gift"
+                title="Gizli Drop · Hazine avı"
+                description="Haritada sadece kutusu görünür; müşteri 150 m yaklaşınca açılır. İnsanları kapına kadar getirir."
+                value={values.isMystery}
+                onChange={value => set('isMystery', value)}
+              />
+            )}
+            {values.isMystery && !isEdit && (
+              <TextField
+                label="İpucu"
+                icon="bulb-outline"
+                value={values.hint}
+                onChangeText={value => set('hint', value)}
+                placeholder="Köşedeki pastanede tatlı bir sürpriz var"
+                maxLength={140}
+                error={errorFor('hint')}
+              />
+            )}
+
+            <SpecialToggle
+              icon="trending-down"
+              title="Düşen fiyat"
+              description="Fiyat başlangıçtan en düşük fiyata dakika dakika iner. Erken yakalayan garantiye alır, bekleyen ucuza alır ama tükenebilir."
+              value={values.isFalling}
+              onChange={value => {
+                set('isFalling', value);
+                // Starting at the usual price is the natural default.
+                if (value && !values.startPrice) set('startPrice', values.originalPrice);
+              }}
+            />
+            {values.isFalling && (
+              <>
+                <TextField
+                  label="Başlangıç fiyatı"
+                  icon="trending-down-outline"
+                  value={values.startPrice}
+                  onChangeText={value => set('startPrice', value.replace(/[^0-9.,]/g, ''))}
+                  keyboardType="decimal-pad"
+                  placeholder="₺100"
+                  error={errorFor('startPrice')}
+                />
+                <Text style={styles.hint}>
+                  &quot;Fiyat&quot; bölümündeki Drop fiyatı, inilecek en düşük fiyat olur. Başlangıç normal fiyatı geçemez.
+                </Text>
+              </>
+            )}
+          </Section>
+
           <Section title="Kategori" icon="grid">
             <CategoryPicker value={values.category} onChange={value => set('category', value)} />
           </Section>
@@ -391,7 +446,14 @@ function usePreviewDrop(values: DropFormValues, businessName = 'İşletmen', bra
     businessName,
     branchName,
     title: values.title.trim() || 'Fırsatının başlığı burada görünecek',
-    description: values.description.trim() || null,
+    // A mystery drop previews the way customers first meet it: sealed, with the hint.
+    description: values.isMystery
+      ? values.hint.trim() || 'Yakınında bir sürpriz var. Yaklaş ve kutuyu aç!'
+      : values.description.trim() || null,
+    isMystery: values.isMystery,
+    isLocked: values.isMystery,
+    startsAt: new Date(openedAt).toISOString(),
+    startPrice: values.isFalling && values.startPrice.trim() ? Number(values.startPrice.replace(',', '.')) : null,
     minimumSpend: values.minimumSpend.trim() && Number.isFinite(spend) ? spend : null,
     capacity,
     claimedCount: 0,
@@ -402,6 +464,40 @@ function usePreviewDrop(values: DropFormValues, businessName = 'İşletmen', bra
     latitude: 0,
     longitude: 0,
   };
+}
+
+function SpecialToggle({
+  icon,
+  title,
+  description,
+  value,
+  onChange,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  description: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <View style={styles.special}>
+      <View style={[styles.specialIcon, value && styles.specialIconOn]}>
+        <Ionicons name={icon} size={18} color={value ? colors.ink : colors.primary} />
+      </View>
+      <View style={styles.specialText}>
+        <Text style={styles.specialTitle}>{title}</Text>
+        <Text style={styles.specialDescription}>{description}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={next => {
+          haptics.tap();
+          onChange(next);
+        }}
+        trackColor={{ true: colors.primary, false: colors.border }}
+      />
+    </View>
+  );
 }
 
 function Section({
@@ -431,6 +527,36 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
     padding: spacing.xl,
+  },
+  special: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  specialIcon: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primarySoft,
+    borderRadius: 12,
+  },
+  specialIconOn: {
+    backgroundColor: colors.lime,
+  },
+  specialText: {
+    flex: 1,
+  },
+  specialTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  specialDescription: {
+    marginTop: 2,
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
   },
   preview: {
     gap: spacing.md,

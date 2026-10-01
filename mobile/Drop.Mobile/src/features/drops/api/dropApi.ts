@@ -28,14 +28,9 @@ export const getNearbyDrops = async ({
   return response.data;
 };
 
-export const getDropDetail = async (
-  dropId: string,
-) => {
-  const response =
-    await apiClient.get<DropDetail>(
-      `/api/drops/${dropId}`,
-    );
-
+/** Sending where you are lets a nearby mystery drop reveal itself. */
+export const getDropDetail = async (dropId: string, at?: { latitude: number; longitude: number }) => {
+  const response = await apiClient.get<DropDetail>(`/api/drops/${dropId}`, { params: at });
   return response.data;
 };
 

@@ -7,6 +7,7 @@ import { mediaUrl } from '@/utils/media';
 
 import type { NearbyDrop } from '../types/drop';
 import { categoryInfo, categoryOf } from '../utils/categories';
+import { MysteryBox } from './MysteryBox';
 
 type Props = {
   drops: NearbyDrop[];
@@ -43,7 +44,9 @@ export function StoryRings({ drops, onOpen }: Props) {
               style={styles.ring}
             >
               <View style={styles.gap}>
-                {drop.photoId ? (
+                {drop.isLocked ? (
+                  <MysteryBox size={SIZE - 14} />
+                ) : drop.photoId ? (
                   <Image source={{ uri: mediaUrl(drop.photoId) }} style={styles.photo} contentFit="cover" />
                 ) : (
                   <Avatar name={drop.businessName} size={SIZE - 10} />

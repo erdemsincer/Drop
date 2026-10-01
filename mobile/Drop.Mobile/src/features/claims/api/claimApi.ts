@@ -8,13 +8,9 @@ import type {
   RedeemClaimResponse,
 } from '../types/claim';
 
-export const createClaim = async (
-  dropId: string,
-) => {
-  const response =
-    await apiClient.post<CreateClaimResponse>(
-      `/api/drops/${dropId}/claims`,
-    );
+/** The position is required by mystery drops (they open within 150 m) and harmless otherwise. */
+export const createClaim = async ({ dropId, at }: { dropId: string; at?: { latitude: number; longitude: number } }) => {
+  const response = await apiClient.post<CreateClaimResponse>(`/api/drops/${dropId}/claims`, at ?? {});
 
   return response.data;
 };

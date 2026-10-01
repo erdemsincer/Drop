@@ -204,7 +204,8 @@ function PastClaimRow({ claim }: { claim: MyClaim }) {
   const category = categoryInfo[categoryOf(claim.category)];
   const badge = statusBadge[claim.status === 'Active' ? 'Expired' : claim.status];
   const used = claim.status === 'Redeemed';
-  const deal = used ? dealOf(claim) : null;
+  // The locked-in price wins: on a falling-price drop that's what they paid.
+  const deal = used ? dealOf({ originalPrice: claim.originalPrice, dealPrice: claim.price ?? claim.dealPrice }) : null;
   const rate = useRateClaim();
 
   return (

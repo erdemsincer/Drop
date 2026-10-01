@@ -13,6 +13,8 @@ export type PlaceDrop = {
   originalPrice?: number | null;
   dealPrice?: number | null;
   photoId?: string | null;
+  isMystery?: boolean;
+  startPrice?: number | null;
 };
 
 /** The customer-facing page of a business. */

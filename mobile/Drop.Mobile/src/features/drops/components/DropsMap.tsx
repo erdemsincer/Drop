@@ -12,6 +12,8 @@ import { categoryInfo, categoryOf } from '../utils/categories';
 import { formatDistance } from '../utils/formatDistance';
 import { regionAround } from '../utils/maps';
 
+const MYSTERY = { icon: 'gift' as const, tint: '#5B37F2' };
+
 type Props = {
   drops: NearbyDrop[];
   latitude: number;
@@ -152,7 +154,9 @@ export function DropsMap({ drops, latitude, longitude, radiusKm, onOpenDrop }: P
 }
 
 function Pin({ drops, selected }: { drops: NearbyDrop[]; selected: boolean }) {
-  const lead = categoryInfo[categoryOf(drops[0].category)];
+  // A branch with only sealed mystery drops shows a gift, not a category.
+  const sealed = drops.every(drop => drop.isLocked);
+  const lead = sealed ? MYSTERY : categoryInfo[categoryOf(drops[0].category)];
   const soldOut = drops.every(drop => drop.remainingCapacity <= 0);
   const size = selected ? 46 : 38;
 
@@ -179,7 +183,7 @@ function Pin({ drops, selected }: { drops: NearbyDrop[]; selected: boolean }) {
 
 function MapDropCard({ drop, width, onPress }: { drop: NearbyDrop; width: number; onPress: () => void }) {
   const remaining = useCountdown(drop.endsAt);
-  const category = categoryInfo[categoryOf(drop.category)];
+  const category = drop.isLocked ? MYSTERY : categoryInfo[categoryOf(drop.category)];
   const soldOut = drop.remainingCapacity <= 0;
 
   return (

@@ -32,6 +32,12 @@ export type DropFormValues = {
   dealPrice: string;
   /** Uploaded photo id, or null. */
   photoId: string | null;
+  /** Falling price: switched on, with the opening price as typed. */
+  isFalling: boolean;
+  startPrice: string;
+  /** Treasure hunt: sealed until customers are within 150 m. */
+  isMystery: boolean;
+  hint: string;
 };
 
 export type DropFormErrors = Partial<Record<keyof DropFormValues, string>>;
@@ -76,6 +82,19 @@ export const validateDropForm = (values: DropFormValues): DropFormErrors => {
     else if (deal >= original) errors.dealPrice = 'Drop fiyatı normal fiyattan düşük olmalı.';
   }
 
+  if (values.isFalling && !values.startPrice.trim()) {
+    errors.startPrice = 'Başlangıç fiyatını yaz.';
+  } else if (values.isFalling) {
+    const start = parseDecimal(values.startPrice);
+    const original = parseDecimal(values.originalPrice);
+    const deal = parseDecimal(values.dealPrice);
+    if (!values.originalPrice.trim() || !values.dealPrice.trim()) errors.startPrice = 'Önce normal ve en düşük fiyatı yaz.';
+    else if (!Number.isFinite(start) || start <= deal) errors.startPrice = 'Başlangıç, en düşük fiyattan yüksek olmalı.';
+    else if (start > original) errors.startPrice = 'Başlangıç, normal fiyatı geçemez.';
+  }
+
+  if (values.hint.trim().length > 140) errors.hint = 'En fazla 140 karakter olabilir.';
+
   if (values.claimDurationMinutes > values.durationMinutes) {
     errors.claimDurationMinutes = 'Kullanım süresi Drop süresinden uzun olamaz.';
   }
@@ -95,6 +114,9 @@ export const toCreateDropRequest = (values: DropFormValues): CreateDropRequest =
   originalPrice: values.originalPrice.trim() ? parseDecimal(values.originalPrice) : null,
   dealPrice: values.dealPrice.trim() ? parseDecimal(values.dealPrice) : null,
   photoId: values.photoId,
+  startPrice: values.isFalling && values.startPrice.trim() ? parseDecimal(values.startPrice) : null,
+  isMystery: values.isMystery,
+  hint: values.isMystery ? values.hint.trim() || null : null,
 });
 
 export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
@@ -111,6 +133,10 @@ export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
   dealPrice: drop.dealPrice != null ? String(drop.dealPrice) : '',
   // A republished drop reuses the photo; it is never copied, just shared.
   photoId: drop.photoId ?? null,
+  isFalling: drop.startPrice != null,
+  startPrice: drop.startPrice != null ? String(drop.startPrice) : '',
+  isMystery: drop.isMystery ?? false,
+  hint: drop.hint ?? '',
 });
 
 /** Everything of a previous drop, durations included, to publish it again. */
@@ -146,9 +172,9 @@ export const withOption = (options: Choice<number>[], value: number): Choice<num
     : [...options, { label: minutesLabel(value), value }].sort((a, b) => a.value - b.value);
 
 export const toUpdateDropRequest = (values: DropFormValues): UpdateDropRequest => {
-  const { title, description, minimumSpend, capacity, category, originalPrice, dealPrice, photoId } =
+  const { title, description, minimumSpend, capacity, category, originalPrice, dealPrice, photoId, startPrice } =
     toCreateDropRequest(values);
-  return { title, description, minimumSpend, capacity, category, originalPrice, dealPrice, photoId };
+  return { title, description, minimumSpend, capacity, category, originalPrice, dealPrice, photoId, startPrice };
 };
 
 // Maps FluentValidation property names back onto form fields.
@@ -162,4 +188,6 @@ export const apiFieldMap: Record<string, keyof DropFormValues> = {
   ClaimDurationMinutes: 'claimDurationMinutes',
   OriginalPrice: 'originalPrice',
   DealPrice: 'dealPrice',
+  StartPrice: 'startPrice',
+  Hint: 'hint',
 };

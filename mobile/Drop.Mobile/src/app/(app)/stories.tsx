@@ -20,6 +20,9 @@ import { getApiError } from '@/api/getApiError';
 import { useCatchDrop } from '@/features/claims/hooks/useCatchDrop';
 import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessage';
 import { DealPrice } from '@/features/drops/components/DealPrice';
+import { FallingPrice } from '@/features/drops/components/FallingPrice';
+import { MysteryBox } from '@/features/drops/components/MysteryBox';
+import { useFallingPrice } from '@/features/drops/hooks/useFallingPrice';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
 import type { NearbyDrop } from '@/features/drops/types/drop';
@@ -90,8 +93,10 @@ function Story({ drop, index, total, height, showHint }: StoryProps) {
   const { catchDrop, mutation } = useCatchDrop();
   const category = categoryInfo[categoryOf(drop.category)];
   const deal = dealOf(drop);
+  const falling = useFallingPrice(drop);
   const soldOut = drop.remainingCapacity <= 0;
-  const unavailable = soldOut || remaining.isExpired;
+  const locked = drop.isLocked === true;
+  const unavailable = soldOut || remaining.isExpired || locked;
 
   const apiError = mutation.error ? getApiError(mutation.error) : null;
   const error = apiError
@@ -102,7 +107,11 @@ function Story({ drop, index, total, height, showHint }: StoryProps) {
 
   return (
     <View style={{ height }}>
-      {drop.photoId ? (
+      {locked ? (
+        <LinearGradient colors={gradients.night} style={[StyleSheet.absoluteFill, styles.center]}>
+          <MysteryBox size={170} />
+        </LinearGradient>
+      ) : drop.photoId ? (
         <Image source={{ uri: mediaUrl(drop.photoId) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
       ) : (
         <LinearGradient colors={[category.tint, gradients.night[1]]} style={[StyleSheet.absoluteFill, styles.center]}>
@@ -150,10 +159,16 @@ function Story({ drop, index, total, height, showHint }: StoryProps) {
           </Text>
         )}
 
-        {deal && (
+        {falling ? (
           <View style={styles.deal}>
-            <DealPrice deal={deal} size="lg" inverted />
+            <FallingPrice state={falling} original={drop.originalPrice} size="lg" inverted />
           </View>
+        ) : (
+          deal && (
+            <View style={styles.deal}>
+              <DealPrice deal={deal} size="lg" inverted />
+            </View>
+          )
         )}
 
         <View style={styles.meta}>
@@ -176,17 +191,26 @@ function Story({ drop, index, total, height, showHint }: StoryProps) {
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ disabled: unavailable }}
-            disabled={unavailable || mutation.isPending}
-            onPress={() => catchDrop(drop)}
-            style={({ pressed }) => [styles.primary, unavailable && styles.primaryDisabled, pressed && styles.pressed]}
+            accessibilityState={{ disabled: unavailable && !locked }}
+            disabled={(unavailable && !locked) || mutation.isPending}
+            // A sealed box opens on the detail screen, which follows you there.
+            onPress={() =>
+              locked ? router.push({ pathname: '/(app)/drop/[id]', params: { id: drop.id } }) : catchDrop(drop)
+            }
+            style={({ pressed }) => [
+              styles.primary,
+              unavailable && !locked && styles.primaryDisabled,
+              pressed && styles.pressed,
+            ]}
           >
             {mutation.isPending ? (
               <ActivityIndicator color={colors.ink} />
             ) : (
               <>
-                <Ionicons name={unavailable ? 'lock-closed' : 'flash'} size={18} color={colors.ink} />
-                <Text style={styles.primaryText}>{soldOut ? 'Tükendi' : remaining.isExpired ? 'Bitti' : 'Yakala'}</Text>
+                <Ionicons name={locked ? 'gift' : unavailable ? 'lock-closed' : 'flash'} size={18} color={colors.ink} />
+                <Text style={styles.primaryText}>
+                  {locked ? 'Yaklaş ve aç' : soldOut ? 'Tükendi' : remaining.isExpired ? 'Bitti' : 'Yakala'}
+                </Text>
               </>
             )}
           </Pressable>

@@ -3,6 +3,8 @@ export type CreateClaimResponse = {
   dropId: string;
   expiresAt: string;
   remainingCapacity: number;
+  /** Price locked in at catch time. */
+  price?: number | null;
 };
 
 export type ActiveClaim = {
@@ -46,4 +48,6 @@ export type MyClaim = {
   /** Stars the customer gave after using it; null until rated. */
   rating?: number | null;
   photoId?: string | null;
+  /** What they locked in when catching it. */
+  price?: number | null;
 };
