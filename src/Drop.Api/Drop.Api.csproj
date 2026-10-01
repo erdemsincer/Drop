@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Legal\*.html" />
+    <EmbeddedResource Include="Share\*.html" />
   </ItemGroup>
 
 </Project>

@@ -16,6 +16,7 @@ import { useDropDetail } from '@/features/drops/hooks/useDropDetail';
 import { FollowButton } from '@/features/follows/components/FollowButton';
 import type { DropDetail } from '@/features/drops/types/drop';
 import { categoryInfo, categoryOf } from '@/features/drops/utils/categories';
+import { shareDrop } from '@/features/drops/utils/shareDrop';
 import { scheduleClaimReminder } from '@/features/notifications/claimReminders';
 import {
   Avatar,
@@ -118,13 +119,24 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
 
           <View style={styles.heroBar}>
             <IconButton icon="chevron-back" tone="glass" accessibilityLabel="Geri dön" onPress={() => router.back()} />
-            {soldOut ? (
-              <Badge label="TÜKENDİ" tone="glass" />
-            ) : ended ? (
-              <Badge label="SONA ERDİ" tone="glass" />
-            ) : (
-              <Badge label="CANLI" tone="glass" live />
-            )}
+            <View style={styles.heroActions}>
+              {soldOut ? (
+                <Badge label="TÜKENDİ" tone="glass" />
+              ) : ended ? (
+                <Badge label="SONA ERDİ" tone="glass" />
+              ) : (
+                <Badge label="CANLI" tone="glass" live />
+              )}
+              <IconButton
+                icon="share-outline"
+                tone="glass"
+                accessibilityLabel="Arkadaşınla paylaş"
+                onPress={() => {
+                  haptics.tap();
+                  void shareDrop(drop);
+                }}
+              />
+            </View>
           </View>
 
           <View style={styles.businessRow}>
@@ -351,6 +363,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  heroActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   businessRow: {
     flexDirection: 'row',
