@@ -32,7 +32,7 @@ internal sealed class DevelopmentEmailSender : IEmailSender
         }
         else
         {
-            _logger.LogWarning("E-mail not sent: Email:SmtpHost is not configured.");
+            _logger.LogWarning("E-mail not sent: neither Email:ResendApiKey nor Email:SmtpHost is configured. Subject: {Subject}", subject);
         }
 
         return Task.CompletedTask;

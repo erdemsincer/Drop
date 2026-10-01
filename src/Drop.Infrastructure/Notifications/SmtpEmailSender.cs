@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using Drop.Application.Notifications;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Drop.Infrastructure.Notifications;
@@ -8,10 +9,12 @@ namespace Drop.Infrastructure.Notifications;
 internal sealed class SmtpEmailSender : IEmailSender
 {
     private readonly EmailOptions _options;
+    private readonly ILogger<SmtpEmailSender> _logger;
 
-    public SmtpEmailSender(IOptions<EmailOptions> options)
+    public SmtpEmailSender(IOptions<EmailOptions> options, ILogger<SmtpEmailSender> logger)
     {
         _options = options.Value;
+        _logger = logger;
     }
 
     // A blocked or silent SMTP port must not hang the request that sends the mail.
@@ -42,6 +45,15 @@ internal sealed class SmtpEmailSender : IEmailSender
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(SendTimeout);
 
-        await client.SendMailAsync(message, timeout.Token);
+        try
+        {
+            await client.SendMailAsync(message, timeout.Token);
+        }
+        catch (Exception ex)
+        {
+            // Callers swallow mail failures; this is where they get logged (never the recipient).
+            _logger.LogWarning(ex, "E-mail via SMTP failed: {Subject}", subject);
+            throw;
+        }
     }
 }
