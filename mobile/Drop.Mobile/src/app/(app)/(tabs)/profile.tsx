@@ -12,6 +12,7 @@ import { useMyClaims } from '@/features/claims/hooks/useMyClaims';
 import { useFollows, useToggleFollow } from '@/features/follows/hooks/useFollows';
 import { useMe } from '@/features/users/hooks/useMe';
 import { useAuth } from '@/providers/AuthProvider';
+import { openLegal } from '@/utils/openLegal';
 import {
   Avatar,
   DropLogo,
@@ -220,6 +221,18 @@ export default function ProfileScreen() {
         </Section>
 
         <Section title="Gizlilik">
+          <Row
+            icon="shield-checkmark"
+            tint="#2D8CDB"
+            title="Gizlilik ve KVKK Metni"
+            onPress={() => void openLegal('privacy')}
+          />
+          <Row
+            icon="document-text"
+            tint="#686779"
+            title="Kullanım Koşulları"
+            onPress={() => void openLegal('terms')}
+          />
           <Row icon="trash" title="Hesabımı sil" danger onPress={() => router.push('/(app)/account/delete')} />
         </Section>
 

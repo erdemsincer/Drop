@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { getApiErrorMessage } from '@/api/apiError';
 import { getApiError } from '@/api/getApiError';
 import { AuthShell } from '@/features/auth/components/AuthShell';
+import { LegalConsent } from '@/features/auth/components/LegalConsent';
 import { AuthSwitchLink } from '@/features/auth/components/AuthSwitchLink';
 import { useBusinessSignup } from '@/features/auth/hooks/useBusinessSignup';
 import { type AuthFormErrors, validateRegister } from '@/features/auth/utils/authValidation';
@@ -168,6 +169,8 @@ export default function BusinessRegisterScreen() {
       {generalError && <Notice message={generalError} />}
 
       <Button title="İşletmemi Kaydet" icon="storefront" loading={mutation.isPending} onPress={submit} />
+
+      <LegalConsent action="İşletmeni kaydederek" />
     </AuthShell>
   );
 }

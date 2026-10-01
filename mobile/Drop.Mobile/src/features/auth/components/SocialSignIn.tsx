@@ -10,6 +10,7 @@ import { authStorage } from '@/storage/authStorage';
 import { Notice, colors, haptics, radius, spacing } from '@/ui';
 
 import { signInWithProvider } from '../api/authApi';
+import { LegalConsent } from './LegalConsent';
 
 const isCancel = (error: unknown) =>
   typeof error === 'object' && error !== null && 'code' in error && error.code === 'ERR_REQUEST_CANCELED';
@@ -91,6 +92,8 @@ export function SocialSignIn() {
       </View>
 
       {errorMessage && <Notice message={errorMessage} />}
+
+      <LegalConsent action="Apple ile devam ederek" />
     </View>
   );
 }

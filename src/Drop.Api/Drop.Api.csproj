@@ -29,4 +29,8 @@
     <InternalsVisibleTo Include="Drop.IntegrationTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Legal\*.html" />
+  </ItemGroup>
+
 </Project>
