@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -25,11 +25,15 @@ import {
   typography,
 } from '@/ui';
 
-const QR_SIZE = 240;
+// Grows with the screen so a tablet on the counter scans from arm's length.
+const MAX_QR = 420;
+const LOGO = require('../../../../../../assets/images/icon.png');
 
 export default function BranchQrScreen() {
   const { branchId } = useLocalSearchParams<{ branchId: string }>();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const qrSize = Math.min(MAX_QR, width - 2 * (spacing.xxl * 2), height * 0.42);
 
   // Customers scan this at the counter; don't let the screen sleep.
   useKeepAwake();
@@ -53,12 +57,27 @@ export default function BranchQrScreen() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.business}>{branchQuery.data?.businessName ?? ' '}</Text>
-        <Text style={styles.branch}>{branchQuery.data?.name ?? ' '}</Text>
+        <Text style={styles.business}>
+          {branchQuery.data ? `${branchQuery.data.businessName} · ${branchQuery.data.name}` : ' '}
+        </Text>
+        <Text style={styles.branch}>Drop&apos;unu burada okut ⚡</Text>
+        <Text style={styles.steps}>Uygulamada yakaladığın Drop&apos;u aç › QR Kodu Okut</Text>
 
-        <View style={styles.qrCard}>
+        <View style={[styles.qrCard, { width: qrSize + spacing.xxl * 2, height: qrSize + spacing.xxl * 2 }]}>
           {code ? (
-            <QRCode value={code.payload} size={QR_SIZE} color={colors.ink} backgroundColor="#FFFFFF" ecl="M" />
+            // High error correction leaves room for the logo in the middle.
+            <QRCode
+              value={code.payload}
+              size={qrSize}
+              color={colors.ink}
+              backgroundColor="#FFFFFF"
+              ecl="H"
+              logo={LOGO}
+              logoSize={qrSize * 0.2}
+              logoBorderRadius={qrSize * 0.05}
+              logoBackgroundColor="#FFFFFF"
+              logoMargin={4}
+            />
           ) : qrQuery.isError ? (
             <Ionicons name="cloud-offline" size={48} color={colors.textSubtle} />
           ) : (
@@ -147,9 +166,14 @@ const styles = StyleSheet.create({
     color: colors.textOnDark,
     textAlign: 'center',
   },
+  steps: {
+    marginTop: -spacing.sm,
+    color: colors.textOnDarkMuted,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   qrCard: {
-    width: QR_SIZE + spacing.xxl * 2,
-    height: QR_SIZE + spacing.xxl * 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.md,
@@ -158,7 +182,8 @@ const styles = StyleSheet.create({
     ...shadows.raised,
   },
   rotation: {
-    width: QR_SIZE + spacing.xxl * 2,
+    alignSelf: 'stretch',
+    marginHorizontal: spacing.xxl,
     gap: spacing.sm,
   },
   rotationText: {
