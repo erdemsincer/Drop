@@ -23,10 +23,7 @@ API servisinde **Variables** sekmesine şunları ekle:
 | `Qr__SigningKey` | ayrı bir `openssl rand -base64 48` çıktısı |
 | `ReverseProxy__Enabled` | `true` |
 | `Admin__Emails` | işletme onaylayacak e-postalar, virgülle |
-| `Email__SmtpHost` | `smtp.resend.com` |
-| `Email__SmtpPort` | `587` |
-| `Email__SmtpUser` | `resend` |
-| `Email__SmtpPassword` | Resend API anahtarı (aşağıda) |
+| `Email__ResendApiKey` | Resend API anahtarı (aşağıda) |
 | `Email__From` | `Drop <no-reply@alan-adin.com>` |
 
 `PORT` ve `DATABASE_URL`'i API kendisi tanır; ayrıca `ConnectionStrings__Database`
@@ -35,7 +32,8 @@ yazmana gerek yok. Eksik ya da zayıf anahtarla API bilerek açılmaz (log'da ne
 ## 3. Resend (e-posta)
 
 1. https://resend.com hesabı aç → **API Keys → Create** → anahtarı
-   `Email__SmtpPassword` olarak Railway'e yapıştır.
+   `Email__ResendApiKey` olarak Railway'e yapıştır. SMTP değil HTTPS API kullanılır:
+   Railway deneme/Hobby planlarında giden SMTP portlarını engeller.
 2. **Domains → Add Domain** ile kendi alan adını ekleyip DNS kayıtlarını gir.
    Doğrulanana kadar yalnızca `onboarding@resend.dev` adresinden ve sadece
    kendi e-postana gönderebilirsin; test için `Email__From` = `Drop <onboarding@resend.dev>` kullan.

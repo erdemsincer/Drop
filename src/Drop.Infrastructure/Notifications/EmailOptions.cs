@@ -4,6 +4,9 @@ public sealed class EmailOptions
 {
     public const string SectionName = "Email";
 
+    /// <summary>Resend API key (re_...). When set it is used instead of SMTP.</summary>
+    public string? ResendApiKey { get; set; }
+
     /// <summary>Any SMTP provider works (Resend, SendGrid, Brevo, Mailgun, ...). Empty = not configured.</summary>
     public string? SmtpHost { get; set; }
 

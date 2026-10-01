@@ -14,6 +14,9 @@ internal sealed class SmtpEmailSender : IEmailSender
         _options = options.Value;
     }
 
+    // A blocked or silent SMTP port must not hang the request that sends the mail.
+    private static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(15);
+
     public async Task SendAsync(
         string to,
         string subject,
@@ -36,6 +39,9 @@ internal sealed class SmtpEmailSender : IEmailSender
         };
         message.To.Add(to);
 
-        await client.SendMailAsync(message, cancellationToken);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(SendTimeout);
+
+        await client.SendMailAsync(message, timeout.Token);
     }
 }

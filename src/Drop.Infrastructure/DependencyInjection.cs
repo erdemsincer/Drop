@@ -189,6 +189,7 @@ public static class DependencyInjection
                 opt.SmtpUser = emailSection["SmtpUser"];
                 opt.SmtpPassword = emailSection["SmtpPassword"];
                 opt.From = emailSection["From"] ?? opt.From;
+                opt.ResendApiKey = emailSection["ResendApiKey"];
 
                 if (int.TryParse(emailSection["SmtpPort"], out var port))
                     opt.SmtpPort = port;
@@ -197,10 +198,24 @@ public static class DependencyInjection
                     opt.EnableSsl = ssl;
             });
 
-        if (string.IsNullOrWhiteSpace(emailSection["SmtpHost"]))
-            services.AddSingleton<IEmailSender, DevelopmentEmailSender>();
-        else
+        if (emailSection["ResendApiKey"] is { Length: > 0 } resendApiKey)
+        {
+            services.AddHttpClient(ResendEmailSender.ClientName, client =>
+            {
+                client.BaseAddress = new Uri("https://api.resend.com");
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.DefaultRequestHeaders.Authorization = new("Bearer", resendApiKey);
+            });
+            services.AddSingleton<IEmailSender, ResendEmailSender>();
+        }
+        else if (!string.IsNullOrWhiteSpace(emailSection["SmtpHost"]))
+        {
             services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, DevelopmentEmailSender>();
+        }
 
         var jwtSection = configuration.GetSection(JwtOptions.SectionName);
         services.Configure<JwtOptions>(

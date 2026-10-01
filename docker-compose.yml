@@ -32,6 +32,7 @@ services:
       Database__MigrateOnStartup: "true"
       Admin__Emails: ${ADMIN_EMAILS:-}
       Sentry__Dsn: ${SENTRY_DSN:-}
+      Email__ResendApiKey: ${RESEND_API_KEY:-}
       Email__SmtpHost: ${SMTP_HOST:-}
       Email__SmtpPort: ${SMTP_PORT:-587}
       Email__SmtpUser: ${SMTP_USER:-}
