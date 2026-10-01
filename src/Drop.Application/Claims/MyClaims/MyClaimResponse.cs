@@ -11,4 +11,5 @@ public sealed record MyClaimResponse(
     ClaimStatus Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset ExpiresAt,
-    DateTimeOffset? RedeemedAt);
+    DateTimeOffset? RedeemedAt,
+    DropCategory Category);
