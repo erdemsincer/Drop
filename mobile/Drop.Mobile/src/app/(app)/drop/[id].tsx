@@ -4,15 +4,18 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import type { ComponentProps } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getApiError } from '@/api/getApiError';
 import { useCreateClaim } from '@/features/claims/hooks/useCreateClaim';
 import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessage';
+import { DropLocationCard } from '@/features/drops/components/DropLocationCard';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { useDropDetail } from '@/features/drops/hooks/useDropDetail';
 import { FollowButton } from '@/features/follows/components/FollowButton';
 import type { DropDetail } from '@/features/drops/types/drop';
+import { categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import { scheduleClaimReminder } from '@/features/notifications/claimReminders';
 import {
   Avatar,
@@ -32,7 +35,6 @@ import {
   typography,
 } from '@/ui';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { openDirections } from '@/utils/openDirections';
 
 export default function DropDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -98,6 +100,7 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
   };
 
   const claimedRatio = drop.capacity > 0 ? drop.claimedCount / drop.capacity : 1;
+  const category = categoryInfo[categoryOf(drop.category)];
 
   return (
     <View style={styles.root}>
@@ -108,7 +111,10 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
         contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
       >
         <LinearGradient colors={gradients.night} style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
-          <View style={styles.orb} />
+          {/* The category tints the hero: a warm glow for food, green for fun, and so on. */}
+          <View style={[styles.orb, { backgroundColor: category.tint }]} />
+          <View style={styles.orbSecondary} />
+          <Ionicons name={category.icon} size={170} color="rgba(255,255,255,0.06)" style={styles.watermark} />
 
           <View style={styles.heroBar}>
             <IconButton icon="chevron-back" tone="glass" accessibilityLabel="Geri dön" onPress={() => router.back()} />
@@ -135,20 +141,20 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
               </View>
               <FollowButton businessId={drop.businessId} businessName={drop.businessName} />
             </View>
-            <IconButton
-              icon="navigate"
-              tone="glass"
-              accessibilityLabel="Yol tarifi"
-              onPress={() => openDirections(drop.latitude, drop.longitude, `${drop.businessName} ${drop.branchName}`)}
-            />
           </View>
 
-          <Text style={styles.title}>{drop.title}</Text>
-          {!!drop.description && <Text style={styles.description}>{drop.description}</Text>}
+          <Animated.View entering={FadeInDown.delay(80).duration(380)}>
+            <View style={[styles.categoryChip, { backgroundColor: `${category.tint}40` }]}>
+              <Ionicons name={category.icon} size={13} color="#FFFFFF" />
+              <Text style={styles.categoryText}>{category.label.toLocaleUpperCase('tr-TR')}</Text>
+            </View>
+            <Text style={styles.title}>{drop.title}</Text>
+            {!!drop.description && <Text style={styles.description}>{drop.description}</Text>}
+          </Animated.View>
         </LinearGradient>
 
         <View style={styles.body}>
-          <View style={styles.statsCard}>
+          <Animated.View entering={FadeInDown.delay(160).duration(380)} style={styles.statsCard}>
             <View style={styles.statsRow}>
               <Stat
                 icon="people"
@@ -177,7 +183,7 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
             <Text style={styles.progressCaption}>
               {drop.claimedCount} kişi yakaladı · {drop.remainingCapacity} yer kaldı
             </Text>
-          </View>
+          </Animated.View>
 
           {drop.minimumSpend != null && (
             <View style={styles.spendCard}>
@@ -191,7 +197,17 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
             </View>
           )}
 
-          <View style={styles.steps}>
+          <Animated.View entering={FadeInDown.delay(240).duration(380)}>
+            <DropLocationCard
+              latitude={drop.latitude}
+              longitude={drop.longitude}
+              businessName={drop.businessName}
+              branchName={drop.branchName}
+              tint={category.tint}
+            />
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(300).duration(380)} style={styles.steps}>
             <Text style={styles.stepsTitle}>Nasıl çalışır?</Text>
 
             <Step icon="flash" title="Drop'u yakala" description="Butona dokun, fırsat senin için ayrılsın." />
@@ -202,7 +218,7 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
             />
             <Step icon="qr-code" title="QR kodu okut" description="Kasadaki Drop QR kodunu uygulamadan tara." />
             <Step icon="gift" title="Avantajını kullan" description="Doğrulama anında tamamlanır." isLast />
-          </View>
+          </Animated.View>
 
           {apiError && (
             <Notice message={getClaimErrorMessage(apiError.code, apiError.detail)} />
@@ -297,8 +313,39 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
+    opacity: 0.45,
+  },
+  orbSecondary: {
+    position: 'absolute',
+    bottom: -120,
+    left: -100,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
     backgroundColor: colors.primary,
-    opacity: 0.4,
+    opacity: 0.25,
+  },
+  watermark: {
+    position: 'absolute',
+    right: -24,
+    bottom: 10,
+    transform: [{ rotate: '-12deg' }],
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: spacing.xl,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
+  categoryText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
   },
   heroBar: {
     flexDirection: 'row',
@@ -332,7 +379,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.display,
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
     color: colors.textOnDark,
   },
   description: {
