@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 
 import { getApiError } from '@/api/getApiError';
 import { CategoryPicker } from '@/features/businesses/components/CategoryPicker';
+import { PhotoPicker } from '@/features/businesses/components/PhotoPicker';
 import { StartTimePicker } from '@/features/businesses/components/StartTimePicker';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
@@ -51,6 +52,9 @@ const initialValues: DropFormValues = {
   claimDurationMinutes: 15,
   startsAt: null,
   category: 'Other',
+  originalPrice: '',
+  dealPrice: '',
+  photoId: null,
 };
 
 /**
@@ -206,6 +210,40 @@ export default function DropFormScreen() {
               maxLength={1000}
               error={errorFor('description')}
             />
+          </Section>
+
+          <Section title="Fotoğraf" icon="image">
+            <PhotoPicker value={values.photoId} onChange={value => set('photoId', value)} />
+          </Section>
+
+          <Section title="Fiyat" icon="pricetags">
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <TextField
+                  label="Normal fiyat"
+                  icon="cash-outline"
+                  value={values.originalPrice}
+                  onChangeText={value => set('originalPrice', value.replace(/[^0-9.,]/g, ''))}
+                  keyboardType="decimal-pad"
+                  placeholder="₺120"
+                  error={errorFor('originalPrice')}
+                />
+              </View>
+              <View style={styles.half}>
+                <TextField
+                  label="Drop fiyatı"
+                  icon="flash-outline"
+                  value={values.dealPrice}
+                  onChangeText={value => set('dealPrice', value.replace(/[^0-9.,]/g, ''))}
+                  keyboardType="decimal-pad"
+                  placeholder="₺60"
+                  error={errorFor('dealPrice')}
+                />
+              </View>
+            </View>
+            <Text style={styles.hint}>
+              İsteğe bağlı. Yazarsan kartta indirim oranı görünür ve müşterinin tasarrufuna eklenir. Bedava ise Drop fiyatına 0 yaz.
+            </Text>
           </Section>
 
           <Section title="Kategori" icon="grid">

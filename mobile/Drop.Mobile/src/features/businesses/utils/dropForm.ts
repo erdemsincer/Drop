@@ -27,6 +27,11 @@ export type DropFormValues = {
   /** ISO start time, or null to publish now. */
   startsAt: string | null;
   category: DropCategory;
+  /** Usual price and the drop price as typed; both empty means "no price shown". */
+  originalPrice: string;
+  dealPrice: string;
+  /** Uploaded photo id, or null. */
+  photoId: string | null;
 };
 
 export type DropFormErrors = Partial<Record<keyof DropFormValues, string>>;
@@ -58,6 +63,19 @@ export const validateDropForm = (values: DropFormValues): DropFormErrors => {
     else if (start > Date.now() + 30 * 24 * 3_600_000) errors.startsAt = 'En fazla 30 gün sonrasına planlanabilir.';
   }
 
+  const hasOriginal = Boolean(values.originalPrice.trim());
+  const hasDeal = Boolean(values.dealPrice.trim());
+  if (hasOriginal !== hasDeal) {
+    if (!hasOriginal) errors.originalPrice = 'Normal fiyatı da yaz.';
+    else errors.dealPrice = 'Drop fiyatını da yaz (bedavaysa 0).';
+  } else if (hasOriginal) {
+    const original = parseDecimal(values.originalPrice);
+    const deal = parseDecimal(values.dealPrice);
+    if (!Number.isFinite(original) || original <= 0) errors.originalPrice = 'Geçerli bir fiyat gir.';
+    else if (!Number.isFinite(deal) || deal < 0) errors.dealPrice = 'Geçerli bir fiyat gir.';
+    else if (deal >= original) errors.dealPrice = 'Drop fiyatı normal fiyattan düşük olmalı.';
+  }
+
   if (values.claimDurationMinutes > values.durationMinutes) {
     errors.claimDurationMinutes = 'Kullanım süresi Drop süresinden uzun olamaz.';
   }
@@ -74,6 +92,9 @@ export const toCreateDropRequest = (values: DropFormValues): CreateDropRequest =
   claimDurationMinutes: values.claimDurationMinutes,
   startsAt: values.startsAt,
   category: values.category,
+  originalPrice: values.originalPrice.trim() ? parseDecimal(values.originalPrice) : null,
+  dealPrice: values.dealPrice.trim() ? parseDecimal(values.dealPrice) : null,
+  photoId: values.photoId,
 });
 
 export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
@@ -86,6 +107,10 @@ export const dropToFormValues = (drop: BusinessDrop): DropFormValues => ({
   claimDurationMinutes: drop.claimDurationMinutes,
   startsAt: null,
   category: categoryOf(drop.category),
+  originalPrice: drop.originalPrice != null ? String(drop.originalPrice) : '',
+  dealPrice: drop.dealPrice != null ? String(drop.dealPrice) : '',
+  // A republished drop reuses the photo; it is never copied, just shared.
+  photoId: drop.photoId ?? null,
 });
 
 /** Everything of a previous drop, durations included, to publish it again. */
@@ -121,8 +146,9 @@ export const withOption = (options: Choice<number>[], value: number): Choice<num
     : [...options, { label: minutesLabel(value), value }].sort((a, b) => a.value - b.value);
 
 export const toUpdateDropRequest = (values: DropFormValues): UpdateDropRequest => {
-  const { title, description, minimumSpend, capacity, category } = toCreateDropRequest(values);
-  return { title, description, minimumSpend, capacity, category };
+  const { title, description, minimumSpend, capacity, category, originalPrice, dealPrice, photoId } =
+    toCreateDropRequest(values);
+  return { title, description, minimumSpend, capacity, category, originalPrice, dealPrice, photoId };
 };
 
 // Maps FluentValidation property names back onto form fields.
@@ -134,4 +160,6 @@ export const apiFieldMap: Record<string, keyof DropFormValues> = {
   DurationMinutes: 'durationMinutes',
   StartsAt: 'startsAt',
   ClaimDurationMinutes: 'claimDurationMinutes',
+  OriginalPrice: 'originalPrice',
+  DealPrice: 'dealPrice',
 };

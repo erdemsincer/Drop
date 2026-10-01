@@ -70,7 +70,14 @@
       "expo-web-browser",
       "expo-notifications",
       "@react-native-community/datetimepicker",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Drop'una fotoğraf eklemek için galerine erişiyoruz.",
+          "cameraPermission": "Drop'una fotoğraf çekmek ve kasadaki QR kodu okutmak için kamerayı kullanıyoruz."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
