@@ -17,7 +17,8 @@ const isCancel = (error: unknown) =>
 /** "Continue with Apple" under the e-mail form: one tap signs in or creates the account. */
 export function SocialSignIn() {
   const { refresh } = useAuth();
-  const [appleAvailable, setAppleAvailable] = useState(false);
+  const [iosAvailable, setAppleAvailable] = useState<boolean | null>(null);
+  const appleAvailable = Platform.OS === 'ios' ? iosAvailable : false;
 
   useEffect(() => {
     if (Platform.OS !== 'ios') return;
@@ -55,6 +56,7 @@ export function SocialSignIn() {
     },
   });
 
+  // Expo Go (SDK 57) ships without the Apple module, so the button only appears in real builds.
   if (!appleAvailable) return null;
 
   const apiError = apple.error ? getApiError(apple.error) : null;
