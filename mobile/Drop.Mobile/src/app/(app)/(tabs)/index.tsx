@@ -11,6 +11,7 @@ import { CategoryFilter } from '@/features/drops/components/CategoryFilter';
 import { DropCard } from '@/features/drops/components/DropCard';
 import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
 import { DropsMap } from '@/features/drops/components/DropsMap';
+import { EmptyRadar } from '@/features/drops/components/EmptyRadar';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
 import { type DropSort, SortMenu, sortDrops } from '@/features/drops/components/SortMenu';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
@@ -218,12 +219,10 @@ export default function HomeScreen() {
               onAction={() => nearbyQuery.refetch()}
             />
           ) : (
-            <StateView
-              icon="cafe"
-              title="Buralar şimdilik sakin"
-              description={`${radiusKm} km çevrende aktif Drop yok. Mesafeyi artırabilir ya da biraz sonra tekrar bakabilirsin.`}
-              actionLabel={radiusKm < 10 ? 'Mesafeyi artır' : undefined}
-              onAction={radiusKm < 10 ? () => setRadiusKm(10) : undefined}
+            <EmptyRadar
+              radiusKm={radiusKm}
+              onWiden={radiusKm < 10 ? () => setRadiusKm(10) : undefined}
+              onAddBusiness={() => router.push(hasBusiness ? '/(app)/business' : '/(app)/business/create')}
             />
           )
         }
