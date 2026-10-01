@@ -20,4 +20,7 @@ public sealed record BusinessDropResponse(
     DropStatus Status,
     DateTimeOffset? StartsAt,
     DateTimeOffset? EndsAt,
-    DropCategory Category);
+    DropCategory Category,
+    decimal? OriginalPrice,
+    decimal? DealPrice,
+    Guid? PhotoId);

@@ -38,7 +38,12 @@ internal sealed class MyClaimsQuery : IMyClaimsQuery
                 claim.CreatedAt,
                 claim.ExpiresAt,
                 claim.RedeemedAt,
-                drop.Category)
+                drop.Category,
+                business.Id,
+                drop.OriginalPrice,
+                drop.DealPrice,
+                claim.Rating,
+                drop.PhotoId)
         ).AsNoTracking().Take(MaxClaims).ToListAsync(cancellationToken);
 
         // The expiration job runs periodically; don't show a lapsed claim as active meanwhile.

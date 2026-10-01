@@ -1,3 +1,4 @@
+using Drop.Application.Users.Stats;
 using Drop.Api.Configuration;
 using Drop.Application.Authentication.Login;
 using Drop.Application.Follows;
@@ -22,6 +23,15 @@ public sealed class UsersController : ControllerBase
     [HttpGet("me")]
     public async Task<ActionResult<MeResponse>> GetMe(
         [FromServices] GetMeService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(cancellationToken));
+    }
+
+    /// <summary>Totals for the profile: drops caught, used, and money saved.</summary>
+    [HttpGet("me/stats")]
+    public async Task<ActionResult<MyStatsResponse>> GetMyStats(
+        [FromServices] GetMyStatsService service,
         CancellationToken cancellationToken)
     {
         return Ok(await service.ExecuteAsync(cancellationToken));

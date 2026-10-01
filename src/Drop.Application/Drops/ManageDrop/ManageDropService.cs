@@ -1,3 +1,4 @@
+using Drop.Application.Media;
 using Drop.Application.Authentication;
 using Drop.Application.Businesses;
 using Drop.Application.Common.Errors;
@@ -12,19 +13,22 @@ public sealed class ManageDropService
     private readonly IBusinessAccessService _accessService;
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _timeProvider;
+    private readonly IMediaStore _mediaStore;
 
     public ManageDropService(
         IDropRepository dropRepository,
         IDropLifecycleStore lifecycleStore,
         IBusinessAccessService accessService,
         ICurrentUser currentUser,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IMediaStore mediaStore)
     {
         _dropRepository = dropRepository;
         _lifecycleStore = lifecycleStore;
         _accessService = accessService;
         _currentUser = currentUser;
         _timeProvider = timeProvider;
+        _mediaStore = mediaStore;
     }
 
     public async Task<DropLifecycleResponse> EndAsync(
@@ -51,6 +55,11 @@ public sealed class ManageDropService
         CancellationToken cancellationToken = default)
     {
         await EnsureCanManageAsync(dropId, cancellationToken);
+
+        if (request.PhotoId is { } photoId && !await _mediaStore.ExistsAsync(photoId, cancellationToken))
+        {
+            throw new ConflictException(ErrorCodes.Drop.PhotoNotFound, "The photo was not found; upload it again.");
+        }
 
         return await _lifecycleStore.UpdateAsync(dropId, request, _timeProvider.GetUtcNow(), cancellationToken);
     }

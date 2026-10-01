@@ -23,6 +23,18 @@ internal sealed class DropConfiguration
         builder.Property(x => x.MinimumSpend)
             .HasPrecision(18, 2);
 
+        builder.Property(x => x.OriginalPrice)
+            .HasPrecision(18, 2);
+
+        builder.Property(x => x.DealPrice)
+            .HasPrecision(18, 2);
+
+        // Photos are shared between republished drops; deleting one just leaves the drop without.
+        builder.HasOne<Domain.Media.MediaFile>()
+            .WithMany()
+            .HasForeignKey(x => x.PhotoId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(x => x.Capacity)
             .IsRequired();
 

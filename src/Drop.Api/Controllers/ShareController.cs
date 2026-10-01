@@ -79,6 +79,10 @@ public sealed class ShareController : ControllerBase
         string E(string? value) => WebUtility.HtmlEncode(value ?? string.Empty);
 
         var remaining = drop.RemainingCapacity > 0 ? $"{drop.RemainingCapacity}/{drop.Capacity}" : "Tükendi";
+        var tr = CultureInfo.GetCultureInfo("tr-TR");
+        var price = drop.OriginalPrice is { } original && drop.DealPrice is { } deal
+            ? $"<div class=\"stat\"><b>{(deal == 0 ? "Bedava" : "₺" + deal.ToString("0.##", tr))}</b><span><s>₺{original.ToString("0.##", tr)}</s></span></div>"
+            : string.Empty;
         var spend = drop.MinimumSpend is { } minimum
             ? $"<div class=\"stat\"><b>₺{minimum.ToString("0.##", CultureInfo.GetCultureInfo("tr-TR"))}</b><span>Min. harcama</span></div>"
             : string.Empty;
@@ -95,6 +99,7 @@ public sealed class ShareController : ControllerBase
                   <div class="stats">
                     <div class="stat"><b id="left" data-ends="{drop.EndsAt.UtcDateTime:O}">—</b><span>Kalan süre</span></div>
                     <div class="stat"><b>{E(remaining)}</b><span>Kalan yer</span></div>
+                    {price}
                     {spend}
                   </div>
                   <a class="cta" href="{AppScheme}://drop/{drop.Id}">Drop'ta aç ve yakala <i>→</i></a>

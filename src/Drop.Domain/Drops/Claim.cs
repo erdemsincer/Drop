@@ -50,6 +50,30 @@ public sealed class Claim : Entity
 
     public DateTimeOffset? RedeemedAt { get; private set; }
 
+    /// <summary>1–5 stars the customer gave after using the drop; null until rated.</summary>
+    public int? Rating { get; private set; }
+
+    public DateTimeOffset? RatedAt { get; private set; }
+
+    /// <summary>Rates a used drop. Changing one's mind later simply overwrites the stars.</summary>
+    public void Rate(int stars, DateTimeOffset now)
+    {
+        if (Status != ClaimStatus.Redeemed)
+        {
+            throw new ClaimDomainException(
+                "claim.not_redeemed",
+                "Only used drops can be rated.");
+        }
+
+        if (stars is < 1 or > 5)
+        {
+            throw new ArgumentOutOfRangeException(nameof(stars), "Rating must be between 1 and 5.");
+        }
+
+        Rating = stars;
+        RatedAt = now;
+    }
+
     /// <summary>Withdraws an unused reservation because its drop was cancelled.</summary>
     public void Cancel()
     {

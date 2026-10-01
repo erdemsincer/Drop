@@ -1,5 +1,6 @@
 using Drop.Application.Authentication;
 using Drop.Application.Claims;
+using Drop.Application.Notifications.Push;
 
 namespace Drop.Application.Claims.CreateClaim;
 
@@ -8,15 +9,18 @@ public sealed class CreateClaimService
     private readonly IClaimStore _claimStore;
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _timeProvider;
+    private readonly IClaimCreatedNotifier _claimCreatedNotifier;
 
     public CreateClaimService(
         IClaimStore claimStore,
         ICurrentUser currentUser,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IClaimCreatedNotifier claimCreatedNotifier)
     {
         _claimStore = claimStore;
         _currentUser = currentUser;
         _timeProvider = timeProvider;
+        _claimCreatedNotifier = claimCreatedNotifier;
     }
 
     public async Task<CreateClaimResponse> ExecuteAsync(
@@ -35,6 +39,8 @@ public sealed class CreateClaimService
             userId,
             _timeProvider.GetUtcNow(),
             cancellationToken);
+
+        _claimCreatedNotifier.Enqueue(result.ClaimId);
 
         return new CreateClaimResponse(
             result.ClaimId,

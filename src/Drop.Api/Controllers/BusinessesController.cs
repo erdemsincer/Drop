@@ -1,3 +1,4 @@
+using Drop.Application.Businesses.Profile;
 using Drop.Application.Businesses.CreateBusiness;
 using Drop.Application.Businesses.GetMyBusinesses;
 using Drop.Application.Businesses.RenameBusiness;
@@ -46,6 +47,16 @@ public sealed class BusinessesController : ControllerBase
     }
 
     /// <summary>Reservations, redemptions and customers over the last N days (1–90, default 30).</summary>
+    /// <summary>The customer-facing page of an approved business.</summary>
+    [HttpGet("{businessId:guid}/profile")]
+    public async Task<ActionResult<BusinessProfileResponse>> GetProfile(
+        Guid businessId,
+        [FromServices] GetBusinessProfileService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(businessId, cancellationToken));
+    }
+
     [HttpGet("{businessId:guid}/stats")]
     public async Task<ActionResult<BusinessStatsResponse>> Stats(
         Guid businessId,

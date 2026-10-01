@@ -50,5 +50,33 @@ public sealed class CreateDropRequestValidator
         RuleFor(x => x.Category)
             .IsInEnum()
             .WithErrorCode("category.invalid");
+
+        RuleFor(x => x.OriginalPrice)
+            .NotNull()
+            .WithErrorCode("pricing.incomplete")
+            .WithMessage("Give both prices, or neither.")
+            .When(x => x.DealPrice.HasValue);
+
+        RuleFor(x => x.DealPrice)
+            .NotNull()
+            .WithErrorCode("pricing.incomplete")
+            .WithMessage("Give both prices, or neither.")
+            .When(x => x.OriginalPrice.HasValue);
+
+        RuleFor(x => x.OriginalPrice)
+            .GreaterThan(0)
+            .WithErrorCode("original_price.invalid")
+            .LessThanOrEqualTo(1_000_000)
+            .WithErrorCode("original_price.invalid")
+            .When(x => x.OriginalPrice.HasValue);
+
+        RuleFor(x => x.DealPrice!.Value)
+            .GreaterThanOrEqualTo(0)
+            .WithName("DealPrice")
+            .WithErrorCode("deal_price.invalid")
+            .LessThan(x => x.OriginalPrice!.Value)
+            .WithErrorCode("deal_price.not_lower")
+            .WithMessage("The deal price must be lower than the original price.")
+            .When(x => x.DealPrice.HasValue && x.OriginalPrice.HasValue);
     }
 }

@@ -17,4 +17,10 @@ public sealed record DropDetailResponse(
     int ClaimDurationMinutes,
     double Latitude,
     double Longitude,
-    string Category);
+    string Category,
+    decimal? OriginalPrice,
+    decimal? DealPrice,
+    /// <summary>Average stars across the business's used drops (one decimal); null until rated.</summary>
+    double? BusinessRating,
+    int BusinessRatingCount,
+    Guid? PhotoId);

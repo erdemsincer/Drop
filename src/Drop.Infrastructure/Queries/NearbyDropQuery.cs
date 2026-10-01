@@ -66,7 +66,28 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
                 d."Category" AS "Category",
 
                 b."Latitude" AS "Latitude",
-                b."Longitude" AS "Longitude"
+                b."Longitude" AS "Longitude",
+
+
+                (
+                    SELECT ROUND(AVG(rc."Rating")::numeric, 1)::float8
+                    FROM claims rc
+                    INNER JOIN drops rd ON rd."Id" = rc."DropId"
+                    INNER JOIN branches rb ON rb."Id" = rd."BranchId"
+                    WHERE rb."BusinessId" = bus."Id" AND rc."Rating" IS NOT NULL
+                ) AS "BusinessRating",
+
+                (
+                    SELECT COUNT(*)::int
+                    FROM claims rc
+                    INNER JOIN drops rd ON rd."Id" = rc."DropId"
+                    INNER JOIN branches rb ON rb."Id" = rd."BranchId"
+                    WHERE rb."BusinessId" = bus."Id" AND rc."Rating" IS NOT NULL
+                ) AS "BusinessRatingCount",
+
+                d."OriginalPrice" AS "OriginalPrice",
+                d."DealPrice" AS "DealPrice",
+                d."PhotoId" AS "PhotoId"
 
             FROM drops d
 

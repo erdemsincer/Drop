@@ -32,6 +32,8 @@ public sealed class DropDbContext : DbContext, IUnitOfWork
 
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
 
+    public DbSet<Domain.Media.MediaFile> MediaFiles => Set<Domain.Media.MediaFile>();
+
     public DbSet<BusinessFollow> BusinessFollows => Set<BusinessFollow>();
 
     public DbSet<Domain.Notifications.DeviceToken> DeviceTokens => Set<Domain.Notifications.DeviceToken>();

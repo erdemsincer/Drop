@@ -1,4 +1,5 @@
 using Drop.Application.Drops.GetNearbyDrops;
+using Drop.Application.Drops.GetUpcomingDrops;
 using Drop.Application.Features.Drops.GetDropDetail;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,16 @@ public sealed class DropsCustomerController : ControllerBase
             cancellationToken);
 
         return Ok(response);
+    }
+
+    /// <summary>Scheduled drops nearby, starting within a week, soonest first.</summary>
+    [HttpGet("upcoming")]
+    public async Task<ActionResult<IReadOnlyList<UpcomingDropResponse>>> GetUpcoming(
+        [FromQuery] GetNearbyDropsRequest request,
+        [FromServices] GetUpcomingDropsService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(request.Latitude, request.Longitude, request.RadiusKm, cancellationToken));
     }
 
     [HttpGet("{dropId:guid}")]

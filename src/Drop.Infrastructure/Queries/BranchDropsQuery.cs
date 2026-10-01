@@ -46,6 +46,9 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 drop.StartsAt,
                 drop.EndsAt,
                 drop.Category,
+                drop.OriginalPrice,
+                drop.DealPrice,
+                drop.PhotoId,
                 ActiveClaimCount = _dbContext.Claims.Count(claim =>
                     claim.DropId == drop.Id &&
                     claim.Status == ClaimStatus.Active &&
@@ -71,7 +74,10 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 EffectiveStatus(row.Status, row.StartsAt, row.EndsAt, now),
                 row.StartsAt,
                 row.EndsAt,
-                row.Category))
+                row.Category,
+                row.OriginalPrice,
+                row.DealPrice,
+                row.PhotoId))
             .ToList();
     }
 

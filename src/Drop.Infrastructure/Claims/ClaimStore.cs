@@ -174,4 +174,35 @@ internal sealed class ClaimStore : IClaimStore
 
         await transaction.CommitAsync(cancellationToken);
     }
+
+    public async Task RateAsync(
+        Guid claimId,
+        Guid userId,
+        int stars,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        var claim = await _dbContext.Claims.SingleOrDefaultAsync(x => x.Id == claimId, cancellationToken)
+            ?? throw new NotFoundException(
+                ErrorCodes.Claim.NotFound,
+                "Claim was not found.");
+
+        if (claim.UserId != userId)
+        {
+            throw new ForbiddenException(
+                ErrorCodes.Claim.AccessDenied,
+                "You cannot rate this claim.");
+        }
+
+        try
+        {
+            claim.Rate(stars, now);
+        }
+        catch (ClaimDomainException ex)
+        {
+            throw new ConflictException(ex.Code, ex.Message);
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

@@ -1,3 +1,4 @@
+using Drop.Application.Media;
 using Drop.Application.Abstractions;
 using Drop.Application.Notifications.Push;
 using Drop.Domain.Drops;
@@ -19,6 +20,7 @@ public sealed class CreateDropService
     private readonly IBusinessAccessService _accessService;
     private readonly ICurrentUser _currentUser;
     private readonly IDropLiveNotifier _dropLiveNotifier;
+    private readonly IMediaStore _mediaStore;
 
     public CreateDropService(
         IBranchRepository branchRepository,
@@ -28,7 +30,8 @@ public sealed class CreateDropService
         TimeProvider timeProvider,
         IBusinessAccessService accessService,
         ICurrentUser currentUser,
-        IDropLiveNotifier dropLiveNotifier)
+        IDropLiveNotifier dropLiveNotifier,
+        IMediaStore mediaStore)
     {
         _branchRepository = branchRepository;
         _businessRepository = businessRepository;
@@ -38,6 +41,7 @@ public sealed class CreateDropService
         _accessService = accessService;
         _currentUser = currentUser;
         _dropLiveNotifier = dropLiveNotifier;
+        _mediaStore = mediaStore;
     }
 
     public async Task<CreateDropResponse> ExecuteAsync(
@@ -93,6 +97,15 @@ public sealed class CreateDropService
             TimeSpan.FromMinutes(request.DurationMinutes),
             TimeSpan.FromMinutes(request.ClaimDurationMinutes),
             request.Category ?? DropCategory.Other);
+
+        drop.SetPricing(request.OriginalPrice, request.DealPrice);
+
+        if (request.PhotoId is { } photoId && !await _mediaStore.ExistsAsync(photoId, cancellationToken))
+        {
+            throw new ConflictException(ErrorCodes.Drop.PhotoNotFound, "The photo was not found; upload it again.");
+        }
+
+        drop.SetPhoto(request.PhotoId);
 
         var now = _timeProvider.GetUtcNow();
 

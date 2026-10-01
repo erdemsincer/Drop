@@ -8,4 +8,7 @@ public sealed record UpdateDropRequest(
     string? Description,
     decimal? MinimumSpend,
     int Capacity,
-    DropCategory? Category = null);
+    DropCategory? Category = null,
+    decimal? OriginalPrice = null,
+    decimal? DealPrice = null,
+    Guid? PhotoId = null);

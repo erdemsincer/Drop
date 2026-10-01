@@ -12,4 +12,9 @@ public sealed record MyClaimResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset ExpiresAt,
     DateTimeOffset? RedeemedAt,
-    DropCategory Category);
+    DropCategory Category,
+    Guid BusinessId,
+    decimal? OriginalPrice,
+    decimal? DealPrice,
+    int? Rating,
+    Guid? PhotoId);

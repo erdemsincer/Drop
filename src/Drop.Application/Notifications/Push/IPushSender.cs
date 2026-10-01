@@ -25,3 +25,9 @@ public interface IDropLiveNotifier
 {
     void Enqueue(Guid dropId);
 }
+
+/// <summary>Tells the business's team that someone just caught one of their drops.</summary>
+public interface IClaimCreatedNotifier
+{
+    void Enqueue(Guid claimId);
+}

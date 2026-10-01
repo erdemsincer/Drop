@@ -1,5 +1,6 @@
 using Drop.Application.Authentication;
 using Drop.Application.Claims.CancelClaim;
+using Drop.Application.Claims.RateClaim;
 using Drop.Application.Claims.CreateClaim;
 using Drop.Application.Claims.MyClaims;
 using Drop.Application.Features.Claims.ActiveClaim;
@@ -58,6 +59,19 @@ public sealed class ClaimsController : ControllerBase
     }
 
     /// <summary>Gives an unused reservation back. The same drop can't be claimed again.</summary>
+    /// <summary>Rates a used drop with 1–5 stars; rating again replaces the stars.</summary>
+    [HttpPost("{claimId:guid}/rating")]
+    public async Task<IActionResult> Rate(
+        Guid claimId,
+        [FromBody] RateClaimRequest request,
+        [FromServices] RateClaimService service,
+        CancellationToken cancellationToken)
+    {
+        await service.ExecuteAsync(claimId, request, cancellationToken);
+
+        return NoContent();
+    }
+
     [HttpPost("{claimId:guid}/cancel")]
     public async Task<IActionResult> Cancel(
         Guid claimId,

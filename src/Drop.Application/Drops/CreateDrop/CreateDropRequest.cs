@@ -10,4 +10,7 @@ public sealed record CreateDropRequest(
     int DurationMinutes,
     int ClaimDurationMinutes,
     DateTimeOffset? StartsAt = null,
-    DropCategory? Category = null);
+    DropCategory? Category = null,
+    decimal? OriginalPrice = null,
+    decimal? DealPrice = null,
+    Guid? PhotoId = null);

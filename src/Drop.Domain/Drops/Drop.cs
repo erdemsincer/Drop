@@ -64,6 +64,17 @@ public sealed class Drop : Entity
 
     public DropCategory Category { get; private set; }
 
+    /// <summary>The usual price, shown struck through next to <see cref="DealPrice"/>.</summary>
+    public decimal? OriginalPrice { get; private set; }
+
+    /// <summary>What the customer pays with the drop; 0 means free.</summary>
+    public decimal? DealPrice { get; private set; }
+
+    /// <summary>An uploaded photo (media file id); null for none.</summary>
+    public Guid? PhotoId { get; private set; }
+
+    public void SetPhoto(Guid? photoId) => PhotoId = photoId == Guid.Empty ? null : photoId;
+
     public DropStatus Status { get; private set; }
 
     public DateTimeOffset? StartsAt { get; private set; }
@@ -162,6 +173,33 @@ public sealed class Drop : Entity
         MinimumSpend = minimumSpend;
         Capacity = capacity;
         Category = category ?? Category;
+    }
+
+    /// <summary>
+    /// Sets the before/after price, or clears it with two nulls. Either both
+    /// are given, or neither: a lone price can't show a saving.
+    /// </summary>
+    public void SetPricing(decimal? originalPrice, decimal? dealPrice)
+    {
+        if (originalPrice is null && dealPrice is null)
+        {
+            OriginalPrice = null;
+            DealPrice = null;
+            return;
+        }
+
+        if (originalPrice is not { } original || dealPrice is not { } deal)
+            throw new DropDomainException(
+                "drop.pricing_incomplete",
+                "Give both the original and the deal price, or neither.");
+
+        if (original <= 0 || deal < 0 || deal >= original)
+            throw new DropDomainException(
+                "drop.pricing_invalid",
+                "The deal price must be lower than the original price.");
+
+        OriginalPrice = original;
+        DealPrice = deal;
     }
 
     private void EnsureLiveOrScheduled(DateTimeOffset now)

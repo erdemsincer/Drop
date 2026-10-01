@@ -59,7 +59,26 @@ internal sealed class DropDetailQuery : IDropDetailQuery
                 d."ClaimDurationMinutes" AS "ClaimDurationMinutes",
                 b."Latitude" AS "Latitude",
                 b."Longitude" AS "Longitude",
-                d."Category" AS "Category"
+                d."Category" AS "Category",
+
+                (
+                    SELECT ROUND(AVG(rc."Rating")::numeric, 1)::float8
+                    FROM claims rc
+                    INNER JOIN drops rd ON rd."Id" = rc."DropId"
+                    INNER JOIN branches rb ON rb."Id" = rd."BranchId"
+                    WHERE rb."BusinessId" = bus."Id" AND rc."Rating" IS NOT NULL
+                ) AS "BusinessRating",
+
+                (
+                    SELECT COUNT(*)::int
+                    FROM claims rc
+                    INNER JOIN drops rd ON rd."Id" = rc."DropId"
+                    INNER JOIN branches rb ON rb."Id" = rd."BranchId"
+                    WHERE rb."BusinessId" = bus."Id" AND rc."Rating" IS NOT NULL
+                ) AS "BusinessRatingCount",
+                d."OriginalPrice" AS "OriginalPrice",
+                d."DealPrice" AS "DealPrice",
+                d."PhotoId" AS "PhotoId"
             FROM drops d
             INNER JOIN branches b ON b."Id" = d."BranchId"
             INNER JOIN businesses bus ON bus."Id" = b."BusinessId"

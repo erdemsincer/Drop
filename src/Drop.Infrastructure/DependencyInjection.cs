@@ -1,3 +1,8 @@
+using Drop.Application.Drops.GetUpcomingDrops;
+using Drop.Application.Businesses.Profile;
+using Drop.Application.Media;
+using Drop.Infrastructure.Media;
+using Drop.Application.Users.Stats;
 using Drop.Application.Authentication.External;
 using Drop.Application.Follows;
 using Drop.Application.Notifications.Push;
@@ -11,6 +16,7 @@ using Drop.Application.Users.ChangePassword;
 using Drop.Application.Users.EmailVerification;
 using Drop.Application.Users.UpdateProfile;
 using Drop.Application.Claims.CancelClaim;
+using Drop.Application.Claims.RateClaim;
 using Drop.Application.Abstractions;
 using Drop.Application.Admin;
 using Drop.Application.Authentication;
@@ -120,6 +126,10 @@ public static class DependencyInjection
 
         services.AddScoped<INearbyDropQuery, NearbyDropQuery>();
         services.AddScoped<GetNearbyDropsService>();
+        services.AddScoped<IUpcomingDropQuery, UpcomingDropQuery>();
+        services.AddScoped<GetUpcomingDropsService>();
+        services.AddScoped<IBusinessProfileQuery, BusinessProfileQuery>();
+        services.AddScoped<GetBusinessProfileService>();
 
         services.AddScoped<IDropDetailQuery, DropDetailQuery>();
         services.AddScoped<GetDropDetailService>();
@@ -127,6 +137,10 @@ public static class DependencyInjection
         services.AddScoped<IMyClaimsQuery, MyClaimsQuery>();
         services.AddScoped<GetMyClaimsService>();
         services.AddScoped<GetMeService>();
+        services.AddScoped<IMediaStore, MediaStore>();
+        services.AddScoped<MediaService>();
+        services.AddScoped<IMyStatsQuery, MyStatsQuery>();
+        services.AddScoped<GetMyStatsService>();
         services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();
         services.AddScoped<DeleteAccountService>();
         services.AddScoped<UpdateProfileService>();
@@ -139,6 +153,7 @@ public static class DependencyInjection
         services.AddScoped<IClaimStore, ClaimStore>();
         services.AddScoped<CreateClaimService>();
         services.AddScoped<CancelClaimService>();
+        services.AddScoped<RateClaimService>();
 
         services.AddScoped<IAdminAccess, ConfiguredAdminAccess>();
         services.AddScoped<IAdminBusinessStore, AdminBusinessStore>();
@@ -273,6 +288,10 @@ public static class DependencyInjection
         services.AddSingleton<DropLiveQueue>();
         services.AddSingleton<IDropLiveNotifier>(sp => sp.GetRequiredService<DropLiveQueue>());
         services.AddHostedService<DropLiveDispatcher>();
+
+        services.AddSingleton<ClaimCreatedQueue>();
+        services.AddSingleton<IClaimCreatedNotifier>(sp => sp.GetRequiredService<ClaimCreatedQueue>());
+        services.AddHostedService<ClaimCreatedDispatcher>();
 
         return services;
     }
