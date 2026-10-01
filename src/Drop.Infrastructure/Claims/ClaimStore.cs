@@ -128,6 +128,9 @@ internal sealed class ClaimStore : IClaimStore
             now,
             drop.ClaimDuration);
 
+        // A falling price is locked in at the moment of catching.
+        claim.LockPrice(drop.PriceAt(now));
+
         await _dbContext.Claims.AddAsync(
             claim,
             cancellationToken);
@@ -142,7 +145,8 @@ internal sealed class ClaimStore : IClaimStore
             claim.Id,
             claim.DropId,
             claim.ExpiresAt,
-            drop.Capacity - occupiedCount - 1);
+            drop.Capacity - occupiedCount - 1,
+            claim.Price);
     }
 
     public async Task WithdrawAsync(

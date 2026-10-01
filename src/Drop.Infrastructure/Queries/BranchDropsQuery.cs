@@ -51,6 +51,7 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 drop.PhotoId,
                 drop.IsMystery,
                 drop.Hint,
+                drop.StartPrice,
                 ActiveClaimCount = _dbContext.Claims.Count(claim =>
                     claim.DropId == drop.Id &&
                     claim.Status == ClaimStatus.Active &&
@@ -81,7 +82,8 @@ internal sealed class BranchDropsQuery : IBranchDropsQuery
                 row.DealPrice,
                 row.PhotoId,
                 row.IsMystery,
-                row.Hint))
+                row.Hint,
+                row.StartPrice))
             .ToList();
     }
 

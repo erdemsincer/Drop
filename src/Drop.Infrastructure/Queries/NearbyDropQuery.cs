@@ -91,7 +91,9 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
                 d."IsMystery" AS "IsMystery",
                 d."Hint" AS "Hint",
                 -- Locking depends on the caller's distance; MysteryMask decides.
-                false AS "IsLocked"
+                false AS "IsLocked",
+                d."StartPrice" AS "StartPrice",
+                d."StartsAt" AS "StartsAt"
 
             FROM drops d
 

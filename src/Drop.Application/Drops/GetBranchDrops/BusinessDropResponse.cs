@@ -25,4 +25,5 @@ public sealed record BusinessDropResponse(
     decimal? DealPrice,
     Guid? PhotoId,
     bool IsMystery,
-    string? Hint);
+    string? Hint,
+    decimal? StartPrice);

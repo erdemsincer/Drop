@@ -49,6 +49,7 @@ public sealed class CreateClaimService
             result.ClaimId,
             result.DropId,
             result.ExpiresAt,
-            result.RemainingCapacity);
+            result.RemainingCapacity,
+            result.Price);
     }
 }

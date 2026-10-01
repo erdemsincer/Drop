@@ -25,4 +25,7 @@ public sealed record NearbyDropResponse(
     bool IsMystery,
     string? Hint,
     /// <summary>A mystery drop seen from too far: the deal is hidden (see MysteryMask).</summary>
-    bool IsLocked);
+    bool IsLocked,
+    /// <summary>Falling-price drops: opening price; the current one follows from StartsAt/EndsAt.</summary>
+    decimal? StartPrice,
+    DateTimeOffset StartsAt);

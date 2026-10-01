@@ -83,6 +83,7 @@ internal sealed class BusinessProfileQuery : IBusinessProfileQuery
                 drop.DealPrice,
                 drop.PhotoId,
                 drop.IsMystery,
+                drop.StartPrice,
                 Taken = _dbContext.Claims.Count(claim =>
                     claim.DropId == drop.Id
                     && (claim.Status == ClaimStatus.Redeemed || (claim.Status == ClaimStatus.Active && claim.ExpiresAt > now))),
@@ -104,7 +105,8 @@ internal sealed class BusinessProfileQuery : IBusinessProfileQuery
                 row.OriginalPrice,
                 row.DealPrice,
                 row.PhotoId,
-                row.IsMystery))).ToList();
+                row.IsMystery,
+                row.StartPrice))).ToList();
 
         return new BusinessProfileResponse(
             business.Id,

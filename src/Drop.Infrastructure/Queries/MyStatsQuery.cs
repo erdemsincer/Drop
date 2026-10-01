@@ -24,8 +24,9 @@ internal sealed class MyStatsQuery : IMyStatsQuery
         var saved = await (
             from claim in claims
             join drop in _dbContext.Drops on claim.DropId equals drop.Id
-            where claim.Status == ClaimStatus.Redeemed && drop.OriginalPrice != null && drop.DealPrice != null
-            select drop.OriginalPrice!.Value - drop.DealPrice!.Value
+            where claim.Status == ClaimStatus.Redeemed && drop.OriginalPrice != null && (claim.Price != null || drop.DealPrice != null)
+            // The locked-in price wins: on a falling-price drop it's what they actually paid.
+            select drop.OriginalPrice!.Value - (claim.Price ?? drop.DealPrice!.Value)
         ).SumAsync(cancellationToken);
 
         return new MyStatsResponse(claimed, redeemed, saved);

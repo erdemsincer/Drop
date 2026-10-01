@@ -29,6 +29,9 @@ internal sealed class DropConfiguration
         builder.Property(x => x.DealPrice)
             .HasPrecision(18, 2);
 
+        builder.Property(x => x.StartPrice)
+            .HasPrecision(18, 2);
+
         // Photos are shared between republished drops; deleting one just leaves the drop without.
         builder.HasOne<Domain.Media.MediaFile>()
             .WithMany()

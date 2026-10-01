@@ -62,6 +62,7 @@ internal sealed class DropLifecycleStore : IDropLifecycleStore
 
         // The form always sends both; leaving them out clears the price.
         drop.SetPricing(request.OriginalPrice, request.DealPrice);
+        drop.SetFallingPrice(request.StartPrice);
         drop.SetPhoto(request.PhotoId);
 
         await _dbContext.SaveChangesAsync(cancellationToken);

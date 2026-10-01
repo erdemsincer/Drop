@@ -70,6 +70,52 @@ public sealed class Drop : Entity
     /// <summary>What the customer pays with the drop; 0 means free.</summary>
     public decimal? DealPrice { get; private set; }
 
+    /// <summary>
+    /// Set on a falling-price drop: the price it opens at, sliding minute by
+    /// minute down to <see cref="DealPrice"/> by the time it ends.
+    /// </summary>
+    public decimal? StartPrice { get; private set; }
+
+    public bool IsFallingPrice => StartPrice is not null;
+
+    /// <summary>
+    /// Makes the price fall from <paramref name="startPrice"/> to the deal price.
+    /// Needs a regular price first; the start sits between the two.
+    /// </summary>
+    public void SetFallingPrice(decimal? startPrice)
+    {
+        if (startPrice is null)
+        {
+            StartPrice = null;
+            return;
+        }
+
+        if (OriginalPrice is not { } original || DealPrice is not { } floor)
+            throw new DropDomainException("drop.pricing_incomplete", "A falling price needs the usual and the lowest price.");
+
+        if (startPrice <= floor || startPrice > original)
+            throw new DropDomainException("drop.start_price_invalid", "The start price must be above the lowest price and at most the usual price.");
+
+        StartPrice = startPrice;
+    }
+
+    /// <summary>
+    /// What catching the drop costs at <paramref name="now"/>: the deal price,
+    /// or for a falling-price drop the price on the minute (whole lira, never
+    /// below the floor). Null when the drop has no price.
+    /// </summary>
+    public decimal? PriceAt(DateTimeOffset now)
+    {
+        if (StartPrice is not { } start || DealPrice is not { } floor || StartsAt is not { } from || EndsAt is not { } to)
+            return DealPrice;
+
+        var totalMinutes = Math.Max(1, (int)(to - from).TotalMinutes);
+        var elapsedMinutes = Math.Clamp((int)(now - from).TotalMinutes, 0, totalMinutes);
+        var price = start - (start - floor) * elapsedMinutes / totalMinutes;
+
+        return Math.Max(floor, Math.Floor(price));
+    }
+
     /// <summary>An uploaded photo (media file id); null for none.</summary>
     public Guid? PhotoId { get; private set; }
 
@@ -213,6 +259,7 @@ public sealed class Drop : Entity
         {
             OriginalPrice = null;
             DealPrice = null;
+            StartPrice = null;
             return;
         }
 

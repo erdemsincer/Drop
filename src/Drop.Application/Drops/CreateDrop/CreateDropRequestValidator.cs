@@ -82,5 +82,13 @@ public sealed class CreateDropRequestValidator
             .WithErrorCode("deal_price.not_lower")
             .WithMessage("The deal price must be lower than the original price.")
             .When(x => x.DealPrice.HasValue && x.OriginalPrice.HasValue);
+            RuleFor(x => x.StartPrice!.Value)
+            .GreaterThan(x => x.DealPrice ?? decimal.MaxValue)
+            .WithName("StartPrice")
+            .WithErrorCode("start_price.invalid")
+            .WithMessage("The start price must be above the lowest price.")
+            .LessThanOrEqualTo(x => x.OriginalPrice ?? 0)
+            .WithErrorCode("start_price.invalid")
+            .When(x => x.StartPrice.HasValue);
     }
 }

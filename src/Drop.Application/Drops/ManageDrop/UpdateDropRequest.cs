@@ -11,4 +11,5 @@ public sealed record UpdateDropRequest(
     DropCategory? Category = null,
     decimal? OriginalPrice = null,
     decimal? DealPrice = null,
-    Guid? PhotoId = null);
+    Guid? PhotoId = null,
+    decimal? StartPrice = null);

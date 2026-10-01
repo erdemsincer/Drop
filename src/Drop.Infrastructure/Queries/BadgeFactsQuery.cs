@@ -27,7 +27,7 @@ internal sealed class BadgeFactsQuery : IBadgeFactsQuery
                 claim.CreatedAt,
                 claim.RedeemedAt!.Value,
                 drop.OriginalPrice,
-                drop.DealPrice)
+                claim.Price ?? drop.DealPrice)
         ).AsNoTracking().ToListAsync(cancellationToken);
 
         var rated = await _dbContext.Claims.CountAsync(claim => claim.UserId == userId && claim.Rating != null, cancellationToken);

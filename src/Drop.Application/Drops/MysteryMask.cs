@@ -37,6 +37,7 @@ public static class MysteryMask
                 OriginalPrice = null,
                 DealPrice = null,
                 PhotoId = null,
+                StartPrice = null,
                 BusinessRating = null,
                 BusinessRatingCount = 0,
             };
@@ -65,6 +66,7 @@ public static class MysteryMask
                 OriginalPrice = null,
                 DealPrice = null,
                 PhotoId = null,
+                StartPrice = null,
                 BusinessRating = null,
                 BusinessRatingCount = 0,
             };
@@ -83,11 +85,12 @@ public static class MysteryMask
                 OriginalPrice = null,
                 DealPrice = null,
                 PhotoId = null,
+                StartPrice = null,
             };
 
     /// <summary>On the business page the business is known, but the deal itself stays a surprise.</summary>
     public static BusinessProfileDrop Apply(BusinessProfileDrop drop) =>
         !drop.IsMystery
             ? drop
-            : drop with { Title = Title, Category = "Other", OriginalPrice = null, DealPrice = null, PhotoId = null };
+            : drop with { Title = Title, Category = "Other", OriginalPrice = null, DealPrice = null, PhotoId = null, StartPrice = null };
 }

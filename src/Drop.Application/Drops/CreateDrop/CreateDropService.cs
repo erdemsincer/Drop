@@ -99,6 +99,7 @@ public sealed class CreateDropService
             request.Category ?? DropCategory.Other);
 
         drop.SetPricing(request.OriginalPrice, request.DealPrice);
+        drop.SetFallingPrice(request.StartPrice);
 
         if (request.PhotoId is { } photoId && !await _mediaStore.ExistsAsync(photoId, cancellationToken))
         {

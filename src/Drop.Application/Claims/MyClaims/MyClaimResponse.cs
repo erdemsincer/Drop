@@ -17,4 +17,6 @@ public sealed record MyClaimResponse(
     decimal? OriginalPrice,
     decimal? DealPrice,
     int? Rating,
-    Guid? PhotoId);
+    Guid? PhotoId,
+    /// <summary>What the customer locked in when catching it.</summary>
+    decimal? Price);

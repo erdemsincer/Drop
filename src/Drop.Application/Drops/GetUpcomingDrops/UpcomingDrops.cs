@@ -15,7 +15,8 @@ public sealed record UpcomingDropResponse(
     decimal? OriginalPrice,
     decimal? DealPrice,
     Guid? PhotoId,
-    bool IsMystery);
+    bool IsMystery,
+    decimal? StartPrice);
 
 public interface IUpcomingDropQuery
 {

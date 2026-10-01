@@ -38,6 +38,11 @@ public sealed class Claim : Entity
         ExpiresAt = createdAt.Add(claimDuration);
     }
 
+    /// <summary>The price locked in when the drop was caught (matters for falling-price drops); null if unpriced.</summary>
+    public decimal? Price { get; private set; }
+
+    public void LockPrice(decimal? price) => Price = price;
+
     public Guid DropId { get; private set; }
 
     public Guid UserId { get; private set; }

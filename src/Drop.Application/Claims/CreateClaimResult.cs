@@ -4,4 +4,5 @@ public sealed record CreateClaimResult(
     Guid ClaimId,
     Guid DropId,
     DateTimeOffset ExpiresAt,
-    int RemainingCapacity);
+    int RemainingCapacity,
+    decimal? Price);

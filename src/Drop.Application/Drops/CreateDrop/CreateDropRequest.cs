@@ -14,5 +14,6 @@ public sealed record CreateDropRequest(
     decimal? OriginalPrice = null,
     decimal? DealPrice = null,
     Guid? PhotoId = null,
+    decimal? StartPrice = null,
     bool IsMystery = false,
     string? Hint = null);

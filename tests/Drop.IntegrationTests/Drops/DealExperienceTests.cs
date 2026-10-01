@@ -62,6 +62,60 @@ public sealed class DealExperienceTests : IClassFixture<DropApiFactory>, IAsyncL
         mine[0].GetProperty("businessId").GetGuid().Should().Be(scenario.BusinessId);
     }
 
+    [Fact]
+    public async Task FallingPrice_ShouldLockThePriceWhenCaught_AndCountItInSavings()
+    {
+        var scenario = await IntegrationTestData.CreateClaimScenarioAsync(_factory, capacity: 5);
+        var owner = Client(scenario.OwnerId);
+        var customerId = (await IntegrationTestData.CreateUsersAsync(_factory, count: 1))[0];
+        var customer = Client(customerId);
+
+        var created = await owner.PostAsJsonAsync($"/api/branches/{scenario.BranchId}/drops", new
+        {
+            title = "Düşen fiyatlı pizza",
+            capacity = 5,
+            durationMinutes = 60,
+            claimDurationMinutes = 15,
+            originalPrice = 120m,
+            dealPrice = 40m,
+            startPrice = 100m,
+        });
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var dropId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        var detail = await customer.GetFromJsonAsync<JsonElement>($"/api/drops/{dropId}");
+        detail.GetProperty("startPrice").GetDecimal().Should().Be(100m);
+
+        // Caught right away: the price is still at (or a lira under) the start.
+        var claim = await customer.PostAsync($"/api/drops/{dropId}/claims", null);
+        claim.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await claim.Content.ReadFromJsonAsync<JsonElement>();
+        var locked = body.GetProperty("price").GetDecimal();
+        locked.Should().BeInRange(99m, 100m);
+
+        await RedeemAsync(customer, body.GetProperty("claimId").GetGuid(), scenario.BranchId);
+
+        var stats = await customer.GetFromJsonAsync<JsonElement>("/api/users/me/stats");
+        stats.GetProperty("saved").GetDecimal().Should().Be(120m - locked);
+
+        var mine = await customer.GetFromJsonAsync<JsonElement>("/api/claims/me");
+        mine[0].GetProperty("price").GetDecimal().Should().Be(locked);
+
+        // A start price outside the deal range is refused.
+        var bad = await owner.PostAsJsonAsync($"/api/branches/{scenario.BranchId}/drops", new
+        {
+            title = "Yanlış",
+            capacity = 5,
+            durationMinutes = 60,
+            claimDurationMinutes = 15,
+            originalPrice = 120m,
+            dealPrice = 40m,
+            startPrice = 30m,
+        });
+        bad.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await bad.Content.ReadAsStringAsync()).Should().Contain("start_price.invalid");
+    }
+
     [Theory]
     [InlineData(100, 100, "deal_price.not_lower")]
     [InlineData(100, null, "pricing.incomplete")]

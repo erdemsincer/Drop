@@ -28,4 +28,5 @@ public sealed record DropDetailResponse(
     string? Hint,
     bool IsLocked,
     /// <summary>From the caller's position when it was sent; mystery drops unlock within 150 m.</summary>
-    int? DistanceMeters);
+    int? DistanceMeters,
+    decimal? StartPrice);

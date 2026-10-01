@@ -23,7 +23,8 @@ public sealed record BusinessProfileDrop(
     decimal? OriginalPrice,
     decimal? DealPrice,
     Guid? PhotoId,
-    bool IsMystery);
+    bool IsMystery,
+    decimal? StartPrice);
 
 /// <summary>The customer-facing page of a business: who they are, where, and what's on.</summary>
 public sealed record BusinessProfileResponse(
