@@ -27,6 +27,7 @@ export function DropCard({ drop, onPress }: Props) {
   const lowStock = !soldOut && drop.remainingCapacity <= 3;
   const urgent = remaining.totalSeconds <= URGENT_SECONDS;
   const claimedRatio = drop.capacity > 0 ? drop.claimedCount / drop.capacity : 1;
+  const category = categoryOf(drop.category);
 
   return (
     <Pressable
@@ -72,12 +73,13 @@ export function DropCard({ drop, onPress }: Props) {
           <Badge label="AKTİF" tone="success" live />
         )}
 
-        {categoryOf(drop.category) !== 'Other' && (
-          <Badge
-            label={categoryInfo[categoryOf(drop.category)].label}
-            tone="primary"
-            icon={categoryInfo[categoryOf(drop.category)].icon}
-          />
+        {category !== 'Other' && (
+          <View style={[styles.categoryPill, { backgroundColor: `${categoryInfo[category].tint}1A` }]}>
+            <Ionicons name={categoryInfo[category].icon} size={12} color={categoryInfo[category].tint} />
+            <Text style={[styles.categoryText, { color: categoryInfo[category].tint }]}>
+              {categoryInfo[category].label.toLocaleUpperCase('tr-TR')}
+            </Text>
+          </View>
         )}
 
         {drop.minimumSpend != null && (
@@ -168,6 +170,19 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20,
+  },
+  categoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   tags: {
     flexDirection: 'row',

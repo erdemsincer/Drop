@@ -13,6 +13,7 @@ import { DropCard } from '@/features/drops/components/DropCard';
 import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
 import { DropsMap } from '@/features/drops/components/DropsMap';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
+import { type DropSort, SortMenu, sortDrops } from '@/features/drops/components/SortMenu';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
 import { type DropCategory, categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import { mapAvailable } from '@/features/drops/utils/maps';
@@ -32,6 +33,7 @@ export default function HomeScreen() {
   const [radiusKm, setRadiusKm] = useState(5);
   const [category, setCategory] = useState<DropCategory | null>(null);
   const [view, setView] = useState<'list' | 'map'>('list');
+  const [sort, setSort] = useState<DropSort>('distance');
 
   const locationQuery = useCurrentLocation();
   const activeClaimQuery = useActiveClaim();
@@ -57,6 +59,8 @@ export default function HomeScreen() {
   // A category that just ran out of drops quietly falls back to "all".
   const activeCategory = category && counts[category] ? category : null;
   const drops = activeCategory ? allDrops.filter(drop => categoryOf(drop.category) === activeCategory) : allDrops;
+  // The server already orders by distance; other orders are applied on the device.
+  const listDrops = sortDrops(drops, sort);
 
   const openClaim = (claim: ActiveClaim) =>
     router.push({
@@ -175,6 +179,7 @@ export default function HomeScreen() {
             <Text style={styles.countText}>{drops.length}</Text>
           </View>
         )}
+        {drops.length > 1 && <SortMenu value={sort} onChange={setSort} />}
       </View>
     </View>
   );
@@ -182,7 +187,7 @@ export default function HomeScreen() {
   return (
     <Screen edges={['top']}>
       <FlatList
-        data={nearbyQuery.isLoading || nearbyQuery.isError ? [] : drops}
+        data={nearbyQuery.isLoading || nearbyQuery.isError ? [] : listDrops}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <DropCard
