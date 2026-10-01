@@ -1,45 +1,100 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { useMyClaims } from '@/features/claims/hooks/useMyClaims';
 import type { ClaimStatus, MyClaim } from '@/features/claims/types/claim';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
+import { categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import {
-  Avatar,
   Badge,
+  ChoiceChips,
   Screen,
   Skeleton,
   StateView,
   colors,
+  gradients,
   radius,
   shadows,
   spacing,
   typography,
 } from '@/ui';
 
-const statusBadge: Record<ClaimStatus, { label: string; tone: 'success' | 'primary' | 'neutral' | 'danger' }> = {
-  Active: { label: 'AKTİF', tone: 'success' },
+type Filter = 'all' | ClaimStatus;
+
+const FILTERS: { label: string; value: Filter }[] = [
+  { label: 'Tümü', value: 'all' },
+  { label: 'Kullanılan', value: 'Redeemed' },
+  { label: 'Süresi dolan', value: 'Expired' },
+  { label: 'İptal', value: 'Cancelled' },
+];
+
+const statusBadge: Record<Exclude<ClaimStatus, 'Active'>, { label: string; tone: 'primary' | 'neutral' | 'danger' }> = {
   Redeemed: { label: 'KULLANILDI', tone: 'primary' },
   Expired: { label: 'SÜRESİ DOLDU', tone: 'neutral' },
-  Cancelled: { label: 'İPTAL EDİLDİ', tone: 'danger' },
+  Cancelled: { label: 'İPTAL', tone: 'danger' },
 };
 
-const formatDate = (value: string) =>
+const formatDay = (value: string) =>
   new Date(value).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+const monthTitle = (value: string) =>
+  new Date(value).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toLocaleUpperCase('tr-TR'));
+
+const isSameMonth = (value: string, reference: Date) => {
+  const date = new Date(value);
+  return date.getFullYear() === reference.getFullYear() && date.getMonth() === reference.getMonth();
+};
 
 export default function MyClaimsScreen() {
   const claimsQuery = useMyClaims();
+  const [filter, setFilter] = useState<Filter>('all');
   const claims = claimsQuery.data ?? [];
 
-  const active = claims.filter(claim => claim.status === 'Active');
+  const active = claims.find(claim => claim.status === 'Active');
   const past = claims.filter(claim => claim.status !== 'Active');
-  const redeemedCount = claims.filter(claim => claim.status === 'Redeemed').length;
+  const redeemed = past.filter(claim => claim.status === 'Redeemed');
+  const now = new Date();
+  const redeemedThisMonth = redeemed.filter(claim => isSameMonth(claim.redeemedAt ?? claim.createdAt, now)).length;
 
-  const sections = [
-    ...(active.length ? [{ title: 'Aktif', data: active }] : []),
-    ...(past.length ? [{ title: 'Geçmiş', data: past }] : []),
-  ];
+  // Past claims, filtered, grouped by the month they happened in (newest first, as served).
+  const shown = filter === 'all' ? past : past.filter(claim => claim.status === filter);
+  const sections: { title: string; data: MyClaim[] }[] = [];
+  for (const claim of shown) {
+    const title = monthTitle(claim.redeemedAt ?? claim.createdAt);
+    const section = sections.at(-1);
+    if (section?.title === title) section.data.push(claim);
+    else sections.push({ title, data: [claim] });
+  }
+
+  const header = (
+    <View style={styles.header}>
+      <Text style={styles.eyebrow}>DROP&apos;LARIM</Text>
+      <Text style={styles.heading}>Yakaladıkların</Text>
+
+      {claims.length > 0 && (
+        <LinearGradient colors={gradients.night} style={styles.summary}>
+          <View style={styles.orb} />
+          <SummaryStat value={claims.length} label="Yakalanan" />
+          <View style={styles.summaryDivider} />
+          <SummaryStat value={redeemed.length} label="Kullanılan" highlight />
+          <View style={styles.summaryDivider} />
+          <SummaryStat value={redeemedThisMonth} label="Bu ay" />
+        </LinearGradient>
+      )}
+
+      {active && <ActiveTicket claim={active} />}
+
+      {past.length > 0 && (
+        <View style={styles.filters}>
+          <Text style={styles.sectionLabel}>Geçmiş</Text>
+          <ChoiceChips options={FILTERS} value={filter} onChange={setFilter} />
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <Screen edges={['top']}>
@@ -49,27 +104,15 @@ export default function MyClaimsScreen() {
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.eyebrow}>DROP&apos;LARIM</Text>
-            <Text style={styles.heading}>Yakaladıkların</Text>
-            {redeemedCount > 0 && (
-              <View style={styles.stat}>
-                <Ionicons name="trophy" size={16} color={colors.warning} />
-                <Text style={styles.statText}>
-                  Şimdiye kadar <Text style={styles.statStrong}>{redeemedCount} Drop</Text> kullandın
-                </Text>
-              </View>
-            )}
-          </View>
-        }
-        renderSectionHeader={({ section }) => <Text style={styles.sectionTitle}>{section.title}</Text>}
-        renderItem={({ item }) => <ClaimCard claim={item} />}
+        ListHeaderComponent={header}
+        renderSectionHeader={({ section }) => <Text style={styles.month}>{section.title}</Text>}
+        renderItem={({ item }) => <PastClaimRow claim={item} />}
         ListEmptyComponent={
           claimsQuery.isLoading ? (
             <View style={styles.skeletons}>
-              <Skeleton height={96} radius={radius.xl} />
-              <Skeleton height={96} radius={radius.xl} />
+              <Skeleton height={110} radius={radius.xl} />
+              <Skeleton height={76} radius={radius.lg} />
+              <Skeleton height={76} radius={radius.lg} />
             </View>
           ) : claimsQuery.isError ? (
             <StateView
@@ -79,7 +122,7 @@ export default function MyClaimsScreen() {
               actionLabel="Tekrar dene"
               onAction={() => claimsQuery.refetch()}
             />
-          ) : (
+          ) : claims.length === 0 ? (
             <StateView
               icon="ticket"
               title="Henüz Drop yakalamadın"
@@ -87,7 +130,9 @@ export default function MyClaimsScreen() {
               actionLabel="Keşfet"
               onAction={() => router.navigate('/(app)/(tabs)')}
             />
-          )
+          ) : past.length > 0 ? (
+            <Text style={styles.emptyFilter}>Bu filtrede Drop yok.</Text>
+          ) : null
         }
         refreshControl={
           <RefreshControl
@@ -101,49 +146,76 @@ export default function MyClaimsScreen() {
   );
 }
 
-function ClaimCard({ claim }: { claim: MyClaim }) {
-  const remaining = useCountdown(claim.expiresAt);
-  const isActive = claim.status === 'Active' && !remaining.isExpired;
-  const badge = statusBadge[isActive || claim.status !== 'Active' ? claim.status : 'Expired'];
-
-  const content = (
-    <>
-      <Avatar name={claim.businessName} size={46} />
-      <View style={styles.cardText}>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {claim.dropTitle}
-        </Text>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {claim.businessName} · {claim.branchName}
-        </Text>
-        <View style={styles.cardFooter}>
-          <Badge label={badge.label} tone={badge.tone} live={isActive} />
-          <Text style={styles.cardDate}>
-            {isActive
-              ? `${remaining.label} kaldı`
-              : formatDate(claim.redeemedAt ?? claim.createdAt)}
-          </Text>
-        </View>
-      </View>
-      {isActive && <Ionicons name="chevron-forward" size={20} color={colors.textSubtle} />}
-    </>
+function SummaryStat({ value, label, highlight = false }: { value: number; label: string; highlight?: boolean }) {
+  return (
+    <View style={styles.summaryStat}>
+      <Text style={[styles.summaryValue, highlight && styles.summaryValueHighlight]}>{value}</Text>
+      <Text style={styles.summaryLabel}>{label}</Text>
+    </View>
   );
+}
 
-  if (!isActive) {
-    return <View style={[styles.card, styles.cardPast]}>{content}</View>;
-  }
+/** The one live reservation, styled like the ticket it opens. */
+function ActiveTicket({ claim }: { claim: MyClaim }) {
+  const remaining = useCountdown(claim.expiresAt);
+
+  if (remaining.isExpired) return null;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${claim.dropTitle}, aktif`}
+      accessibilityLabel={`${claim.dropTitle}, aktif rezervasyon, ${remaining.label} kaldı`}
       onPress={() =>
         router.push({ pathname: '/(app)/claim/[id]', params: { id: claim.claimId, expiresAt: claim.expiresAt } })
       }
-      style={({ pressed }) => [styles.card, styles.cardActive, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.ticketWrap, pressed && styles.pressed]}
     >
-      {content}
+      <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.ticket}>
+        <View style={styles.ticketTop}>
+          <Badge label="AKTİF REZERVASYON" tone="glass" live />
+          <Ionicons name="qr-code" size={22} color={colors.textOnDark} />
+        </View>
+        <Text style={styles.ticketTitle} numberOfLines={2}>
+          {claim.dropTitle}
+        </Text>
+        <Text style={styles.ticketPlace} numberOfLines={1}>
+          {claim.businessName} · {claim.branchName}
+        </Text>
+        <View style={styles.ticketBottom}>
+          <View>
+            <Text style={styles.ticketLabel}>KALAN SÜRE</Text>
+            <Text style={styles.ticketTimer}>{remaining.label}</Text>
+          </View>
+          <View style={styles.ticketCta}>
+            <Text style={styles.ticketCtaText}>Bileti aç</Text>
+            <Ionicons name="arrow-forward" size={16} color={colors.ink} />
+          </View>
+        </View>
+      </LinearGradient>
     </Pressable>
+  );
+}
+
+function PastClaimRow({ claim }: { claim: MyClaim }) {
+  const category = categoryInfo[categoryOf(claim.category)];
+  const badge = statusBadge[claim.status === 'Active' ? 'Expired' : claim.status];
+  const used = claim.status === 'Redeemed';
+
+  return (
+    <View style={[styles.row, !used && styles.rowFaded]}>
+      <View style={[styles.rowIcon, { backgroundColor: used ? category.tint : colors.surfaceMuted }]}>
+        <Ionicons name={category.icon} size={20} color={used ? '#FFFFFF' : colors.textSubtle} />
+      </View>
+      <View style={styles.rowText}>
+        <Text style={styles.rowTitle} numberOfLines={1}>
+          {claim.dropTitle}
+        </Text>
+        <Text style={styles.rowMeta} numberOfLines={1}>
+          {claim.businessName} · {formatDay(claim.redeemedAt ?? claim.createdAt)}
+        </Text>
+      </View>
+      <Badge label={badge.label} tone={badge.tone} />
+    </View>
   );
 }
 
@@ -165,80 +237,165 @@ const styles = StyleSheet.create({
     marginTop: 6,
     color: colors.text,
   },
-  stat: {
+  summary: {
+    flexDirection: 'row',
+    overflow: 'hidden',
+    marginTop: spacing.xl,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.xl,
+  },
+  orb: {
+    position: 'absolute',
+    top: -60,
+    right: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: colors.primary,
+    opacity: 0.4,
+  },
+  summaryStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  summaryValue: {
+    color: colors.textOnDark,
+    fontSize: 26,
+    fontWeight: '900',
+  },
+  summaryValueHighlight: {
+    color: colors.lime,
+  },
+  summaryLabel: {
+    marginTop: 2,
+    color: colors.textOnDarkMuted,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  ticketWrap: {
+    marginTop: spacing.lg,
+    borderRadius: radius.xl,
+    ...shadows.primary,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
+  },
+  ticket: {
+    padding: spacing.xl,
+    borderRadius: radius.xl,
+  },
+  ticketTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    alignSelf: 'flex-start',
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.warningSoft,
-    borderRadius: radius.pill,
+    justifyContent: 'space-between',
   },
-  statText: {
-    color: colors.text,
+  ticketTitle: {
+    marginTop: spacing.md,
+    color: colors.textOnDark,
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  ticketPlace: {
+    marginTop: 4,
+    color: colors.textOnDarkMuted,
     fontSize: 13,
     fontWeight: '600',
   },
-  statStrong: {
+  ticketBottom: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+  },
+  ticketLabel: {
+    ...typography.overline,
+    fontSize: 10,
+    color: colors.textOnDarkMuted,
+  },
+  ticketTimer: {
+    color: colors.textOnDark,
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
+  },
+  ticketCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    backgroundColor: colors.lime,
+    borderRadius: radius.pill,
+  },
+  ticketCtaText: {
+    color: colors.ink,
+    fontSize: 14,
     fontWeight: '900',
   },
-  sectionTitle: {
-    ...typography.heading,
+  filters: {
+    gap: spacing.md,
     marginTop: spacing.xxl,
-    marginBottom: spacing.md,
+  },
+  sectionLabel: {
+    ...typography.heading,
     color: colors.text,
+  },
+  month: {
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    ...shadows.card,
+  },
+  rowFaded: {
+    opacity: 0.75,
+  },
+  rowIcon: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+  },
+  rowText: {
+    flex: 1,
+  },
+  rowTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  rowMeta: {
+    marginTop: 2,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
   skeletons: {
     gap: spacing.md,
-    marginTop: spacing.xxl,
+    marginTop: spacing.xl,
   },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    ...shadows.card,
-  },
-  cardActive: {
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  cardPast: {
-    opacity: 0.8,
-  },
-  pressed: {
-    transform: [{ scale: 0.985 }],
-  },
-  cardText: {
-    flex: 1,
-  },
-  cardTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  cardMeta: {
-    marginTop: 3,
+  emptyFilter: {
+    marginTop: spacing.xl,
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  cardDate: {
-    flexShrink: 1,
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

@@ -38,4 +38,6 @@ export type MyClaim = {
   createdAt: string;
   expiresAt: string;
   redeemedAt?: string | null;
+  /** DropCategory name; older servers may omit it. */
+  category?: string;
 };
