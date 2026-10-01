@@ -15,4 +15,4 @@ export { Skeleton } from './components/Skeleton';
 export { StateView } from './components/StateView';
 export { TextField } from './components/TextField';
 export { haptics } from './haptics';
-export { colors, gradients, radius, shadows, spacing, typography } from './theme';
+export { colors, gradients, isDark, radius, shadows, spacing, typography } from './theme';

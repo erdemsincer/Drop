@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { type ComponentProps, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius, spacing } from '../theme';
+import { colors, isDark, radius, spacing } from '../theme';
 
 type Props = Omit<ComponentProps<typeof TextInput>, 'style'> & {
   label: string;
@@ -31,6 +31,7 @@ export function TextField({ label, icon, error, secureTextEntry, multiline, onFo
         <Ionicons name={icon} size={19} color={tint} style={multiline && styles.iconMultiline} />
 
         <TextInput
+          keyboardAppearance={isDark ? 'dark' : 'light'}
           {...props}
           secureTextEntry={secureTextEntry && hidden}
           multiline={multiline}

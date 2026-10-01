@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius } from '../theme';
+import { colors, isDark, radius } from '../theme';
 
 type Props = {
   value: string;
@@ -44,6 +44,7 @@ export function CodeInput({ value, onChange, onComplete, length = 6, error = fal
       })}
 
       <TextInput
+        keyboardAppearance={isDark ? 'dark' : 'light'}
         ref={inputRef}
         value={value}
         onChangeText={handleChange}

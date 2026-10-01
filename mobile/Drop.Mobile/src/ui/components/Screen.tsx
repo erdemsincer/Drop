@@ -3,7 +3,7 @@ import type { PropsWithChildren } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors } from '../theme';
+import { colors, isDark } from '../theme';
 
 type Props = PropsWithChildren<{
   edges?: Edge[];
@@ -17,7 +17,7 @@ export function Screen({
   children,
   edges = ['top', 'bottom'],
   background = colors.bg,
-  statusBar = 'dark',
+  statusBar = isDark ? 'light' : 'dark',
   style,
 }: Props) {
   return (

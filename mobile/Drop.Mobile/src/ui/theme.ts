@@ -1,6 +1,6 @@
-import { Platform, type ViewStyle } from 'react-native';
+import { Appearance, Platform, type ViewStyle } from 'react-native';
 
-export const colors = {
+const light = {
   bg: '#F4F4F8',
   surface: '#FFFFFF',
   surfaceMuted: '#F0EFF6',
@@ -25,7 +25,44 @@ export const colors = {
   warningSoft: '#FEF2E1',
   danger: '#EF4444',
   dangerSoft: '#FDECEC',
-} as const;
+};
+
+// Same keys, tuned for night use: deep purple surfaces instead of pure black,
+// slightly brighter brand purple so it still reads on dark cards.
+const dark: typeof light = {
+  bg: '#0E0B1A',
+  surface: '#1A1530',
+  surfaceMuted: '#241E3D',
+  border: '#2E2747',
+
+  ink: '#2C2452',
+  text: '#F4F3FA',
+  textMuted: '#A9A7BD',
+  textSubtle: '#716E8A',
+  textOnDark: '#FFFFFF',
+  textOnDarkMuted: 'rgba(255,255,255,0.68)',
+
+  primary: '#8B70FF',
+  primaryPressed: '#7A5CFF',
+  primarySoft: '#2A2150',
+
+  lime: '#C8F53C',
+
+  success: '#2BD48A',
+  successSoft: '#10301F',
+  warning: '#FFA43A',
+  warningSoft: '#33240C',
+  danger: '#FF6464',
+  dangerSoft: '#3A1518',
+};
+
+/**
+ * Follows the phone's light/dark setting. Styles are built once at startup
+ * (StyleSheet.create), so switching the phone's mode applies on the next launch.
+ */
+export const isDark = Appearance.getColorScheme() === 'dark';
+
+export const colors = isDark ? dark : light;
 
 export const gradients = {
   primary: ['#8466FF', '#5B37F2'] as const,
@@ -72,8 +109,9 @@ const shadow = (color: string, opacity: number, radiusValue: number, y: number, 
     default: { elevation },
   })!;
 
+// On dark surfaces a soft purple shadow would glow; a deeper black one reads as depth.
 export const shadows = {
-  card: shadow('#1B1340', 0.07, 16, 6, 3),
-  raised: shadow('#1B1340', 0.14, 24, 12, 8),
+  card: isDark ? shadow('#000000', 0.35, 16, 6, 3) : shadow('#1B1340', 0.07, 16, 6, 3),
+  raised: isDark ? shadow('#000000', 0.5, 24, 12, 8) : shadow('#1B1340', 0.14, 24, 12, 8),
   primary: shadow('#6D4AFF', 0.35, 16, 8, 6),
 };
