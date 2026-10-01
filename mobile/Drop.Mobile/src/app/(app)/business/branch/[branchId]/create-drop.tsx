@@ -6,6 +6,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { getApiError } from '@/api/getApiError';
 import { CategoryPicker } from '@/features/businesses/components/CategoryPicker';
 import { StartTimePicker } from '@/features/businesses/components/StartTimePicker';
+import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
 import { useCreateDrop } from '@/features/businesses/hooks/useCreateDrop';
 import { useUpdateDrop } from '@/features/businesses/hooks/useUpdateDrop';
@@ -24,6 +25,8 @@ import {
   toUpdateDropRequest,
   validateDropForm,
 } from '@/features/businesses/utils/dropForm';
+import { DropCard } from '@/features/drops/components/DropCard';
+import type { NearbyDrop } from '@/features/drops/types/drop';
 import {
   Button,
   ChoiceChips,
@@ -80,6 +83,8 @@ export default function DropFormScreen() {
     setAppliedTemplateId(drop.id);
   };
   const [errors, setErrors] = useState<DropFormErrors>({});
+  const branch = useBranch(branchId).data;
+  const preview = usePreviewDrop(values, branch?.businessName, branch?.name);
   const createMutation = useCreateDrop(branchId);
   const updateMutation = useUpdateDrop(branchId);
   const mutation = isEdit ? updateMutation : createMutation;
@@ -275,6 +280,16 @@ export default function DropFormScreen() {
             </>
           )}
 
+          <View style={styles.preview}>
+            <View style={styles.previewHeader}>
+              <Ionicons name="eye" size={16} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Müşteriler böyle görecek</Text>
+            </View>
+            <View pointerEvents="none">
+              <DropCard drop={preview} onPress={() => {}} />
+            </View>
+          </View>
+
           {apiError && !apiError.errors && (
             <Notice message={getBusinessErrorMessage(apiError.code, apiError.detail)} />
           )}
@@ -292,6 +307,33 @@ export default function DropFormScreen() {
       </KeyboardAvoidingView>
     </Screen>
   );
+}
+
+/** The form as a feed card, so the owner sees the deal the way a customer will. */
+function usePreviewDrop(values: DropFormValues, businessName = 'İşletmen', branchName = 'Şuben'): NearbyDrop {
+  // Counted from when the form opened, so the preview countdown ticks instead of resetting on every keystroke.
+  const [openedAt] = useState(() => Date.now());
+  const endsAt = new Date(openedAt + values.durationMinutes * 60_000).toISOString();
+  const capacity = Math.max(1, Number(values.capacity) || 1);
+  const spend = Number(values.minimumSpend.trim().replace(',', '.'));
+
+  return {
+    id: 'preview',
+    branchId: 'preview',
+    businessName,
+    branchName,
+    title: values.title.trim() || 'Fırsatının başlığı burada görünecek',
+    description: values.description.trim() || null,
+    minimumSpend: values.minimumSpend.trim() && Number.isFinite(spend) ? spend : null,
+    capacity,
+    claimedCount: 0,
+    remainingCapacity: capacity,
+    distanceMeters: 250,
+    endsAt,
+    category: values.category,
+    latitude: 0,
+    longitude: 0,
+  };
 }
 
 function Section({
@@ -321,6 +363,16 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
     padding: spacing.xl,
+  },
+  preview: {
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginLeft: spacing.xs,
   },
   section: {
     gap: spacing.md,
