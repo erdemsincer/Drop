@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { BusinessDropCard } from '@/features/businesses/components/BusinessDropCard';
+import { ScheduleList } from '@/features/businesses/components/ScheduleList';
 import { BusinessStatusNotice } from '@/features/businesses/components/BusinessStatusNotice';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
@@ -216,6 +217,8 @@ export default function BranchDashboardScreen() {
           </View>
         )
       )}
+
+      {branch?.canManage && <ScheduleList branchId={branchId} />}
     </View>
   );
 

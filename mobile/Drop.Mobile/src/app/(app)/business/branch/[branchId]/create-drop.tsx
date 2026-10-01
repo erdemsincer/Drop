@@ -6,6 +6,9 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { getApiError } from '@/api/getApiError';
 import { CategoryPicker } from '@/features/businesses/components/CategoryPicker';
 import { PhotoPicker } from '@/features/businesses/components/PhotoPicker';
+import { RepeatPicker } from '@/features/businesses/components/RepeatPicker';
+import { useScheduleMutations } from '@/features/businesses/hooks/useSchedules';
+import type { Repeat } from '@/features/businesses/utils/repeat';
 import { StartTimePicker } from '@/features/businesses/components/StartTimePicker';
 import { useBranch } from '@/features/businesses/hooks/useBranch';
 import { useBranchDrops } from '@/features/businesses/hooks/useBranchDrops';
@@ -91,7 +94,10 @@ export default function DropFormScreen() {
   const preview = usePreviewDrop(values, branch?.businessName, branch?.name);
   const createMutation = useCreateDrop(branchId);
   const updateMutation = useUpdateDrop(branchId);
-  const mutation = isEdit ? updateMutation : createMutation;
+  const scheduleMutation = useScheduleMutations(branchId).create;
+  // A repeat turns "publish this drop" into "publish this drop every … at …".
+  const [repeat, setRepeat] = useState<Repeat | null>(null);
+  const mutation = isEdit ? updateMutation : repeat ? scheduleMutation : createMutation;
 
   const apiError = mutation.error ? getApiError(mutation.error) : null;
 
@@ -132,6 +138,9 @@ export default function DropFormScreen() {
 
     if (isEdit && dropId) {
       updateMutation.mutate({ dropId, request: toUpdateDropRequest(values) }, done);
+    } else if (repeat) {
+      const { startsAt: _ignored, ...request } = toCreateDropRequest(values);
+      scheduleMutation.mutate({ ...request, startTime: repeat.time, days: repeat.days }, done);
     } else {
       createMutation.mutate(toCreateDropRequest(values), done);
     }
@@ -286,13 +295,26 @@ export default function DropFormScreen() {
             </View>
           ) : (
             <>
-            <Section title="Ne zaman başlasın?" icon="calendar">
-              <StartTimePicker
-                value={values.startsAt}
-                onChange={value => set('startsAt', value)}
-                error={errorFor('startsAt')}
+            <Section title="Tekrarlansın mı?" icon="repeat">
+              <RepeatPicker
+                value={repeat}
+                onChange={value => {
+                  setRepeat(value);
+                  // The repeat's time of day replaces a one-off start.
+                  if (value) set('startsAt', null);
+                }}
               />
             </Section>
+
+            {!repeat && (
+              <Section title="Ne zaman başlasın?" icon="calendar">
+                <StartTimePicker
+                  value={values.startsAt}
+                  onChange={value => set('startsAt', value)}
+                  error={errorFor('startsAt')}
+                />
+              </Section>
+            )}
 
             <Section title="Drop ne kadar yayında kalsın?" icon="hourglass">
               <ChoiceChips
@@ -336,8 +358,16 @@ export default function DropFormScreen() {
 
         <View style={styles.footer}>
           <Button
-            title={isEdit ? 'Değişiklikleri Kaydet' : values.startsAt ? "Drop'u Planla" : "Drop'u Yayınla"}
-            icon={isEdit ? 'checkmark-circle' : values.startsAt ? 'calendar' : 'rocket'}
+            title={
+              isEdit
+                ? 'Değişiklikleri Kaydet'
+                : repeat
+                  ? "Tekrarlayan Drop'u Kur"
+                  : values.startsAt
+                    ? "Drop'u Planla"
+                    : "Drop'u Yayınla"
+            }
+            icon={isEdit ? 'checkmark-circle' : repeat ? 'repeat' : values.startsAt ? 'calendar' : 'rocket'}
             loading={mutation.isPending}
             onPress={handlePublish}
           />
