@@ -25,6 +25,7 @@ public sealed class CreateClaimService
 
     public async Task<CreateClaimResponse> ExecuteAsync(
         Guid dropId,
+        CreateClaimRequest? request = null,
         CancellationToken cancellationToken = default)
     {
         if (dropId == Guid.Empty)
@@ -38,6 +39,8 @@ public sealed class CreateClaimService
             dropId,
             userId,
             _timeProvider.GetUtcNow(),
+            request?.Latitude,
+            request?.Longitude,
             cancellationToken);
 
         _claimCreatedNotifier.Enqueue(result.ClaimId);

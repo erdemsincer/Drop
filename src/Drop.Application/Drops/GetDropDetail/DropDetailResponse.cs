@@ -23,4 +23,9 @@ public sealed record DropDetailResponse(
     /// <summary>Average stars across the business's used drops (one decimal); null until rated.</summary>
     double? BusinessRating,
     int BusinessRatingCount,
-    Guid? PhotoId);
+    Guid? PhotoId,
+    bool IsMystery,
+    string? Hint,
+    bool IsLocked,
+    /// <summary>From the caller's position when it was sent; mystery drops unlock within 150 m.</summary>
+    int? DistanceMeters);

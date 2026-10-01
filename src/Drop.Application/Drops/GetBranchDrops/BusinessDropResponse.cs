@@ -23,4 +23,6 @@ public sealed record BusinessDropResponse(
     DropCategory Category,
     decimal? OriginalPrice,
     decimal? DealPrice,
-    Guid? PhotoId);
+    Guid? PhotoId,
+    bool IsMystery,
+    string? Hint);

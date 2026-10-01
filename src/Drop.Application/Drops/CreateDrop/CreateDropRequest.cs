@@ -13,4 +13,6 @@ public sealed record CreateDropRequest(
     DropCategory? Category = null,
     decimal? OriginalPrice = null,
     decimal? DealPrice = null,
-    Guid? PhotoId = null);
+    Guid? PhotoId = null,
+    bool IsMystery = false,
+    string? Hint = null);

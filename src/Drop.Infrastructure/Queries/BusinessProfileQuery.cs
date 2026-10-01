@@ -1,3 +1,4 @@
+using Drop.Application.Drops;
 using Drop.Application.Businesses.Profile;
 using Drop.Domain.Businesses;
 using Drop.Domain.Drops;
@@ -81,6 +82,7 @@ internal sealed class BusinessProfileQuery : IBusinessProfileQuery
                 drop.OriginalPrice,
                 drop.DealPrice,
                 drop.PhotoId,
+                drop.IsMystery,
                 Taken = _dbContext.Claims.Count(claim =>
                     claim.DropId == drop.Id
                     && (claim.Status == ClaimStatus.Redeemed || (claim.Status == ClaimStatus.Active && claim.ExpiresAt > now))),
@@ -101,7 +103,8 @@ internal sealed class BusinessProfileQuery : IBusinessProfileQuery
                 row.EndsAt,
                 row.OriginalPrice,
                 row.DealPrice,
-                row.PhotoId))).ToList();
+                row.PhotoId,
+                row.IsMystery))).ToList();
 
         return new BusinessProfileResponse(
             business.Id,
@@ -112,7 +115,7 @@ internal sealed class BusinessProfileQuery : IBusinessProfileQuery
             ratings?.Count ?? 0,
             redeemedCount,
             branches,
-            mapped.Where(x => x.Live).Select(x => x.Drop).ToList(),
-            mapped.Where(x => !x.Live).Select(x => x.Drop).ToList());
+            mapped.Where(x => x.Live).Select(x => MysteryMask.Apply(x.Drop)).ToList(),
+            mapped.Where(x => !x.Live).Select(x => MysteryMask.Apply(x.Drop)).ToList());
     }
 }

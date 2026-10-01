@@ -41,6 +41,9 @@ internal sealed class DropConfiguration
             .HasForeignKey(x => x.ScheduleId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.Property(x => x.Hint)
+            .HasMaxLength(Domain.Drops.Drop.MaxHintLength);
+
         builder.Property(x => x.Capacity)
             .IsRequired();
 

@@ -51,6 +51,10 @@ public sealed class CreateDropRequestValidator
             .IsInEnum()
             .WithErrorCode("category.invalid");
 
+        RuleFor(x => x.Hint)
+            .MaximumLength(Domain.Drops.Drop.MaxHintLength)
+            .WithErrorCode("hint.too_long");
+
         RuleFor(x => x.OriginalPrice)
             .NotNull()
             .WithErrorCode("pricing.incomplete")

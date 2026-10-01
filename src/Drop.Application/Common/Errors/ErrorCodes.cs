@@ -53,6 +53,7 @@ public static class ErrorCodes
         public const string NotActive = "drop.not_active";
         public const string SoldOut = "drop.sold_out";
         public const string PhotoNotFound = "drop.photo_not_found";
+        public const string Locked = "drop.locked";
     }
 
     public static class Claim

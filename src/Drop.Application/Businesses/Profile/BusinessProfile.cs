@@ -22,7 +22,8 @@ public sealed record BusinessProfileDrop(
     DateTimeOffset EndsAt,
     decimal? OriginalPrice,
     decimal? DealPrice,
-    Guid? PhotoId);
+    Guid? PhotoId,
+    bool IsMystery);
 
 /// <summary>The customer-facing page of a business: who they are, where, and what's on.</summary>
 public sealed record BusinessProfileResponse(

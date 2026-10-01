@@ -39,13 +39,18 @@ public sealed class DropsCustomerController : ControllerBase
     }
 
     [HttpGet("{dropId:guid}")]
+    /// <summary>Pass the caller's position so a nearby mystery drop can reveal itself.</summary>
     public async Task<ActionResult<DropDetailResponse>> GetDetail(
         Guid dropId,
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
         [FromServices] GetDropDetailService service,
         CancellationToken cancellationToken)
     {
         var result = await service.ExecuteAsync(
             dropId,
+            latitude,
+            longitude,
             cancellationToken);
 
         return Ok(result);

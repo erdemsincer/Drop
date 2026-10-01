@@ -15,7 +15,7 @@ public sealed class GetNearbyDropsService
         _timeProvider = timeProvider;
     }
 
-    public Task<IReadOnlyList<NearbyDropResponse>> ExecuteAsync(
+    public async Task<IReadOnlyList<NearbyDropResponse>> ExecuteAsync(
         double latitude,
         double longitude,
         double radiusKm,
@@ -31,12 +31,15 @@ public sealed class GetNearbyDropsService
         if (radiusKm is <= 0 or > MaxRadiusKm)
             throw new ArgumentOutOfRangeException(nameof(radiusKm));
 
-        return _query.ExecuteAsync(
+        var drops = await _query.ExecuteAsync(
             latitude,
             longitude,
             radiusKm,
             _timeProvider.GetUtcNow(),
             category,
             cancellationToken);
+
+        // A locked mystery drop is filtered by its real category but shown as "Other".
+        return drops.Select(MysteryMask.Apply).ToList();
     }
 }

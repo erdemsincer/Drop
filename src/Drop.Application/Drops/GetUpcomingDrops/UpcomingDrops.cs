@@ -14,7 +14,8 @@ public sealed record UpcomingDropResponse(
     DateTimeOffset EndsAt,
     decimal? OriginalPrice,
     decimal? DealPrice,
-    Guid? PhotoId);
+    Guid? PhotoId,
+    bool IsMystery);
 
 public interface IUpcomingDropQuery
 {
@@ -37,10 +38,13 @@ public sealed class GetUpcomingDropsService
         _timeProvider = timeProvider;
     }
 
-    public Task<IReadOnlyList<UpcomingDropResponse>> ExecuteAsync(
+    public async Task<IReadOnlyList<UpcomingDropResponse>> ExecuteAsync(
         double latitude,
         double longitude,
         double radiusKm,
-        CancellationToken cancellationToken = default) =>
-        _query.ExecuteAsync(latitude, longitude, radiusKm, _timeProvider.GetUtcNow(), cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        var drops = await _query.ExecuteAsync(latitude, longitude, radiusKm, _timeProvider.GetUtcNow(), cancellationToken);
+        return drops.Select(MysteryMask.Apply).ToList();
+    }
 }

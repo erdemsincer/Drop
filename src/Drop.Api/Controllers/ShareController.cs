@@ -49,7 +49,8 @@ public sealed class ShareController : ControllerBase
         DropDetailResponse? drop;
         try
         {
-            drop = await service.ExecuteAsync(id, cancellationToken);
+            // No location here: a mystery drop is shared as a sealed teaser.
+            drop = await service.ExecuteAsync(id, cancellationToken: cancellationToken);
         }
         catch (NotFoundException)
         {
@@ -75,7 +76,9 @@ public sealed class ShareController : ControllerBase
                 """);
         }
 
-        var (label, tint) = Categories.GetValueOrDefault(drop.Category, Categories["Other"]);
+        var (label, tint) = drop.IsMystery
+            ? ("🎁 GİZLİ DROP", "#5B37F2")
+            : Categories.GetValueOrDefault(drop.Category, Categories["Other"]);
         string E(string? value) => WebUtility.HtmlEncode(value ?? string.Empty);
 
         var remaining = drop.RemainingCapacity > 0 ? $"{drop.RemainingCapacity}/{drop.Capacity}" : "Tükendi";

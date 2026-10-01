@@ -67,7 +67,7 @@ internal sealed class DropLiveDispatcher : BackgroundService
             join branch in dbContext.Branches on d.BranchId equals branch.Id
             join business in dbContext.Businesses on branch.BusinessId equals business.Id
             where d.Id == dropId
-            select new { d.Id, d.Title, d.Status, d.EndsAt, BusinessId = business.Id, BusinessName = business.Name, BranchName = branch.Name }
+            select new { d.Id, d.Title, d.Status, d.EndsAt, d.IsMystery, BusinessId = business.Id, BusinessName = business.Name, BranchName = branch.Name }
         ).AsNoTracking().SingleOrDefaultAsync(cancellationToken);
 
         // Cancelled or over before we got to it: nothing worth announcing.
@@ -90,11 +90,14 @@ internal sealed class DropLiveDispatcher : BackgroundService
 
         var data = new Dictionary<string, string> { ["dropId"] = drop.Id.ToString() };
         var messages = tokens
-            .Select(token => new PushMessage(
-                token,
-                $"{drop.BusinessName} yeni bir Drop yayınladı ⚡",
-                $"{drop.Title} · {drop.BranchName}",
-                data))
+            .Select(token => drop.IsMystery
+                // The deal stays a secret until they get there.
+                ? new PushMessage(token, $"{drop.BusinessName} gizli bir Drop bıraktı 🎁", "Yaklaş ve kutuyu aç!", data)
+                : new PushMessage(
+                    token,
+                    $"{drop.BusinessName} yeni bir Drop yayınladı ⚡",
+                    $"{drop.Title} · {drop.BranchName}",
+                    data))
             .ToList();
 
         var results = await sender.SendAsync(messages, cancellationToken);

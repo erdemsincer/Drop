@@ -78,7 +78,11 @@ internal sealed class DropDetailQuery : IDropDetailQuery
                 ) AS "BusinessRatingCount",
                 d."OriginalPrice" AS "OriginalPrice",
                 d."DealPrice" AS "DealPrice",
-                d."PhotoId" AS "PhotoId"
+                d."PhotoId" AS "PhotoId",
+                d."IsMystery" AS "IsMystery",
+                d."Hint" AS "Hint",
+                false AS "IsLocked",
+                NULL::int AS "DistanceMeters"
             FROM drops d
             INNER JOIN branches b ON b."Id" = d."BranchId"
             INNER JOIN businesses bus ON bus."Id" = b."BusinessId"

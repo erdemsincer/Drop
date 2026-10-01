@@ -40,7 +40,8 @@ internal sealed class UpcomingDropQuery : IUpcomingDropQuery
                 d."EndsAt" AS "EndsAt",
                 d."OriginalPrice" AS "OriginalPrice",
                 d."DealPrice" AS "DealPrice",
-                d."PhotoId" AS "PhotoId"
+                d."PhotoId" AS "PhotoId",
+                d."IsMystery" AS "IsMystery"
             FROM drops d
             INNER JOIN branches b ON b."Id" = d."BranchId"
             INNER JOIN businesses bus ON bus."Id" = b."BusinessId"

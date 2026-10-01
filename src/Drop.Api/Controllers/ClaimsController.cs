@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Drop.Application.Authentication;
 using Drop.Application.Claims.CancelClaim;
 using Drop.Application.Claims.RateClaim;
@@ -93,10 +94,11 @@ public sealed class DropClaimsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CreateClaimResponse>> Create(
         Guid dropId,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CreateClaimRequest? request,
         [FromServices] CreateClaimService service,
         CancellationToken cancellationToken)
     {
-        var response = await service.ExecuteAsync(dropId, cancellationToken);
+        var response = await service.ExecuteAsync(dropId, request, cancellationToken);
 
         return Created($"/api/claims/{response.ClaimId}", response);
     }

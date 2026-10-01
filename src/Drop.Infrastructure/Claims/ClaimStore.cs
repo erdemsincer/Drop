@@ -21,6 +21,8 @@ internal sealed class ClaimStore : IClaimStore
         Guid dropId,
         Guid userId,
         DateTimeOffset now,
+        double? latitude,
+        double? longitude,
         CancellationToken cancellationToken = default)
     {
         await using var transaction =
@@ -54,6 +56,22 @@ internal sealed class ClaimStore : IClaimStore
             throw new ConflictException(
                 ErrorCodes.Drop.NotActive,
                 "Drop is not active.");
+        }
+
+        if (drop.IsMystery)
+        {
+            var branch = await _dbContext.Branches
+                .Where(x => x.Id == drop.BranchId)
+                .Select(x => new { x.Location.Latitude, x.Location.Longitude })
+                .SingleAsync(cancellationToken);
+
+            // Checked here, not only in the app: the hunt is the point.
+            if (!Application.Drops.MysteryMask.IsWithinReach(branch.Latitude, branch.Longitude, latitude, longitude))
+            {
+                throw new ConflictException(
+                    ErrorCodes.Drop.Locked,
+                    $"Get within {Domain.Drops.Drop.MysteryUnlockMeters} m to open this mystery drop.");
+            }
         }
 
         var alreadyClaimed =

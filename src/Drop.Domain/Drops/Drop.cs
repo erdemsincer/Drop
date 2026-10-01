@@ -75,6 +75,29 @@ public sealed class Drop : Entity
 
     public void SetPhoto(Guid? photoId) => PhotoId = photoId == Guid.Empty ? null : photoId;
 
+    /// <summary>How close a customer must be for a mystery drop to reveal itself.</summary>
+    public const int MysteryUnlockMeters = 150;
+
+    public const int MaxHintLength = 140;
+
+    /// <summary>
+    /// A treasure-hunt drop: only its place and a hint are shown until the
+    /// customer is within <see cref="MysteryUnlockMeters"/>.
+    /// </summary>
+    public bool IsMystery { get; private set; }
+
+    /// <summary>The teaser shown while a mystery drop is still locked.</summary>
+    public string? Hint { get; private set; }
+
+    public void MakeMystery(string? hint)
+    {
+        if (hint?.Trim().Length > MaxHintLength)
+            throw new ArgumentOutOfRangeException(nameof(hint));
+
+        IsMystery = true;
+        Hint = string.IsNullOrWhiteSpace(hint) ? null : hint.Trim();
+    }
+
     /// <summary>The recurring schedule that created this drop, if any.</summary>
     public Guid? ScheduleId { get; private set; }
 

@@ -87,7 +87,11 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
 
                 d."OriginalPrice" AS "OriginalPrice",
                 d."DealPrice" AS "DealPrice",
-                d."PhotoId" AS "PhotoId"
+                d."PhotoId" AS "PhotoId",
+                d."IsMystery" AS "IsMystery",
+                d."Hint" AS "Hint",
+                -- Locking depends on the caller's distance; MysteryMask decides.
+                false AS "IsLocked"
 
             FROM drops d
 

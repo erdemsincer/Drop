@@ -21,4 +21,8 @@ public sealed record NearbyDropResponse(
     /// <summary>Average stars across the business's used drops (one decimal); null until rated.</summary>
     double? BusinessRating,
     int BusinessRatingCount,
-    Guid? PhotoId);
+    Guid? PhotoId,
+    bool IsMystery,
+    string? Hint,
+    /// <summary>A mystery drop seen from too far: the deal is hidden (see MysteryMask).</summary>
+    bool IsLocked);

@@ -107,6 +107,11 @@ public sealed class CreateDropService
 
         drop.SetPhoto(request.PhotoId);
 
+        if (request.IsMystery)
+        {
+            drop.MakeMystery(request.Hint);
+        }
+
         var now = _timeProvider.GetUtcNow();
 
         // A start within the next minute is treated as "now": the sweep runs every minute anyway.

@@ -16,8 +16,11 @@ public sealed class GetDropDetailService
         _timeProvider = timeProvider;
     }
 
+    /// <param name="latitude">The caller's position, if shared; mystery drops stay locked without it.</param>
     public async Task<DropDetailResponse> ExecuteAsync(
         Guid dropId,
+        double? latitude = null,
+        double? longitude = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _query.GetAsync(
@@ -32,6 +35,6 @@ public sealed class GetDropDetailService
                 "Drop was not found.");
         }
 
-        return result;
+        return Application.Drops.MysteryMask.Apply(result, latitude, longitude);
     }
 }
