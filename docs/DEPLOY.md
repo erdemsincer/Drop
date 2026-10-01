@@ -77,5 +77,5 @@ olmadan gönderir. Expo projesinde "enhanced push security" açarsan Railway'e
 
 - Hata takibi: https://sentry.io'da iki proje aç (ASP.NET Core ve React Native).
   API için Railway'e `Sentry__Dsn`, mobil için `eas.json`'daki `EXPO_PUBLIC_SENTRY_DSN`
-  alanlarına DSN'leri yaz. Boş bırakılırsa raporlama kapalıdır; Expo Go'da hiç yüklenmez.
+  profillerine `EXPO_PUBLIC_SENTRY_DSN` ekleyip DSN.leri yaz. Boş bırakılırsa raporlama kapalıdır; Expo Go'da hiç yüklenmez.
 - Yedek: Railway PostGIS servisinde **Backups**'ı aç.

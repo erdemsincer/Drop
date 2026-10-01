@@ -7,8 +7,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://drop-production-6ba3.up.railway.app",
-        "EXPO_PUBLIC_SENTRY_DSN": ""
+        "EXPO_PUBLIC_API_URL": "https://drop-production-6ba3.up.railway.app"
       },
       "android": {
         "buildType": "apk"
@@ -17,8 +16,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://drop-production-6ba3.up.railway.app",
-        "EXPO_PUBLIC_SENTRY_DSN": ""
+        "EXPO_PUBLIC_API_URL": "https://drop-production-6ba3.up.railway.app"
       }
     }
   },
