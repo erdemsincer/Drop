@@ -6,6 +6,9 @@ import type { ComponentProps } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { BadgeGrid } from '@/features/badges/components/BadgeGrid';
+import { NewBadgeModal } from '@/features/badges/components/NewBadgeModal';
+import { useBadges } from '@/features/badges/hooks/useBadges';
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import { roleLabels } from '@/features/businesses/utils/businessLabels';
 import { useFollows, useToggleFollow } from '@/features/follows/hooks/useFollows';
@@ -60,6 +63,8 @@ export default function ProfileScreen() {
   const toggleFollow = useToggleFollow();
 
   const me = meQuery.data;
+  const badges = useBadges(me?.id);
+  const earnedCount = badges.badges.filter(badge => badge.earned).length;
   const fullName = me ? `${me.firstName} ${me.lastName}` : '';
   const businesses = businessesQuery.data ?? [];
   const redeemed = stats?.redeemed ?? 0;
@@ -155,6 +160,12 @@ export default function ProfileScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textSubtle} />
           </Pressable>
+        )}
+
+        {badges.badges.length > 0 && (
+          <Section title={`Rozetler · ${earnedCount}/${badges.badges.length}`}>
+            <BadgeGrid badges={badges.badges} />
+          </Section>
         )}
 
         {businesses.length > 0 && (
@@ -256,6 +267,8 @@ export default function ProfileScreen() {
           <Text style={styles.footerText}>drop · v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
         </View>
       </ScrollView>
+
+      <NewBadgeModal badges={badges.fresh} onClose={() => void badges.markSeen()} />
     </Screen>
   );
 }

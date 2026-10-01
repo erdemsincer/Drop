@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import type { ComponentProps } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getApiError } from '@/api/getApiError';
@@ -11,6 +11,7 @@ import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { openDirections } from '@/utils/openDirections';
 import {
   Badge,
+  Confetti,
   Button,
   IconButton,
   ProgressBar,
@@ -27,11 +28,14 @@ import {
 const URGENT_SECONDS = 3 * 60;
 
 export default function ClaimScreen() {
-  const { id, expiresAt, durationMinutes } = useLocalSearchParams<{
+  const { id, expiresAt, durationMinutes, celebrate } = useLocalSearchParams<{
     id: string;
     expiresAt: string;
     durationMinutes?: string;
+    /** "1" right after catching the drop: confetti once. */
+    celebrate?: string;
   }>();
+  const [burst] = useState(celebrate === '1' ? 1 : 0);
 
   const remaining = useCountdown(expiresAt);
   // Location for "Yol tarifi" comes from the active claim (the route only carries the id).
@@ -198,6 +202,7 @@ export default function ClaimScreen() {
           </>
         )}
       </View>
+      <Confetti burstKey={burst} />
     </Screen>
   );
 }

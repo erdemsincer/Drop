@@ -9,7 +9,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getApiError } from '@/api/getApiError';
-import { useCreateClaim } from '@/features/claims/hooks/useCreateClaim';
+import { useCatchDrop } from '@/features/claims/hooks/useCatchDrop';
 import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessage';
 import { DealPrice } from '@/features/drops/components/DealPrice';
 import { DropLocationCard } from '@/features/drops/components/DropLocationCard';
@@ -23,7 +23,6 @@ import { categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import { formatStartsAt } from '@/features/drops/utils/formatStartsAt';
 import { dealOf } from '@/features/drops/utils/pricing';
 import { shareDrop } from '@/features/drops/utils/shareDrop';
-import { scheduleClaimReminder } from '@/features/notifications/claimReminders';
 import {
   Avatar,
   Badge,
@@ -78,7 +77,7 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
   const insets = useSafeAreaInsets();
   const remaining = useCountdown(drop.endsAt);
   const untilStart = useCountdown(drop.startsAt);
-  const claimMutation = useCreateClaim();
+  const { catchDrop, mutation: claimMutation } = useCatchDrop();
   const reminders = useDropReminders();
   const deal = dealOf(drop);
 
@@ -90,28 +89,7 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
   const unavailable = soldOut || ended || notStarted;
   const reminderOn = reminders.isSet(drop.id);
 
-  const handleClaim = () => {
-    haptics.press();
-
-    claimMutation.mutate(drop.id, {
-      onSuccess: claim => {
-        haptics.success();
-        void scheduleClaimReminder(
-          { claimId: claim.claimId, expiresAt: claim.expiresAt, dropTitle: drop.title },
-          true,
-        );
-        router.replace({
-          pathname: '/(app)/claim/[id]',
-          params: {
-            id: claim.claimId,
-            expiresAt: claim.expiresAt,
-            durationMinutes: String(drop.claimDurationMinutes),
-          },
-        });
-      },
-      onError: () => haptics.error(),
-    });
-  };
+  const handleClaim = () => catchDrop(drop);
 
   const claimedRatio = drop.capacity > 0 ? drop.claimedCount / drop.capacity : 1;
   const category = categoryInfo[categoryOf(drop.category)];

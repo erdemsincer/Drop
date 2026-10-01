@@ -12,6 +12,7 @@ import { DropCard } from '@/features/drops/components/DropCard';
 import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
 import { DropsMap } from '@/features/drops/components/DropsMap';
 import { EmptyRadar } from '@/features/drops/components/EmptyRadar';
+import { StoryRings } from '@/features/drops/components/StoryRings';
 import { UpcomingStrip } from '@/features/drops/components/UpcomingStrip';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
 import { type DropSort, SortMenu, sortDrops } from '@/features/drops/components/SortMenu';
@@ -159,6 +160,13 @@ export default function HomeScreen() {
   const header = (
     <View>
       {topBar}
+
+      <StoryRings
+        drops={allDrops}
+        onOpen={index =>
+          router.push({ pathname: '/(app)/stories', params: { start: String(index), radiusKm: String(radiusKm) } })
+        }
+      />
 
       <Text style={styles.eyebrow}>
         {me?.firstName ? `MERHABA ${me.firstName.toLocaleUpperCase('tr-TR')}` : 'ŞU AN YAKININDA'}
