@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/apiClient';
 
-import type { DropDetail, NearbyDrop } from '../types/drop';
+import type { DropDetail, NearbyDrop, UpcomingDrop } from '../types/drop';
 
 type GetNearbyDropsParams = {
   latitude: number;
@@ -35,6 +35,15 @@ export const getDropDetail = async (
     await apiClient.get<DropDetail>(
       `/api/drops/${dropId}`,
     );
+
+  return response.data;
+};
+
+/** Scheduled drops within the radius, starting in the next week. */
+export const getUpcomingDrops = async ({ latitude, longitude, radiusKm = 5 }: GetNearbyDropsParams) => {
+  const response = await apiClient.get<UpcomingDrop[]>('/api/drops/upcoming', {
+    params: { latitude, longitude, radiusKm },
+  });
 
   return response.data;
 };

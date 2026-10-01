@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -16,11 +16,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { StarRating } from '@/features/claims/components/StarRating';
+import { useRateClaim } from '@/features/claims/hooks/useRateClaim';
 import { Button, colors, gradients, radius, spacing, typography } from '@/ui';
 
 export default function RedeemedScreen() {
   const { id, redeemedAt } = useLocalSearchParams<{ id: string; redeemedAt?: string }>();
   const insets = useSafeAreaInsets();
+
+  const rate = useRateClaim();
+  const [stars, setStars] = useState<number | null>(null);
 
   const checkScale = useSharedValue(0);
   const ring = useSharedValue(0);
@@ -88,6 +93,20 @@ export default function RedeemedScreen() {
             </View>
           </Animated.View>
         )}
+
+        {/* Asked right away, while the visit is fresh; the claims tab offers it again later. */}
+        <Animated.View entering={FadeInDown.delay(560).duration(450)} style={styles.rating}>
+          <Text style={styles.ratingTitle}>{stars ? 'Teşekkürler! 💚' : 'Nasıldı?'}</Text>
+          <StarRating
+            value={stars}
+            size={34}
+            onChange={value => {
+              setStars(value);
+              rate.mutate({ claimId: id, stars: value });
+            }}
+          />
+          {!stars && <Text style={styles.ratingHint}>Puanın diğer kullanıcılara yol gösterir.</Text>}
+        </Animated.View>
       </View>
 
       <View style={[styles.actions, { paddingBottom: insets.bottom + spacing.lg }]}>
@@ -100,6 +119,25 @@ export default function RedeemedScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  rating: {
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    padding: spacing.lg,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderRadius: radius.xl,
+  },
+  ratingTitle: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  ratingHint: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    fontWeight: '600',
   },
   content: {
     flex: 1,

@@ -8,10 +8,11 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import { roleLabels } from '@/features/businesses/utils/businessLabels';
-import { useMyClaims } from '@/features/claims/hooks/useMyClaims';
 import { useFollows, useToggleFollow } from '@/features/follows/hooks/useFollows';
 import { useMe } from '@/features/users/hooks/useMe';
+import { useMyStats } from '@/features/users/hooks/useMyStats';
 import { useAuth } from '@/providers/AuthProvider';
+import { formatCurrency } from '@/utils/formatCurrency';
 import { openLegal } from '@/utils/openLegal';
 import {
   Avatar,
@@ -54,15 +55,14 @@ export default function ProfileScreen() {
   const { signOut } = useAuth();
   const meQuery = useMe();
   const businessesQuery = useMyBusinesses();
-  const claimsQuery = useMyClaims();
+  const stats = useMyStats().data;
   const follows = useFollows().data ?? [];
   const toggleFollow = useToggleFollow();
 
   const me = meQuery.data;
   const fullName = me ? `${me.firstName} ${me.lastName}` : '';
   const businesses = businessesQuery.data ?? [];
-  const claims = claimsQuery.data ?? [];
-  const redeemed = claims.filter(claim => claim.status === 'Redeemed').length;
+  const redeemed = stats?.redeemed ?? 0;
   const tier = tierFor(redeemed);
 
   const confirmLogout = () =>
@@ -97,6 +97,21 @@ export default function ProfileScreen() {
             </>
           )}
 
+          {stats && (
+            <View style={styles.savings}>
+              <Ionicons name="wallet" size={18} color={colors.ink} />
+              <Text style={styles.savingsText}>
+                {stats.saved > 0 ? (
+                  <>
+                    Drop ile <Text style={styles.savingsValue}>{formatCurrency(stats.saved)}</Text> tasarruf ettin
+                  </>
+                ) : (
+                  'İlk tasarrufun bir Drop uzağında'
+                )}
+              </Text>
+            </View>
+          )}
+
           <View style={styles.tier}>
             <View style={styles.tierHead}>
               <View style={styles.tierIcon}>
@@ -117,7 +132,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.stats}>
-            <Stat value={claims.length} label="Yakalanan" />
+            <Stat value={stats?.claimed ?? 0} label="Yakalanan" />
             <View style={styles.statDivider} />
             <Stat value={redeemed} label="Kullanılan" />
             <View style={styles.statDivider} />
@@ -362,6 +377,27 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: gradients.night[1],
     borderRadius: 12,
+  },
+  savings: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.lime,
+    borderRadius: radius.lg,
+  },
+  savingsText: {
+    flex: 1,
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  savingsValue: {
+    fontSize: 17,
+    fontWeight: '900',
   },
   tier: {
     alignSelf: 'stretch',

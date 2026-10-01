@@ -4,6 +4,7 @@ import { createContext, type PropsWithChildren, useCallback, useContext, useEffe
 import { setUnauthorizedHandler } from '@/api/apiClient';
 import { logout } from '@/features/auth/api/authApi';
 import { syncClaimReminders } from '@/features/notifications/claimReminders';
+import { clearDropReminders } from '@/features/notifications/dropReminders';
 import { unregisterPushToken } from '@/features/notifications/pushRegistration';
 import { setMonitoringUser } from '@/services/monitoring';
 import { authStorage } from '@/storage/authStorage';
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await authStorage.clear();
     // The previous account's "5 minutes left" reminders must not fire for the next one.
     await syncClaimReminders(null);
+    await clearDropReminders();
     setIsAuthenticated(false);
     setMonitoringUser(null);
     queryClient.clear();

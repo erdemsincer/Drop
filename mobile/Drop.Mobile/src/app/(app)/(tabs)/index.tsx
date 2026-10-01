@@ -12,9 +12,11 @@ import { DropCard } from '@/features/drops/components/DropCard';
 import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
 import { DropsMap } from '@/features/drops/components/DropsMap';
 import { EmptyRadar } from '@/features/drops/components/EmptyRadar';
+import { UpcomingStrip } from '@/features/drops/components/UpcomingStrip';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
 import { type DropSort, SortMenu, sortDrops } from '@/features/drops/components/SortMenu';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
+import { useUpcomingDrops } from '@/features/drops/hooks/useUpcomingDrops';
 import { type DropCategory, categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import { mapAvailable } from '@/features/drops/utils/maps';
 import { useMe } from '@/features/users/hooks/useMe';
@@ -43,6 +45,12 @@ export default function HomeScreen() {
   const hasBusiness = (businessesQuery.data?.length ?? 0) > 0;
 
   const nearbyQuery = useNearbyDrops({
+    latitude: locationQuery.data?.latitude,
+    longitude: locationQuery.data?.longitude,
+    radiusKm,
+  });
+
+  const upcomingQuery = useUpcomingDrops({
     latitude: locationQuery.data?.latitude,
     longitude: locationQuery.data?.longitude,
     radiusKm,
@@ -177,6 +185,8 @@ export default function HomeScreen() {
 
       <CategoryFilter counts={counts} total={allDrops.length} value={activeCategory} onChange={setCategory} />
 
+      <UpcomingStrip drops={upcomingQuery.data ?? []} onOpen={openDrop} />
+
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>
           {activeCategory ? categoryInfo[activeCategory].label : 'Aktif Drop\'lar'}
@@ -234,6 +244,7 @@ export default function HomeScreen() {
             onRefresh={() => {
               void nearbyQuery.refetch();
               void activeClaimQuery.refetch();
+              void upcomingQuery.refetch();
             }}
             tintColor={colors.primary}
             colors={[colors.primary]}

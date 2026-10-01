@@ -54,3 +54,8 @@ export const getMyClaims = async () => {
 export const cancelClaim = async (claimId: string) => {
   await apiClient.post(`/api/claims/${claimId}/cancel`);
 };
+
+/** 1–5 stars for a used drop; rating again replaces it. */
+export const rateClaim = async ({ claimId, stars }: { claimId: string; stars: number }) => {
+  await apiClient.post(`/api/claims/${claimId}/rating`, { stars });
+};

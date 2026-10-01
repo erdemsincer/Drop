@@ -45,6 +45,11 @@ export const useToggleFollow = () => {
       if (follow) void registerPushToken({ askPermission: true });
     },
 
-    onSettled: () => queryClient.invalidateQueries({ queryKey: followsKey }),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: followsKey }),
+        // The business page shows the follower count.
+        queryClient.invalidateQueries({ queryKey: ['business-profile'] }),
+      ]),
   });
 };

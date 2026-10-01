@@ -40,4 +40,10 @@ export type MyClaim = {
   redeemedAt?: string | null;
   /** DropCategory name; older servers may omit it. */
   category?: string;
+  businessId?: string;
+  originalPrice?: number | null;
+  dealPrice?: number | null;
+  /** Stars the customer gave after using it; null until rated. */
+  rating?: number | null;
+  photoId?: string | null;
 };

@@ -31,9 +31,16 @@ export default function AppLayout() {
         claimId?: string;
         expiresAt?: string;
         dropId?: string;
+        branchId?: string;
       };
 
-      // "New drop" push from a followed business.
+      // "Someone caught your drop" → that branch's dashboard.
+      if (data?.branchId) {
+        router.push({ pathname: '/(app)/business/branch/[branchId]', params: { branchId: data.branchId } });
+        return;
+      }
+
+      // "New drop" from a followed business, or an upcoming drop's reminder.
       if (data?.dropId) {
         router.push({ pathname: '/(app)/drop/[id]', params: { id: data.dropId } });
         return;

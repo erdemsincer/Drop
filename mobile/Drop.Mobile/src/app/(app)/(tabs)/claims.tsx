@@ -4,10 +4,14 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 
+import { StarRating } from '@/features/claims/components/StarRating';
 import { useMyClaims } from '@/features/claims/hooks/useMyClaims';
+import { useRateClaim } from '@/features/claims/hooks/useRateClaim';
 import type { ClaimStatus, MyClaim } from '@/features/claims/types/claim';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { categoryInfo, categoryOf } from '@/features/drops/utils/categories';
+import { dealOf } from '@/features/drops/utils/pricing';
+import { formatCurrency } from '@/utils/formatCurrency';
 import {
   Badge,
   ChoiceChips,
@@ -200,21 +204,39 @@ function PastClaimRow({ claim }: { claim: MyClaim }) {
   const category = categoryInfo[categoryOf(claim.category)];
   const badge = statusBadge[claim.status === 'Active' ? 'Expired' : claim.status];
   const used = claim.status === 'Redeemed';
+  const deal = used ? dealOf(claim) : null;
+  const rate = useRateClaim();
 
   return (
     <View style={[styles.row, !used && styles.rowFaded]}>
-      <View style={[styles.rowIcon, { backgroundColor: used ? category.tint : colors.surfaceMuted }]}>
-        <Ionicons name={category.icon} size={20} color={used ? '#FFFFFF' : colors.textSubtle} />
+      <View style={styles.rowTop}>
+        <View style={[styles.rowIcon, { backgroundColor: used ? category.tint : colors.surfaceMuted }]}>
+          <Ionicons name={category.icon} size={20} color={used ? '#FFFFFF' : colors.textSubtle} />
+        </View>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {claim.dropTitle}
+          </Text>
+          <Text style={styles.rowMeta} numberOfLines={1}>
+            {claim.businessName} · {formatDay(claim.redeemedAt ?? claim.createdAt)}
+          </Text>
+        </View>
+        <Badge label={badge.label} tone={badge.tone} />
       </View>
-      <View style={styles.rowText}>
-        <Text style={styles.rowTitle} numberOfLines={1}>
-          {claim.dropTitle}
-        </Text>
-        <Text style={styles.rowMeta} numberOfLines={1}>
-          {claim.businessName} · {formatDay(claim.redeemedAt ?? claim.createdAt)}
-        </Text>
-      </View>
-      <Badge label={badge.label} tone={badge.tone} />
+
+      {used && (
+        <View style={styles.rateRow}>
+          <Text style={styles.rateLabel}>
+            {claim.rating ? 'Puanın' : 'Nasıldı?'}
+            {deal && deal.saving > 0 && <Text style={styles.saved}>  · {formatCurrency(deal.saving)} tasarruf</Text>}
+          </Text>
+          <StarRating
+            value={claim.rating}
+            size={22}
+            onChange={stars => rate.mutate({ claimId: claim.claimId, stars })}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -355,14 +377,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
     marginBottom: spacing.sm,
     padding: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     ...shadows.card,
+  },
+  rowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  rateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  rateLabel: {
+    flexShrink: 1,
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  saved: {
+    color: colors.success,
+    fontWeight: '800',
   },
   rowFaded: {
     opacity: 0.75,

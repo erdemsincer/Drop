@@ -42,3 +42,10 @@ export const resendVerification = async () => {
 export const deleteAccount = async (password: string | null) => {
   await apiClient.post('/api/users/me/delete', { password });
 };
+
+export type MyStats = { claimed: number; redeemed: number; saved: number };
+
+export const getMyStats = async () => {
+  const response = await apiClient.get<MyStats>('/api/users/me/stats');
+  return response.data;
+};

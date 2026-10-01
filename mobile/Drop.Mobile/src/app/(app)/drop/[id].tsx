@@ -1,21 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import type { ComponentProps } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getApiError } from '@/api/getApiError';
 import { useCreateClaim } from '@/features/claims/hooks/useCreateClaim';
 import { getClaimErrorMessage } from '@/features/claims/utils/getClaimErrorMessage';
+import { DealPrice } from '@/features/drops/components/DealPrice';
 import { DropLocationCard } from '@/features/drops/components/DropLocationCard';
+import { RatingPill } from '@/features/drops/components/RatingPill';
+import { useDropReminders } from '@/features/drops/hooks/useDropReminders';
 import { useCountdown } from '@/features/drops/hooks/useCountdown';
 import { useDropDetail } from '@/features/drops/hooks/useDropDetail';
 import { FollowButton } from '@/features/follows/components/FollowButton';
 import type { DropDetail } from '@/features/drops/types/drop';
 import { categoryInfo, categoryOf } from '@/features/drops/utils/categories';
+import { formatStartsAt } from '@/features/drops/utils/formatStartsAt';
+import { dealOf } from '@/features/drops/utils/pricing';
 import { shareDrop } from '@/features/drops/utils/shareDrop';
 import { scheduleClaimReminder } from '@/features/notifications/claimReminders';
 import {
@@ -36,6 +42,7 @@ import {
   typography,
 } from '@/ui';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { mediaUrl } from '@/utils/media';
 
 export default function DropDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -70,12 +77,18 @@ export default function DropDetailScreen() {
 function DropDetailContent({ drop }: { drop: DropDetail }) {
   const insets = useSafeAreaInsets();
   const remaining = useCountdown(drop.endsAt);
+  const untilStart = useCountdown(drop.startsAt);
   const claimMutation = useCreateClaim();
+  const reminders = useDropReminders();
+  const deal = dealOf(drop);
 
   const apiError = claimMutation.error ? getApiError(claimMutation.error) : null;
   const soldOut = drop.remainingCapacity <= 0;
   const ended = remaining.isExpired;
-  const unavailable = soldOut || ended;
+  // A scheduled drop opened from "Yakında" or a reminder: not claimable yet.
+  const notStarted = !untilStart.isExpired;
+  const unavailable = soldOut || ended || notStarted;
+  const reminderOn = reminders.isSet(drop.id);
 
   const handleClaim = () => {
     haptics.press();
@@ -112,15 +125,30 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
         contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
       >
         <LinearGradient colors={gradients.night} style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
-          {/* The category tints the hero: a warm glow for food, green for fun, and so on. */}
-          <View style={[styles.orb, { backgroundColor: category.tint }]} />
-          <View style={styles.orbSecondary} />
-          <Ionicons name={category.icon} size={170} color="rgba(255,255,255,0.06)" style={styles.watermark} />
+          {drop.photoId ? (
+            <>
+              {/* The photo fills the hero; a dark wash keeps the white text readable. */}
+              <Image source={{ uri: mediaUrl(drop.photoId) }} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <LinearGradient
+                colors={['rgba(18,13,36,0.35)', 'rgba(18,13,36,0.7)', 'rgba(18,13,36,0.96)']}
+                style={StyleSheet.absoluteFill}
+              />
+            </>
+          ) : (
+            <>
+              {/* The category tints the hero: a warm glow for food, green for fun, and so on. */}
+              <View style={[styles.orb, { backgroundColor: category.tint }]} />
+              <View style={styles.orbSecondary} />
+              <Ionicons name={category.icon} size={170} color="rgba(255,255,255,0.06)" style={styles.watermark} />
+            </>
+          )}
 
           <View style={styles.heroBar}>
             <IconButton icon="chevron-back" tone="glass" accessibilityLabel="Geri dön" onPress={() => router.back()} />
             <View style={styles.heroActions}>
-              {soldOut ? (
+              {notStarted ? (
+                <Badge label="YAKINDA" tone="glass" icon="hourglass" />
+              ) : soldOut ? (
                 <Badge label="TÜKENDİ" tone="glass" />
               ) : ended ? (
                 <Badge label="SONA ERDİ" tone="glass" />
@@ -142,9 +170,21 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
           <View style={styles.businessRow}>
             <Avatar name={drop.businessName} size={52} />
             <View style={styles.businessInfo}>
-              <Text style={styles.businessName} numberOfLines={1}>
-                {drop.businessName}
-              </Text>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel={`${drop.businessName} sayfası`}
+                hitSlop={6}
+                onPress={() =>
+                  router.push({ pathname: '/(app)/place/[businessId]', params: { businessId: drop.businessId } })
+                }
+                style={styles.businessLink}
+              >
+                <Text style={styles.businessName} numberOfLines={1}>
+                  {drop.businessName}
+                </Text>
+                <Ionicons name="chevron-forward" size={15} color={colors.textOnDarkMuted} />
+              </Pressable>
+              <RatingPill rating={drop.businessRating} count={drop.businessRatingCount} inverted />
               <View style={styles.branchRow}>
                 <Ionicons name="location" size={13} color={colors.textOnDarkMuted} />
                 <Text style={styles.branchName} numberOfLines={1}>
@@ -162,6 +202,11 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
             </View>
             <Text style={styles.title}>{drop.title}</Text>
             {!!drop.description && <Text style={styles.description}>{drop.description}</Text>}
+            {deal && (
+              <View style={styles.dealRow}>
+                <DealPrice deal={deal} size="lg" inverted />
+              </View>
+            )}
           </Animated.View>
         </LinearGradient>
 
@@ -176,12 +221,11 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
                 danger={soldOut}
               />
               <View style={styles.statDivider} />
-              <Stat
-                icon="hourglass"
-                label="Bitişe"
-                value={ended ? '00:00' : remaining.label}
-                danger={ended}
-              />
+              {notStarted ? (
+                <Stat icon="hourglass" label="Başlamasına" value={untilStart.label} />
+              ) : (
+                <Stat icon="hourglass" label="Bitişe" value={ended ? '00:00' : remaining.label} danger={ended} />
+              )}
               <View style={styles.statDivider} />
               <Stat icon="timer" label="Kullanım" value={`${drop.claimDurationMinutes}`} suffix=" dk" />
             </View>
@@ -249,13 +293,29 @@ function DropDetailContent({ drop }: { drop: DropDetail }) {
           </Text>
         </View>
 
-        <Button
-          title={soldOut ? 'Tükendi' : ended ? 'Sona erdi' : "Drop'u Yakala"}
-          icon={unavailable ? 'lock-closed' : 'flash'}
-          disabled={unavailable}
-          loading={claimMutation.isPending}
-          onPress={handleClaim}
-        />
+        {notStarted ? (
+          <Button
+            title={reminderOn ? 'Hatırlatma kuruldu' : `${formatStartsAt(drop.startsAt)} başlıyor · Hatırlat`}
+            icon={reminderOn ? 'notifications' : 'notifications-outline'}
+            variant={reminderOn ? 'dark' : 'primary'}
+            onPress={() =>
+              reminders.toggle({
+                id: drop.id,
+                title: drop.title,
+                businessName: drop.businessName,
+                startsAt: drop.startsAt,
+              })
+            }
+          />
+        ) : (
+          <Button
+            title={soldOut ? 'Tükendi' : ended ? 'Sona erdi' : "Drop'u Yakala"}
+            icon={unavailable ? 'lock-closed' : 'flash'}
+            disabled={unavailable}
+            loading={claimMutation.isPending}
+            onPress={handleClaim}
+          />
+        )}
       </View>
     </View>
   );
@@ -363,6 +423,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  businessLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    alignSelf: 'flex-start',
+  },
+  dealRow: {
+    marginTop: spacing.lg,
   },
   heroActions: {
     flexDirection: 'row',

@@ -71,6 +71,9 @@ export type BusinessDrop = {
   startsAt?: string | null;
   endsAt?: string | null;
   category: DropCategory;
+  originalPrice?: number | null;
+  dealPrice?: number | null;
+  photoId?: string | null;
 };
 
 export type CreateBusinessRequest = {
@@ -107,6 +110,9 @@ export type CreateDropRequest = {
   /** ISO time; omit or null to publish immediately. */
   startsAt?: string | null;
   category: DropCategory;
+  originalPrice?: number | null;
+  dealPrice?: number | null;
+  photoId?: string | null;
 };
 
 export type UpdateDropRequest = {
@@ -115,6 +121,9 @@ export type UpdateDropRequest = {
   minimumSpend?: number | null;
   capacity: number;
   category?: DropCategory;
+  originalPrice?: number | null;
+  dealPrice?: number | null;
+  photoId?: string | null;
 };
 
 export type UpdateBranchRequest = {
