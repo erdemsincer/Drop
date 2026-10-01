@@ -32,6 +32,9 @@ const groupByBranch = (drops: NearbyDrop[]): BranchPin[] => {
   const pins = new Map<string, BranchPin>();
 
   for (const drop of drops) {
+    // An older server omits coordinates; a marker without them would crash the native map.
+    if (!Number.isFinite(drop.latitude) || !Number.isFinite(drop.longitude)) continue;
+
     const pin = pins.get(drop.branchId);
     if (pin) pin.drops.push(drop);
     else pins.set(drop.branchId, { branchId: drop.branchId, latitude: drop.latitude, longitude: drop.longitude, drops: [drop] });
