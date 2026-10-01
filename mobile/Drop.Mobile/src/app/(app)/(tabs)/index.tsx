@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -17,12 +16,13 @@ import { type DropSort, SortMenu, sortDrops } from '@/features/drops/components/
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
 import { type DropCategory, categoryInfo, categoryOf } from '@/features/drops/utils/categories';
 import { mapAvailable } from '@/features/drops/utils/maps';
+import { useMe } from '@/features/users/hooks/useMe';
 import { useCurrentLocation } from '@/features/location/hooks/useCurrentLocation';
 import {
+  BrandMark,
   Screen,
   StateView,
   colors,
-  gradients,
   haptics,
   radius,
   spacing,
@@ -48,6 +48,8 @@ export default function HomeScreen() {
   });
 
   const allDrops = nearbyQuery.data ?? [];
+  const liveCount = allDrops.filter(drop => drop.remainingCapacity > 0).length;
+  const me = useMe().data;
 
   // Filtered on the device: switching chips is instant and each chip shows its count.
   const counts: Partial<Record<DropCategory, number>> = {};
@@ -101,12 +103,7 @@ export default function HomeScreen() {
 
   const topBar = (
     <View style={styles.topBar}>
-      <View style={styles.brand}>
-        <LinearGradient colors={gradients.primary} style={styles.logoMark}>
-          <Ionicons name="flash" size={18} color={colors.lime} />
-        </LinearGradient>
-        <Text style={styles.logo}>drop</Text>
-      </View>
+      <BrandMark size={36} tone="dark" />
 
       <View style={styles.topActions}>
         {mapAvailable && <ViewToggle value={view} onChange={setView} />}
@@ -154,8 +151,17 @@ export default function HomeScreen() {
     <View>
       {topBar}
 
-      <Text style={styles.eyebrow}>ŞU AN YAKININDA</Text>
-      <Text style={styles.heading}>Kaçırılmayacak{'\n'}anlık fırsatlar</Text>
+      <Text style={styles.eyebrow}>
+        {me?.firstName ? `MERHABA ${me.firstName.toLocaleUpperCase('tr-TR')}` : 'ŞU AN YAKININDA'}
+      </Text>
+      {liveCount > 0 ? (
+        <Text style={styles.heading}>
+          Yakınında <Text style={styles.headingAccent}>{liveCount} fırsat</Text>
+          {'\n'}seni bekliyor
+        </Text>
+      ) : (
+        <Text style={styles.heading}>Kaçırılmayacak{'\n'}anlık fırsatlar</Text>
+      )}
 
       {activeClaimQuery.data && (
         <View style={styles.banner}>
@@ -302,11 +308,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
   },
-  brand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-  },
   topActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -330,19 +331,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-  logoMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
   eyebrow: {
     ...typography.overline,
     color: colors.primary,
@@ -352,6 +340,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: spacing.xl,
     color: colors.text,
+  },
+  headingAccent: {
+    color: colors.primary,
   },
   banner: {
     marginTop: spacing.xs,

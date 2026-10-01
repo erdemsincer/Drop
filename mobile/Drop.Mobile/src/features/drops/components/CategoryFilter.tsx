@@ -38,6 +38,7 @@ export function CategoryFilter({ counts, total, value, onChange }: Props) {
           key={category}
           label={categoryInfo[category].label}
           icon={categoryInfo[category].icon}
+          tint={categoryInfo[category].tint}
           count={counts[category] ?? 0}
           selected={value === category}
           onPress={() => select(category)}
@@ -50,12 +51,14 @@ export function CategoryFilter({ counts, total, value, onChange }: Props) {
 function Chip({
   label,
   icon,
+  tint = colors.primary,
   count,
   selected,
   onPress,
 }: {
   label: string;
   icon?: (typeof categoryInfo)[DropCategory]['icon'];
+  tint?: string;
   count: number;
   selected: boolean;
   onPress: () => void;
@@ -68,7 +71,7 @@ function Chip({
       onPress={onPress}
       style={({ pressed }) => [styles.chip, selected && styles.chipSelected, pressed && styles.pressed]}
     >
-      {icon && <Ionicons name={icon} size={14} color={selected ? colors.textOnDark : colors.primary} />}
+      {icon && <Ionicons name={icon} size={14} color={selected ? colors.lime : tint} />}
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
       <Text style={[styles.count, selected && styles.countSelected]}>{count}</Text>
     </Pressable>

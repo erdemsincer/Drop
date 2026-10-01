@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { Avatar, Badge, ProgressBar, colors, radius, shadows, spacing } from '@/ui';
+import { PulseDot, colors, radius, shadows, spacing } from '@/ui';
 import { formatCurrency } from '@/utils/formatCurrency';
 
 import { useCountdown } from '../hooks/useCountdown';
@@ -26,108 +28,146 @@ export function DropCard({ drop, onPress }: Props) {
   const soldOut = drop.remainingCapacity <= 0;
   const lowStock = !soldOut && drop.remainingCapacity <= 3;
   const urgent = remaining.totalSeconds <= URGENT_SECONDS;
-  const claimedRatio = drop.capacity > 0 ? drop.claimedCount / drop.capacity : 1;
-  const category = categoryOf(drop.category);
+  const claimedRatio = drop.capacity > 0 ? Math.min(1, drop.claimedCount / drop.capacity) : 1;
+  const category = categoryInfo[categoryOf(drop.category)];
+  const tint = soldOut ? colors.textSubtle : category.tint;
 
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${drop.businessName}: ${drop.title}`}
-      style={({ pressed }) => [styles.card, soldOut && styles.cardSoldOut, pressed && styles.pressed]}
-    >
-      <View style={styles.header}>
-        <Avatar name={drop.businessName} size={46} />
+    <Animated.View entering={FadeInDown.duration(320)}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${drop.businessName}: ${drop.title}`}
+        style={({ pressed }) => [styles.card, soldOut && styles.cardSoldOut, pressed && styles.pressed]}
+      >
+        {/* The category paints the top of the card, so a feed of drops reads at a glance. */}
+        <LinearGradient
+          colors={[`${tint}2E`, `${tint}0D`]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
+        >
+          <Ionicons name={category.icon} size={92} color={`${tint}26`} style={styles.watermark} />
 
-        <View style={styles.business}>
-          <Text style={styles.businessName} numberOfLines={1}>
-            {drop.businessName}
+          <View style={styles.heroRow}>
+            <View style={[styles.categoryIcon, { backgroundColor: tint }]}>
+              <Ionicons name={category.icon} size={20} color="#FFFFFF" />
+            </View>
+
+            <View style={styles.business}>
+              <Text style={styles.businessName} numberOfLines={1}>
+                {drop.businessName}
+              </Text>
+              <View style={styles.whereRow}>
+                <Ionicons name="navigate" size={11} color={colors.textMuted} />
+                <Text style={styles.branchName} numberOfLines={1}>
+                  {formatDistance(drop.distanceMeters)} · {drop.branchName}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.timer, urgent && styles.timerUrgent]}>
+              <Ionicons name="time" size={14} color={urgent ? '#FFFFFF' : colors.lime} />
+              <Text style={styles.timerText}>{remaining.label}</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.body}>
+          <Text style={styles.title} numberOfLines={2}>
+            {drop.title}
           </Text>
-          <Text style={styles.branchName} numberOfLines={1}>
-            {drop.branchName}
-          </Text>
-        </View>
 
-        <View style={styles.distance}>
-          <Ionicons name="navigate" size={12} color={colors.primary} />
-          <Text style={styles.distanceText}>{formatDistance(drop.distanceMeters)}</Text>
-        </View>
-      </View>
-
-      <Text style={styles.title} numberOfLines={2}>
-        {drop.title}
-      </Text>
-
-      {!!drop.description && (
-        <Text style={styles.description} numberOfLines={2}>
-          {drop.description}
-        </Text>
-      )}
-
-      <View style={styles.tags}>
-        {soldOut ? (
-          <Badge label="TÜKENDİ" tone="neutral" />
-        ) : lowStock ? (
-          <Badge label={`SON ${drop.remainingCapacity}`} tone="danger" icon="flame" />
-        ) : (
-          <Badge label="AKTİF" tone="success" live />
-        )}
-
-        {category !== 'Other' && (
-          <View style={[styles.categoryPill, { backgroundColor: `${categoryInfo[category].tint}1A` }]}>
-            <Ionicons name={categoryInfo[category].icon} size={12} color={categoryInfo[category].tint} />
-            <Text style={[styles.categoryText, { color: categoryInfo[category].tint }]}>
-              {categoryInfo[category].label.toLocaleUpperCase('tr-TR')}
+          {!!drop.description && (
+            <Text style={styles.description} numberOfLines={2}>
+              {drop.description}
             </Text>
+          )}
+
+          {drop.minimumSpend != null && (
+            <View style={styles.spend}>
+              <Ionicons name="wallet-outline" size={13} color={colors.textMuted} />
+              <Text style={styles.spendText}>Min. harcama {formatCurrency(drop.minimumSpend)}</Text>
+            </View>
+          )}
+
+          <View style={styles.footer}>
+            <View style={styles.capacity}>
+              <View style={styles.capacityRow}>
+                {soldOut ? (
+                  <Text style={styles.soldOutText}>Tükendi</Text>
+                ) : (
+                  <>
+                    {!lowStock && <PulseDot color={colors.success} size={7} />}
+                    {lowStock && <Ionicons name="flame" size={14} color={colors.danger} />}
+                    <Text style={[styles.capacityValue, lowStock && styles.capacityLow]}>
+                      {drop.remainingCapacity}
+                    </Text>
+                    <Text style={styles.capacityLabel}>/ {drop.capacity} yer kaldı</Text>
+                  </>
+                )}
+              </View>
+              <View style={styles.track}>
+                <View
+                  style={[
+                    styles.fill,
+                    {
+                      width: `${Math.max(4, claimedRatio * 100)}%`,
+                      backgroundColor: lowStock || soldOut ? colors.danger : tint,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            <View style={[styles.cta, { backgroundColor: soldOut ? colors.surfaceMuted : colors.ink }]}>
+              <Text style={[styles.ctaText, soldOut && styles.ctaTextMuted]}>{soldOut ? 'Bak' : 'Kap'}</Text>
+              <Ionicons name="arrow-forward" size={15} color={soldOut ? colors.textMuted : colors.lime} />
+            </View>
           </View>
-        )}
-
-        {drop.minimumSpend != null && (
-          <Badge label={`Min. ${formatCurrency(drop.minimumSpend)}`} tone="neutral" icon="wallet-outline" />
-        )}
-      </View>
-
-      <View style={styles.footer}>
-        <View style={styles.capacity}>
-          <View style={styles.capacityRow}>
-            <Text style={styles.capacityValue}>{drop.remainingCapacity}</Text>
-            <Text style={styles.capacityLabel}> / {drop.capacity} kaldı</Text>
-          </View>
-          <ProgressBar
-            value={claimedRatio}
-            color={lowStock || soldOut ? colors.danger : colors.primary}
-            style={styles.progress}
-          />
         </View>
-
-        <View style={[styles.timer, urgent && styles.timerUrgent]}>
-          <Ionicons name="time" size={15} color={urgent ? colors.warning : colors.textOnDark} />
-          <Text style={[styles.timerText, urgent && styles.timerTextUrgent]}>{remaining.label}</Text>
-        </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     marginBottom: spacing.lg,
-    padding: spacing.lg + 2,
+    overflow: 'hidden',
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
     ...shadows.card,
   },
   cardSoldOut: {
-    opacity: 0.6,
+    opacity: 0.65,
   },
   pressed: {
     transform: [{ scale: 0.985 }],
-    opacity: 0.95,
   },
-  header: {
+  hero: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md + 2,
+    overflow: 'hidden',
+  },
+  watermark: {
+    position: 'absolute',
+    right: 70,
+    top: -18,
+    transform: [{ rotate: '-14deg' }],
+  },
+  heroRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+  },
+  categoryIcon: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
   },
   business: {
     flex: 1,
@@ -137,107 +177,123 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-  branchName: {
+  whereRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginTop: 2,
+  },
+  branchName: {
+    flexShrink: 1,
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
-  distance: {
+  timer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: colors.primarySoft,
+    paddingVertical: 7,
+    backgroundColor: colors.ink,
     borderRadius: radius.pill,
   },
-  distanceText: {
-    color: colors.primary,
-    fontSize: 12,
+  timerUrgent: {
+    backgroundColor: colors.warning,
+  },
+  timerText: {
+    color: colors.textOnDark,
+    fontSize: 13,
     fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  body: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
   title: {
-    marginTop: spacing.lg,
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontWeight: '900',
     letterSpacing: -0.4,
     lineHeight: 25,
   },
   description: {
-    marginTop: 6,
+    marginTop: 4,
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20,
   },
-  categoryPill: {
+  spend: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
+    gap: 5,
+    marginTop: spacing.sm,
   },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
-  tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
+  spendText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.lg,
     marginTop: spacing.lg,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceMuted,
   },
   capacity: {
     flex: 1,
   },
   capacityRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
+    gap: 5,
   },
   capacityValue: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '900',
+    fontVariant: ['tabular-nums'],
+  },
+  capacityLow: {
+    color: colors.danger,
   },
   capacityLabel: {
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
-  progress: {
-    marginTop: 7,
+  soldOutText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '800',
   },
-  timer: {
+  track: {
+    height: 6,
+    marginTop: 7,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 3,
+  },
+  fill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  cta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
+    height: 40,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
   },
-  timerUrgent: {
-    backgroundColor: colors.warningSoft,
-  },
-  timerText: {
+  ctaText: {
     color: colors.textOnDark,
     fontSize: 14,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
+    fontWeight: '900',
   },
-  timerTextUrgent: {
-    color: colors.warning,
+  ctaTextMuted: {
+    color: colors.textMuted,
   },
 });

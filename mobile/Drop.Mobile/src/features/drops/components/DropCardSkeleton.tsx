@@ -5,19 +5,24 @@ import { Skeleton, colors, radius, shadows, spacing } from '@/ui';
 export function DropCardSkeleton() {
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Skeleton width={46} height={46} radius={15} />
+      <View style={styles.hero}>
+        <Skeleton width={42} height={42} radius={14} />
         <View style={styles.lines}>
           <Skeleton width="55%" height={14} />
-          <Skeleton width="35%" height={11} />
+          <Skeleton width="40%" height={11} />
         </View>
-        <Skeleton width={64} height={26} radius={13} />
+        <Skeleton width={68} height={30} radius={15} />
       </View>
-      <Skeleton width="85%" height={20} style={styles.title} />
-      <Skeleton width="60%" height={14} style={styles.line} />
-      <View style={styles.footer}>
-        <Skeleton width="45%" height={30} />
-        <Skeleton width={84} height={36} radius={14} />
+      <View style={styles.body}>
+        <Skeleton width="85%" height={20} />
+        <Skeleton width="60%" height={14} style={styles.line} />
+        <View style={styles.footer}>
+          <View style={styles.lines}>
+            <Skeleton width="45%" height={13} />
+            <Skeleton width="100%" height={6} />
+          </View>
+          <Skeleton width={74} height={40} radius={20} />
+        </View>
       </View>
     </View>
   );
@@ -26,30 +31,32 @@ export function DropCardSkeleton() {
 const styles = StyleSheet.create({
   card: {
     marginBottom: spacing.lg,
-    padding: spacing.lg + 2,
+    overflow: 'hidden',
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
     ...shadows.card,
   },
-  header: {
+  hero: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceMuted,
+  },
+  body: {
+    padding: spacing.lg,
   },
   lines: {
     flex: 1,
     gap: 7,
-  },
-  title: {
-    marginTop: spacing.lg,
   },
   line: {
     marginTop: spacing.sm,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: spacing.xl,
+    gap: spacing.lg,
+    marginTop: spacing.lg,
   },
 });

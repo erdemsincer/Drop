@@ -4,6 +4,7 @@ export { BrandMark } from './components/BrandMark';
 export { Button } from './components/Button';
 export { ChoiceChips, type Choice } from './components/ChoiceChips';
 export { CodeInput } from './components/CodeInput';
+export { DropLogo } from './components/DropLogo';
 export { Header } from './components/Header';
 export { IconButton } from './components/IconButton';
 export { Notice } from './components/Notice';
