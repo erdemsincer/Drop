@@ -82,6 +82,12 @@ public sealed class DropApiFactory : WebApplicationFactory<Program>, IAsyncLifet
             services.AddSingleton<Drop.Application.Notifications.Push.IPushSender>(
                 sp => sp.GetRequiredService<CapturingPushSender>());
 
+            // Apple and Google are never called; tests mint tokens through the fake.
+            services.RemoveAll<Drop.Application.Authentication.External.IExternalIdentityVerifier>();
+            services.AddSingleton<FakeExternalIdentityVerifier>();
+            services.AddSingleton<Drop.Application.Authentication.External.IExternalIdentityVerifier>(
+                sp => sp.GetRequiredService<FakeExternalIdentityVerifier>());
+
             // Remove existing DbContext registration
             services.RemoveAll<DbContextOptions<DropDbContext>>();
 

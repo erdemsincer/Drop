@@ -17,7 +17,8 @@
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -68,7 +69,8 @@
       "expo-status-bar",
       "expo-web-browser",
       "expo-notifications",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

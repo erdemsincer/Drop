@@ -41,8 +41,16 @@ public sealed class ChangePasswordService
     {
         var user = await _userRepository.GetByIdAsync(_currentUser.Id, cancellationToken);
 
+        if (user is null)
+        {
+            throw new AuthenticationException(
+                ErrorCodes.Auth.InvalidCredentials,
+                "User no longer exists.");
+        }
+
+        // An Apple/Google account sets its first password without one to confirm.
         // 409 rather than 401: a wrong password here is a form error, not a dead session.
-        if (user is null || !_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        if (user.PasswordHash is not null && !_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
         {
             throw new ConflictException(
                 ErrorCodes.Auth.InvalidCredentials,

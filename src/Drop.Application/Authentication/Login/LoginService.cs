@@ -34,7 +34,8 @@ public sealed class LoginService
             email,
             cancellationToken);
 
-        if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+        // Apple/Google-only accounts have no password to match.
+        if (user?.PasswordHash is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             throw new AuthenticationException(
                 ErrorCodes.Auth.InvalidCredentials,

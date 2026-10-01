@@ -8,6 +8,8 @@ export type Me = {
   lastName: string;
   emailVerified: boolean;
   isAdmin: boolean;
+  /** False for Apple/Google accounts that never set a password. */
+  hasPassword: boolean;
 };
 
 export const getMe = async () => {
@@ -36,6 +38,7 @@ export const resendVerification = async () => {
 };
 
 /** Permanently deletes the account (and businesses the user owns). */
-export const deleteAccount = async (password: string) => {
+/** `password` is null for accounts without one (Apple/Google sign-in). */
+export const deleteAccount = async (password: string | null) => {
   await apiClient.post('/api/users/me/delete', { password });
 };

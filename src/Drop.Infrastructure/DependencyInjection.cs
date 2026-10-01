@@ -1,3 +1,4 @@
+using Drop.Application.Authentication.External;
 using Drop.Application.Follows;
 using Drop.Application.Notifications.Push;
 using Drop.Infrastructure.Follows;
@@ -180,6 +181,11 @@ public static class DependencyInjection
         services.AddScoped<LogoutService>();
         services.AddScoped<IVerificationCodeStore, VerificationCodeStore>();
         services.AddScoped<PasswordResetService>();
+
+        services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.SectionName));
+        services.AddSingleton<IExternalIdentityVerifier, ExternalIdentityVerifier>();
+        services.AddScoped<IExternalLoginStore, ExternalLoginStore>();
+        services.AddScoped<ExternalSignInService>();
 
         var emailSection = configuration.GetSection(EmailOptions.SectionName);
         services.Configure<EmailOptions>(

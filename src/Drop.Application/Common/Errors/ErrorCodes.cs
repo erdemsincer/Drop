@@ -15,6 +15,8 @@ public static class ErrorCodes
         public const string InvalidRefreshToken = "auth.invalid_refresh_token";
         public const string InvalidResetCode = "auth.invalid_reset_code";
         public const string InvalidVerificationCode = "auth.invalid_verification_code";
+        public const string InvalidExternalToken = "auth.invalid_external_token";
+        public const string ExternalEmailMissing = "auth.external_email_missing";
     }
 
     public static class Business

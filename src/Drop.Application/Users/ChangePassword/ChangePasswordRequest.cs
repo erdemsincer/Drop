@@ -11,9 +11,9 @@ public sealed class ChangePasswordRequestValidator
 {
     public ChangePasswordRequestValidator()
     {
+        // Empty for accounts that never had a password; the service checks it otherwise.
         RuleFor(x => x.CurrentPassword)
-            .NotEmpty()
-            .WithErrorCode("password.required");
+            .MaximumLength(128);
 
         RuleFor(x => x.NewPassword)
             .NotEmpty()

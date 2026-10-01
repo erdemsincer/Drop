@@ -6,15 +6,20 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 
 import { getApiError } from '@/api/getApiError';
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
+import { useMe } from '@/features/users/hooks/useMe';
 import { deleteAccount } from '@/features/users/api/userApi';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button, Header, Notice, Screen, TextField, colors, haptics, radius, spacing, typography } from '@/ui';
+
+const CONFIRM_WORD = 'SİL';
 
 export default function DeleteAccountScreen() {
   const { signOut } = useAuth();
   const businessesQuery = useMyBusinesses();
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  // Apple/Google accounts have no password; typing the word stands in for it.
+  const hasPassword = useMe().data?.hasPassword ?? true;
 
   const owned = (businessesQuery.data ?? []).filter(business => business.role === 'Owner');
 
@@ -30,6 +35,17 @@ export default function DeleteAccountScreen() {
   const apiError = mutation.error ? getApiError(mutation.error) : null;
 
   const submit = () => {
+    if (!hasPassword) {
+      if (password.trim().toLocaleUpperCase('tr-TR') !== CONFIRM_WORD) {
+        setPasswordError(`Onay için ${CONFIRM_WORD} yaz.`);
+        haptics.error();
+        return;
+      }
+
+      mutation.mutate(null);
+      return;
+    }
+
     if (!password) {
       setPasswordError('Onay için şifreni gir.');
       haptics.error();
@@ -64,16 +80,17 @@ export default function DeleteAccountScreen() {
           </View>
 
           <TextField
-            label="Şifren"
-            icon="lock-closed-outline"
+            label={hasPassword ? 'Şifren' : `Onay için ${CONFIRM_WORD} yaz`}
+            icon={hasPassword ? 'lock-closed-outline' : 'create-outline'}
             value={password}
             onChangeText={value => {
               setPassword(value);
               setPasswordError('');
             }}
-            placeholder="Onay için şifreni gir"
-            secureTextEntry
-            autoComplete="current-password"
+            placeholder={hasPassword ? 'Onay için şifreni gir' : CONFIRM_WORD}
+            secureTextEntry={hasPassword}
+            autoCapitalize={hasPassword ? 'none' : 'characters'}
+            autoComplete={hasPassword ? 'current-password' : 'off'}
             error={
               passwordError ||
               (apiError?.code === 'auth.invalid_credentials' ? 'Şifre hatalı.' : undefined)

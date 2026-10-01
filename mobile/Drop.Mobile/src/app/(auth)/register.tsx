@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '@/api/apiError';
 import { getApiError } from '@/api/getApiError';
 import { login, register } from '@/features/auth/api/authApi';
 import { AuthShell } from '@/features/auth/components/AuthShell';
+import { SocialSignIn } from '@/features/auth/components/SocialSignIn';
 import { AuthSwitchLink } from '@/features/auth/components/AuthSwitchLink';
 import { BusinessSignupLink } from '@/features/auth/components/BusinessSignupLink';
 import { type AuthFormErrors, validateRegister } from '@/features/auth/utils/authValidation';
@@ -155,6 +156,8 @@ export default function RegisterScreen() {
         loading={mutation.isPending}
         onPress={submit}
       />
+
+      <SocialSignIn />
     </AuthShell>
   );
 }

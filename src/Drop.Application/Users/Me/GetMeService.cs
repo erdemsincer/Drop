@@ -37,6 +37,7 @@ public sealed class GetMeService
             user.FirstName,
             user.LastName,
             user.IsEmailVerified,
-            isAdmin);
+            isAdmin,
+            user.HasPassword);
     }
 }

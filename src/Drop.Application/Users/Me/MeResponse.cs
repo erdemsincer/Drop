@@ -6,4 +6,5 @@ public sealed record MeResponse(
     string FirstName,
     string LastName,
     bool EmailVerified,
-    bool IsAdmin);
+    bool IsAdmin,
+    bool HasPassword);

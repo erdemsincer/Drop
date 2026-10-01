@@ -30,6 +30,8 @@ public sealed class DropDbContext : DbContext, IUnitOfWork
 
     public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
 
+    public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+
     public DbSet<BusinessFollow> BusinessFollows => Set<BusinessFollow>();
 
     public DbSet<Domain.Notifications.DeviceToken> DeviceTokens => Set<Domain.Notifications.DeviceToken>();

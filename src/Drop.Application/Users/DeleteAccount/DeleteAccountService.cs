@@ -30,7 +30,9 @@ public sealed class DeleteAccountService
         var user = await _userRepository.GetByIdAsync(_currentUser.Id, cancellationToken);
 
         // Re-confirm with the password: a stolen, unlocked phone must not be enough.
-        if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+        // Apple/Google-only accounts have none; the app's confirmation step stands in.
+        if (user is null
+            || (user.PasswordHash is not null && !_passwordHasher.Verify(request.Password ?? string.Empty, user.PasswordHash)))
         {
             throw new AuthenticationException(
                 ErrorCodes.Auth.InvalidCredentials,

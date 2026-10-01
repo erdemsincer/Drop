@@ -26,3 +26,11 @@ export const requestPasswordReset = async (email: string) => {
 export const resetPassword = async (request: { email: string; code: string; newPassword: string }) => {
   await apiClient.post('/api/auth/reset-password', request);
 };
+
+export type ExternalSignInRequest = { idToken: string; firstName?: string | null; lastName?: string | null };
+
+/** Apple or Google identity token in, a Drop session out (the account is created or linked as needed). */
+export const signInWithProvider = async (provider: 'apple' | 'google', request: ExternalSignInRequest) => {
+  const response = await apiClient.post<LoginResponse>(`/api/auth/${provider}`, request);
+  return response.data;
+};

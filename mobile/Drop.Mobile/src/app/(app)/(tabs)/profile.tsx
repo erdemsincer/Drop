@@ -200,7 +200,7 @@ export default function ProfileScreen() {
           <Row
             icon="key"
             tint="#E8900C"
-            title="Şifreyi değiştir"
+            title={me?.hasPassword === false ? 'Şifre belirle' : 'Şifreyi değiştir'}
             onPress={() => router.push('/(app)/account/password')}
           />
           <Row

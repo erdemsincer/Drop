@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { getApiErrorMessage } from '@/api/apiError';
 import { getApiError } from '@/api/getApiError';
 import { AuthShell } from '@/features/auth/components/AuthShell';
+import { SocialSignIn } from '@/features/auth/components/SocialSignIn';
 import { AuthSwitchLink } from '@/features/auth/components/AuthSwitchLink';
 import { BusinessSignupLink } from '@/features/auth/components/BusinessSignupLink';
 import { useLogin } from '@/features/auth/hooks/useLogin';
@@ -123,6 +124,8 @@ export default function LoginScreen() {
         loading={loginMutation.isPending}
         onPress={handleLogin}
       />
+
+      <SocialSignIn />
     </AuthShell>
   );
 }

@@ -5,12 +5,15 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 
 import { getApiError } from '@/api/getApiError';
 import { useChangePassword } from '@/features/users/hooks/useAccountMutations';
+import { useMe } from '@/features/users/hooks/useMe';
 import { Button, Header, Notice, Screen, TextField, colors, haptics, radius, spacing } from '@/ui';
 
 type Errors = { current?: string; next?: string; confirm?: string };
 
 export default function ChangePasswordScreen() {
   const mutation = useChangePassword();
+  // Apple/Google accounts set their first password without a current one.
+  const hasPassword = useMe().data?.hasPassword ?? true;
 
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -19,11 +22,11 @@ export default function ChangePasswordScreen() {
 
   const submit = () => {
     const found: Errors = {
-      current: current ? undefined : 'Mevcut şifreni gir.',
+      current: current || !hasPassword ? undefined : 'Mevcut şifreni gir.',
       next:
         next.length < 8
           ? 'Yeni şifre en az 8 karakter olmalı.'
-          : next === current
+          : hasPassword && next === current
             ? 'Yeni şifre mevcut şifrenden farklı olmalı.'
             : undefined,
       confirm: confirm === next ? undefined : 'Şifreler eşleşmiyor.',
@@ -54,23 +57,30 @@ export default function ChangePasswordScreen() {
 
   return (
     <Screen>
-      <Header title="Şifreyi değiştir" onBack={() => router.back()} />
+      <Header title={hasPassword ? 'Şifreyi değiştir' : 'Şifre belirle'} onBack={() => router.back()} />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <TextField
-            label="Mevcut şifre"
-            icon="lock-closed-outline"
-            value={current}
-            onChangeText={value => {
-              setCurrent(value);
-              clear('current');
-              if (mutation.isError) mutation.reset();
-            }}
-            secureTextEntry
-            autoComplete="current-password"
-            error={errors.current ?? (wrongCurrent ? 'Mevcut şifre hatalı.' : undefined)}
-          />
+          {hasPassword ? (
+            <TextField
+              label="Mevcut şifre"
+              icon="lock-closed-outline"
+              value={current}
+              onChangeText={value => {
+                setCurrent(value);
+                clear('current');
+                if (mutation.isError) mutation.reset();
+              }}
+              secureTextEntry
+              autoComplete="current-password"
+              error={errors.current ?? (wrongCurrent ? 'Mevcut şifre hatalı.' : undefined)}
+            />
+          ) : (
+            <Notice
+              tone="warning"
+              message="Apple ile giriş yapıyorsun. Bir şifre belirlersen e-postan ve şifrenle de girebilirsin."
+            />
+          )}
 
           <TextField
             label="Yeni şifre"

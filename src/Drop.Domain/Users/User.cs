@@ -32,9 +32,39 @@ public sealed class User : Entity
         Status = UserStatus.Active;
     }
 
+    /// <summary>
+    /// A user who signed up with Apple or Google: no password (they can set one
+    /// later), and the provider already proved the e-mail address.
+    /// </summary>
+    public static User CreateExternal(
+        string email,
+        string firstName,
+        string lastName,
+        DateTimeOffset createdAt)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email cannot be empty.");
+        }
+
+        var user = new User
+        {
+            Email = email.Trim().ToLowerInvariant(),
+            CreatedAt = createdAt,
+            Status = UserStatus.Active,
+            EmailVerifiedAt = createdAt,
+        };
+        user.SetName(firstName, lastName);
+
+        return user;
+    }
+
     public string Email { get; private set; } = null!;
 
-    public string PasswordHash { get; private set; } = null!;
+    /// <summary>Null for accounts created through Apple or Google that never set a password.</summary>
+    public string? PasswordHash { get; private set; }
+
+    public bool HasPassword => PasswordHash is not null;
 
     public string FirstName { get; private set; } = null!;
 
