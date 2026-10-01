@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useMyBusinesses } from '@/features/businesses/hooks/useMyBusinesses';
 import { roleLabels } from '@/features/businesses/utils/businessLabels';
@@ -10,7 +12,42 @@ import { useMyClaims } from '@/features/claims/hooks/useMyClaims';
 import { useFollows, useToggleFollow } from '@/features/follows/hooks/useFollows';
 import { useMe } from '@/features/users/hooks/useMe';
 import { useAuth } from '@/providers/AuthProvider';
-import { Avatar, Skeleton, Screen, colors, gradients, radius, shadows, spacing, typography } from '@/ui';
+import {
+  Avatar,
+  DropLogo,
+  ProgressBar,
+  Skeleton,
+  Screen,
+  colors,
+  gradients,
+  radius,
+  shadows,
+  spacing,
+  typography,
+} from '@/ui';
+
+type IconName = ComponentProps<typeof Ionicons>['name'];
+
+// Redeemed drops earn a title; the bar in the hero shows the way to the next one.
+const tiers: { min: number; title: string; icon: IconName }[] = [
+  { min: 0, title: 'Yeni avcı', icon: 'leaf' },
+  { min: 1, title: 'Fırsat avcısı', icon: 'flash' },
+  { min: 5, title: 'Usta avcı', icon: 'rocket' },
+  { min: 15, title: 'Efsane', icon: 'trophy' },
+];
+
+const tierFor = (redeemed: number) => {
+  let index = 0;
+  while (index + 1 < tiers.length && redeemed >= tiers[index + 1].min) index++;
+  const next = tiers[index + 1];
+  const current = tiers[index];
+
+  return {
+    ...current,
+    next,
+    progress: next ? (redeemed - current.min) / (next.min - current.min) : 1,
+  };
+};
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
@@ -25,6 +62,7 @@ export default function ProfileScreen() {
   const businesses = businessesQuery.data ?? [];
   const claims = claimsQuery.data ?? [];
   const redeemed = claims.filter(claim => claim.status === 'Redeemed').length;
+  const tier = tierFor(redeemed);
 
   const confirmLogout = () =>
     Alert.alert('Çıkış yap', 'Hesabından çıkmak istediğine emin misin?', [
@@ -37,9 +75,17 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={gradients.night} style={styles.hero}>
           <View style={styles.orb} />
+          <View style={styles.orbLime} />
           {me ? (
             <>
-              <Avatar name={fullName} size={68} />
+              <View style={styles.avatarRing}>
+                <Avatar name={fullName} size={72} />
+                {me.emailVerified && (
+                  <View style={styles.verifiedBadge}>
+                    <Ionicons name="checkmark" size={12} color={colors.ink} />
+                  </View>
+                )}
+              </View>
               <Text style={styles.name}>{fullName}</Text>
               <Text style={styles.email}>{me.email}</Text>
             </>
@@ -50,10 +96,31 @@ export default function ProfileScreen() {
             </>
           )}
 
+          <View style={styles.tier}>
+            <View style={styles.tierHead}>
+              <View style={styles.tierIcon}>
+                <Ionicons name={tier.icon} size={14} color={colors.ink} />
+              </View>
+              <Text style={styles.tierTitle}>{tier.title}</Text>
+              <Text style={styles.tierNext}>
+                {tier.next ? `${tier.next.min - redeemed} Drop sonra: ${tier.next.title}` : 'Zirvedesin'}
+              </Text>
+            </View>
+            <ProgressBar
+              value={tier.progress}
+              color={colors.lime}
+              trackColor="rgba(255,255,255,0.12)"
+              height={6}
+              style={styles.tierBar}
+            />
+          </View>
+
           <View style={styles.stats}>
             <Stat value={claims.length} label="Yakalanan" />
             <View style={styles.statDivider} />
             <Stat value={redeemed} label="Kullanılan" />
+            <View style={styles.statDivider} />
+            <Stat value={follows.length} label="Takip" />
           </View>
         </LinearGradient>
 
@@ -80,6 +147,7 @@ export default function ProfileScreen() {
               <Row
                 key={business.id}
                 icon="storefront"
+                tint="#12A36A"
                 title={business.name}
                 subtitle={roleLabels[business.role]}
                 onPress={() =>
@@ -94,6 +162,7 @@ export default function ProfileScreen() {
           <Section title="Yönetim">
             <Row
               icon="shield-checkmark"
+              tint="#2D8CDB"
               title="İşletme onayları"
               subtitle="Başvuruları incele, onayla veya reddet"
               onPress={() => router.push('/(app)/admin')}
@@ -107,6 +176,7 @@ export default function ProfileScreen() {
               <Row
                 key={follow.businessId}
                 icon="notifications"
+                tint="#E8900C"
                 title={follow.name}
                 subtitle="Yeni Drop'larında bildirim alırsın · Bırakmak için dokun"
                 onPress={() =>
@@ -127,10 +197,21 @@ export default function ProfileScreen() {
 
         <Section title="Hesap">
           <Row icon="person-circle" title="Profili düzenle" onPress={() => router.push('/(app)/account/edit')} />
-          <Row icon="key" title="Şifreyi değiştir" onPress={() => router.push('/(app)/account/password')} />
-          <Row icon="ticket" title="Drop'larım" onPress={() => router.navigate('/(app)/(tabs)/claims')} />
+          <Row
+            icon="key"
+            tint="#E8900C"
+            title="Şifreyi değiştir"
+            onPress={() => router.push('/(app)/account/password')}
+          />
+          <Row
+            icon="ticket"
+            tint="#12A36A"
+            title="Drop'larım"
+            onPress={() => router.navigate('/(app)/(tabs)/claims')}
+          />
           <Row
             icon="sparkles"
+            tint="#E0479E"
             title="Drop'u tanı"
             subtitle="Uygulama tanıtımını tekrar izle"
             onPress={() => router.push({ pathname: '/onboarding', params: { replay: '1' } })}
@@ -141,6 +222,11 @@ export default function ProfileScreen() {
         <Section title="Gizlilik">
           <Row icon="trash" title="Hesabımı sil" danger onPress={() => router.push('/(app)/account/delete')} />
         </Section>
+
+        <View style={styles.footer}>
+          <DropLogo size={22} color={colors.textSubtle} />
+          <Text style={styles.footerText}>drop · v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
+        </View>
       </ScrollView>
     </Screen>
   );
@@ -157,23 +243,25 @@ function Stat({ value, label }: { value: number; label: string }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View style={styles.section}>
+    <Animated.View entering={FadeInDown.duration(320)} style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.sectionCard}>{children}</View>
-    </View>
+    </Animated.View>
   );
 }
 
 type RowProps = {
-  icon: ComponentProps<typeof Ionicons>['name'];
+  icon: IconName;
+  /** Each kind of row gets its own colour, like a settings app. */
+  tint?: string;
   title: string;
   subtitle?: string;
   danger?: boolean;
   onPress: () => void;
 };
 
-function Row({ icon, title, subtitle, danger = false, onPress }: RowProps) {
-  const tint = danger ? colors.danger : colors.primary;
+function Row({ icon, tint: rowTint = colors.primary, title, subtitle, danger = false, onPress }: RowProps) {
+  const tint = danger ? colors.danger : rowTint;
 
   return (
     <Pressable
@@ -181,8 +269,8 @@ function Row({ icon, title, subtitle, danger = false, onPress }: RowProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
-      <View style={[styles.rowIcon, { backgroundColor: danger ? colors.dangerSoft : colors.primarySoft }]}>
-        <Ionicons name={icon} size={18} color={tint} />
+      <View style={[styles.rowIcon, { backgroundColor: tint }]}>
+        <Ionicons name={icon} size={17} color="#FFFFFF" />
       </View>
       <View style={styles.rowText}>
         <Text style={[styles.rowTitle, danger && { color: colors.danger }]} numberOfLines={1}>
@@ -233,6 +321,77 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     opacity: 0.4,
   },
+  orbLime: {
+    position: 'absolute',
+    bottom: -90,
+    left: -70,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: colors.lime,
+    opacity: 0.12,
+  },
+  avatarRing: {
+    padding: 4,
+    borderWidth: 2,
+    borderColor: colors.lime,
+    borderRadius: 30,
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.lime,
+    borderWidth: 3,
+    borderColor: gradients.night[1],
+    borderRadius: 12,
+  },
+  tier: {
+    alignSelf: 'stretch',
+    marginTop: spacing.xl,
+  },
+  tierHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  tierIcon: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.lime,
+    borderRadius: 11,
+  },
+  tierTitle: {
+    color: colors.textOnDark,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  tierNext: {
+    flex: 1,
+    color: colors.textOnDarkMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'right',
+  },
+  tierBar: {
+    marginTop: spacing.sm,
+  },
+  footer: {
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.xxxl,
+  },
+  footerText: {
+    color: colors.textSubtle,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   name: {
     ...typography.title,
     marginTop: spacing.md,
@@ -251,7 +410,7 @@ const styles = StyleSheet.create({
   stats: {
     flexDirection: 'row',
     alignSelf: 'stretch',
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: radius.lg,
