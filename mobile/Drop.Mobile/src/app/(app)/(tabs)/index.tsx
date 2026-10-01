@@ -11,15 +11,18 @@ import type { ActiveClaim } from '@/features/claims/types/claim';
 import { CategoryFilter } from '@/features/drops/components/CategoryFilter';
 import { DropCard } from '@/features/drops/components/DropCard';
 import { DropCardSkeleton } from '@/features/drops/components/DropCardSkeleton';
+import { DropsMap } from '@/features/drops/components/DropsMap';
 import { RadiusFilter } from '@/features/drops/components/RadiusFilter';
 import { useNearbyDrops } from '@/features/drops/hooks/useNearbyDrops';
 import { type DropCategory, categoryInfo, categoryOf } from '@/features/drops/utils/categories';
+import { mapAvailable } from '@/features/drops/utils/maps';
 import { useCurrentLocation } from '@/features/location/hooks/useCurrentLocation';
 import {
   Screen,
   StateView,
   colors,
   gradients,
+  haptics,
   radius,
   spacing,
   typography,
@@ -28,6 +31,7 @@ import {
 export default function HomeScreen() {
   const [radiusKm, setRadiusKm] = useState(5);
   const [category, setCategory] = useState<DropCategory | null>(null);
+  const [view, setView] = useState<'list' | 'map'>('list');
 
   const locationQuery = useCurrentLocation();
   const activeClaimQuery = useActiveClaim();
@@ -91,30 +95,60 @@ export default function HomeScreen() {
     );
   }
 
-  const header = (
-    <View>
-      <View style={styles.topBar}>
-        <View style={styles.brand}>
-          <LinearGradient colors={gradients.primary} style={styles.logoMark}>
-            <Ionicons name="flash" size={18} color={colors.lime} />
-          </LinearGradient>
-          <Text style={styles.logo}>drop</Text>
+  const topBar = (
+    <View style={styles.topBar}>
+      <View style={styles.brand}>
+        <LinearGradient colors={gradients.primary} style={styles.logoMark}>
+          <Ionicons name="flash" size={18} color={colors.lime} />
+        </LinearGradient>
+        <Text style={styles.logo}>drop</Text>
+      </View>
+
+      <View style={styles.topActions}>
+        {mapAvailable && <ViewToggle value={view} onChange={setView} />}
+        {hasBusiness && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="İşletme moduna geç"
+            onPress={() => router.push('/(app)/business')}
+            style={({ pressed }) => [styles.modeButton, pressed && styles.modeButtonPressed]}
+          >
+            <Ionicons name="storefront" size={15} color={colors.textOnDark} />
+            <Text style={styles.modeButtonText}>İşletme</Text>
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
+
+  const openDrop = (id: string) => router.push({ pathname: '/(app)/drop/[id]', params: { id } });
+
+  if (view === 'map' && mapAvailable && locationQuery.data) {
+    return (
+      <Screen edges={['top']}>
+        <View style={styles.mapHeader}>
+          {topBar}
+          {activeClaimQuery.data && (
+            <ActiveClaimBanner claim={activeClaimQuery.data} onPress={() => openClaim(activeClaimQuery.data!)} />
+          )}
+          <RadiusFilter value={radiusKm} onChange={setRadiusKm} />
+          <CategoryFilter counts={counts} total={allDrops.length} value={activeCategory} onChange={setCategory} />
         </View>
 
-        <View style={styles.topActions}>
-          {hasBusiness && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="İşletme moduna geç"
-              onPress={() => router.push('/(app)/business')}
-              style={({ pressed }) => [styles.modeButton, pressed && styles.modeButtonPressed]}
-            >
-              <Ionicons name="storefront" size={15} color={colors.textOnDark} />
-              <Text style={styles.modeButtonText}>İşletme</Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
+        <DropsMap
+          drops={drops}
+          latitude={locationQuery.data.latitude}
+          longitude={locationQuery.data.longitude}
+          radiusKm={radiusKm}
+          onOpenDrop={openDrop}
+        />
+      </Screen>
+    );
+  }
+
+  const header = (
+    <View>
+      {topBar}
 
       <Text style={styles.eyebrow}>ŞU AN YAKININDA</Text>
       <Text style={styles.heading}>Kaçırılmayacak{'\n'}anlık fırsatlar</Text>
@@ -153,7 +187,7 @@ export default function HomeScreen() {
         renderItem={({ item }) => (
           <DropCard
             drop={item}
-            onPress={() => router.push({ pathname: '/(app)/drop/[id]', params: { id: item.id } })}
+            onPress={() => openDrop(item.id)}
           />
         )}
         ListHeaderComponent={header}
@@ -200,7 +234,57 @@ export default function HomeScreen() {
   );
 }
 
+function ViewToggle({ value, onChange }: { value: 'list' | 'map'; onChange: (value: 'list' | 'map') => void }) {
+  const option = (target: 'list' | 'map', icon: 'list' | 'map', label: string) => {
+    const selected = value === target;
+
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ selected }}
+        onPress={() => {
+          if (selected) return;
+          haptics.tap();
+          onChange(target);
+        }}
+        style={[styles.toggleOption, selected && styles.toggleOptionSelected]}
+      >
+        <Ionicons name={selected ? icon : `${icon}-outline`} size={18} color={selected ? colors.textOnDark : colors.textMuted} />
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={styles.toggle}>
+      {option('list', 'list', 'Liste görünümü')}
+      {option('map', 'map', 'Harita görünümü')}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  mapHeader: {
+    paddingHorizontal: spacing.xl,
+  },
+  toggle: {
+    flexDirection: 'row',
+    padding: 3,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+  },
+  toggleOption: {
+    width: 38,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 11,
+  },
+  toggleOptionSelected: {
+    backgroundColor: colors.ink,
+  },
   list: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,

@@ -20,6 +20,10 @@ export type NearbyDrop = {
 
   /** DropCategory name; see utils/categories. */
   category: string;
+
+  /** The branch's position, for the map. */
+  latitude: number;
+  longitude: number;
 };
 
 export type DropDetail = {
