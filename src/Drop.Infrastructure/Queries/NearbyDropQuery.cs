@@ -63,7 +63,10 @@ internal sealed class NearbyDropQuery : INearbyDropQuery
 
                 d."EndsAt" AS "EndsAt",
 
-                d."Category" AS "Category"
+                d."Category" AS "Category",
+
+                b."Latitude" AS "Latitude",
+                b."Longitude" AS "Longitude"
 
             FROM drops d
 

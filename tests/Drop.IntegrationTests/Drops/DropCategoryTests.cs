@@ -48,6 +48,10 @@ public sealed class DropCategoryTests : IClassFixture<DropApiFactory>, IAsyncLif
         all.Select(x => x.GetProperty("category").GetString())
             .Should().BeEquivalentTo(["Coffee", "Food", "Other"]);
 
+        // The map pins drops at their branch.
+        all[0].GetProperty("latitude").GetDouble().Should().BeApproximately(Latitude, 0.0001);
+        all[0].GetProperty("longitude").GetDouble().Should().BeApproximately(Longitude, 0.0001);
+
         var coffee = await Nearby(owner, category: "Coffee");
         coffee.Should().ContainSingle().Which.GetProperty("title").GetString().Should().Be("Kahve %30");
 

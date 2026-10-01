@@ -13,4 +13,6 @@ public sealed record NearbyDropResponse(
     int RemainingCapacity,
     int DistanceMeters,
     DateTimeOffset EndsAt,
-    string Category);
+    string Category,
+    double Latitude,
+    double Longitude);
