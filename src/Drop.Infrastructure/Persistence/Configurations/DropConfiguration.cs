@@ -35,6 +35,12 @@ internal sealed class DropConfiguration
             .HasForeignKey(x => x.PhotoId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Deleting a schedule cancels its upcoming drops; past ones simply lose the link.
+        builder.HasOne<Domain.Drops.DropSchedule>()
+            .WithMany()
+            .HasForeignKey(x => x.ScheduleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(x => x.Capacity)
             .IsRequired();
 

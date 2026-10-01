@@ -1,3 +1,5 @@
+using Drop.Application.Users.Badges;
+using Drop.Application.Drops.Schedules;
 using Drop.Application.Drops.GetUpcomingDrops;
 using Drop.Application.Businesses.Profile;
 using Drop.Application.Media;
@@ -137,6 +139,10 @@ public static class DependencyInjection
         services.AddScoped<IMyClaimsQuery, MyClaimsQuery>();
         services.AddScoped<GetMyClaimsService>();
         services.AddScoped<GetMeService>();
+        services.AddScoped<IBadgeFactsQuery, BadgeFactsQuery>();
+        services.AddScoped<BadgeService>();
+        services.AddScoped<IDropScheduleStore, DropScheduleStore>();
+        services.AddScoped<DropScheduleService>();
         services.AddScoped<IMediaStore, MediaStore>();
         services.AddScoped<MediaService>();
         services.AddScoped<IMyStatsQuery, MyStatsQuery>();

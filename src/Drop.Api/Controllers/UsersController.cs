@@ -1,3 +1,4 @@
+using Drop.Application.Users.Badges;
 using Drop.Application.Users.Stats;
 using Drop.Api.Configuration;
 using Drop.Application.Authentication.Login;
@@ -32,6 +33,15 @@ public sealed class UsersController : ControllerBase
     [HttpGet("me/stats")]
     public async Task<ActionResult<MyStatsResponse>> GetMyStats(
         [FromServices] GetMyStatsService service,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await service.ExecuteAsync(cancellationToken));
+    }
+
+    /// <summary>Achievements and progress towards each.</summary>
+    [HttpGet("me/badges")]
+    public async Task<ActionResult<IReadOnlyList<BadgeResponse>>> GetMyBadges(
+        [FromServices] BadgeService service,
         CancellationToken cancellationToken)
     {
         return Ok(await service.ExecuteAsync(cancellationToken));

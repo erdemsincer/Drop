@@ -75,6 +75,11 @@ public sealed class Drop : Entity
 
     public void SetPhoto(Guid? photoId) => PhotoId = photoId == Guid.Empty ? null : photoId;
 
+    /// <summary>The recurring schedule that created this drop, if any.</summary>
+    public Guid? ScheduleId { get; private set; }
+
+    internal void FromSchedule(Guid scheduleId) => ScheduleId = scheduleId;
+
     public DropStatus Status { get; private set; }
 
     public DateTimeOffset? StartsAt { get; private set; }
